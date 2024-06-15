@@ -37,7 +37,7 @@ function PickCar() {
                     btnID("btn1");
                   }}
                 >
-                  Audi A1 S-Line
+                  Suzuki Swift
                 </button>
                 <button
                   className={`${coloringButton("btn2")}`}
@@ -47,7 +47,7 @@ function PickCar() {
                     btnID("btn2");
                   }}
                 >
-                  VW Golf 6
+                  Toyota Yaris
                 </button>
                 <button
                   className={`${coloringButton("btn3")}`}
@@ -57,7 +57,7 @@ function PickCar() {
                     btnID("btn3");
                   }}
                 >
-                  Toyota Camry
+                  Chang Alsvin
                 </button>
                 <button
                   className={`${coloringButton("btn4")}`}
@@ -67,7 +67,7 @@ function PickCar() {
                     btnID("btn4");
                   }}
                 >
-                  BMW 320 ModernLine
+                  Suzuki Dzire
                 </button>
                 <button
                   className={`${coloringButton("btn5")}`}
@@ -77,7 +77,7 @@ function PickCar() {
                     btnID("btn5");
                   }}
                 >
-                  Mercedes-Benz GLK
+                  Toyota Corolla Executive
                 </button>
                 <button
                   className={`${coloringButton("btn6")}`}
@@ -87,7 +87,7 @@ function PickCar() {
                     btnID("btn6");
                   }}
                 >
-                  VW Passat CC
+                  Suzuki Celerio
                 </button>
               </div>
 

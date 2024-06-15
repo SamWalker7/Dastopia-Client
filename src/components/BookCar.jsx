@@ -68,8 +68,8 @@ function BookCar() {
       pickUp === "" ||
       dropOff === "" ||
       pickTime === "" ||
-      dropTime === "" ||
-      carType === ""
+      dropTime === ""
+      // carType === ""
     ) {
       errorMsg.style.display = "flex";
     } else {
@@ -174,7 +174,7 @@ function BookCar() {
               </p>
 
               <form className="box-form">
-                <div className="box-form__car-type">
+                {/* <div className="box-form__car-type">
                   <label>
                     <i className="fa-solid fa-car"></i> &nbsp; Select Your Car
                     Type <b>*</b>
@@ -190,20 +190,20 @@ function BookCar() {
                     <option value="Mercedes-Benz GLK">Mercedes-Benz GLK</option>
                     <option value="VW Passat CC">VW Passat CC</option>
                   </select>
-                </div>
+                </div> */}
 
                 <div className="box-form__car-type">
                   <label>
-                    <i className="fa-solid fa-location-dot"></i> &nbsp; Pick-up{" "}
+                    <i className="fa-solid fa-location-dot"></i> &nbsp; Pick-up Location{" "}
                     <b>*</b>
                   </label>
                   <select value={pickUp} onChange={handlePick}>
                     <option>Select pick up location</option>
-                    <option>Delhi</option>
-                    <option>Kolkata</option>
+                    <option>Addis Ababa</option>
+                    {/* <option></option>
                     <option>Bengaluru</option>
                     <option>Mumbai</option>
-                    <option>Goa</option>
+                    <option>Goa</option> */}
                   </select>
                 </div>
 
@@ -214,11 +214,11 @@ function BookCar() {
                   </label>
                   <select value={dropOff} onChange={handleDrop}>
                     <option>Select drop off location</option>
-                    <option>Delhi</option>
-                    <option>Kolkata</option>
+                    <option>Addis Ababa</option>
+                    {/* <option>Kolkata</option>
                     <option>Bengaluru</option>
                     <option>Mumbai</option>
-                    <option>Goa</option>
+                    <option>Goa</option> */}
                   </select>
                 </div>
 

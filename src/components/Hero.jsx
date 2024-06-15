@@ -42,7 +42,7 @@ function Hero() {
                 Save <span>big</span> with our car rental
               </h1>
               <p>
-                Rent the car of your dreams. Unbeatable prices, unlimited miles,
+                Rent the car of your dreams. Unbeatable prices, amazing cars,
                 flexible pick-up options and much more.
               </p>
               <div className="hero-content__text__btns">
@@ -51,9 +51,9 @@ function Hero() {
                   className="hero-content__text__btns__book-ride"
                   to="/"
                 >
-                  Book Ride &nbsp; <i className="fa-solid fa-circle-check"></i>
+                  Book Car &nbsp; <i className="fa-solid fa-circle-check"></i>
                 </Link>
-                <Link className="hero-content__text__btns__learn-more" to="/">
+                <Link className="hero-content__text__btns__learn-more" to="/about">
                   Learn More &nbsp; <i className="fa-solid fa-angle-right"></i>
                 </Link>
               </div>

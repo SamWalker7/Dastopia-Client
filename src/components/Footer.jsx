@@ -42,19 +42,19 @@ function Footer() {
             <ul className="footer-content__2">
               <li>Company</li>
               <li>
-                <a href="#home">Gallery</a>
+                <a href="/about">About</a>
               </li>
               <li>
-                <a href="#home">Careers</a>
+                <a href="/contact">Contact Us</a>
               </li>
               <li>
-                <a href="#home">Mobile</a>
+                <a href="/models">Cars</a>
               </li>
               <li>
-                <a href="#home">Blog</a>
+                <a href="/team">Our Team</a>
               </li>
               <li>
-                <a href="#home">How we work</a>
+                <a href="/testimonials">Testimonals</a>
               </li>
             </ul>
 
