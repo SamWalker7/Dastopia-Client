@@ -1860,6 +1860,7 @@ footer {
 .models-div__box__descr__name-price__name p {
   font-size: 2.4rem;
   font-weight: 700;
+  color: #1732c6e9;
 }
 .models-div__box__descr__name-price__name span {
   display: flex;
@@ -1876,6 +1877,7 @@ footer {
 }
 .models-div__box__descr__name-price__price h4 {
   font-size: 2.8rem;
+  color: #4c9d3c;
 }
 .models-div__box__descr__name-price__price p {
   font-size: 1.6rem;
@@ -1893,8 +1895,8 @@ footer {
 }
 .models-div__box__descr__name-price__details span {
   font-size: 1.8rem;
-  font-weight: 500;
-  color: #777777;
+  font-weight: 600;
+  color: #7c7979;
   text-align: left;
 }
 .models-div__box__descr__name-price__details span i {

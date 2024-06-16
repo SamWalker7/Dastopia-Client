@@ -30,7 +30,7 @@ function Navbar() {
             </li>
             <li>
               <Link onClick={openNav} to="/models">
-                Models
+                Vehicles
               </Link>
             </li>
             <li>
@@ -74,7 +74,7 @@ function Navbar() {
             <li>
               {" "}
               <Link className="models-link" to="/models">
-                Vehicle Models
+                Vehicles
               </Link>
             </li>
             <li>
