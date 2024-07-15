@@ -40,14 +40,14 @@ function About() {
                   <img src={Box2} alt="car-icon" />
                   <span>
                     <h4>85</h4>
-                    <p>Rental Outlets</p>
+                    <p>24/7 Customer Support</p>
                   </span>
                 </div>
                 <div className="about-main__text__icons__box">
                   <img src={Box3} alt="car-icon" className="last-fk" />
                   <span>
                     <h4>75</h4>
-                    <p>Repair Shop</p>
+                    <p>Insurance Coverage</p>
                   </span>
                 </div>
               </div>
