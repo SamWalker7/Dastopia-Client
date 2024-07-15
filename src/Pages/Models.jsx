@@ -18,50 +18,33 @@ import CarImg6 from "../images/cars-big/passat-box.png";
 
 // Imported Functions
 import { getAllVehicles, getDownloadUrl } from "../api";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchImages, fetchVehicles } from "../store/slices/vehicleSlice";
 
 function Models() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [vehicles, setVehicles] = useState([]);
+  const dispatch = useDispatch();
+
+  const vehicles = useSelector((state) => state.vehicle.vehicles);
+  const isLoading = useSelector((state) => state.vehicle.loading);
 
   useEffect(() => {
-    fetchVehicles();
-  }, []);
+    const loadData = async () => {
+      const response = await dispatch(fetchVehicles())
+      if (fetchVehicles.fulfilled.match(response)) {
+        const vehicles = response.payload;
+        vehicles.map(async (vehicle) => {
+          await dispatch(fetchImages(vehicle))
+        })
 
-  const fetchVehicles = async () => {
-    setIsLoading(true);
-    const { body } = await getAllVehicles();
-    let data = [];
-    for (const vehicle of body) {
-      data.push({
-        ...vehicle,
-        status: vehicle?.isEnabled
-          ? "Approved"
-          : vehicle?.isEnabled === false
-          ? "Declined"
-          : "Pending",
-        images: [], // Initially, set images to an empty array
-        imageLoading: true, // Flag to indicate images are loading
-      });
-    }
-
-    setVehicles(data);
-    setIsLoading(false);
-
-    // Fetch images after setting vehicle data
-    for (let i = 0; i < body.length; i++) {
-      const vehicle = body[i];
-      if (vehicle?.vehicleImageKeys?.length > 0) {
-        let urls = [];
-        for (const image of vehicle?.vehicleImageKeys) {
-          const url = await getDownloadUrl(image.key);
-          urls.push(url.body || "https://via.placeholder.com/300");
-        }
-        data[i].images = urls;
-        data[i].imageLoading = false; // Set image loading flag to false
-        setVehicles([...data]); // Update state with new images
       }
     }
-  };
+
+    if (vehicles.length < 1) {
+      loadData();
+    }
+    // loadData();
+  }, [])
+
 
   return (
     <>
@@ -128,8 +111,8 @@ function Models() {
                 //   </div>
                 // </div>
               ))}
-              //{" "}
-              <div className="models-div__box">
+              {" "}
+              {/* <div className="models-div__box">
                 //{" "}
                 <div className="models-div__box__img">
                   // <img src={CarImg2} alt="car_img" />
@@ -196,9 +179,9 @@ function Models() {
                   //{" "}
                 </div>
                 //{" "}
-              </div>
-              //{" "}
-              <div className="models-div__box">
+              </div> */}
+              {/* //{" "} */}
+              {/* <div className="models-div__box">
                 //{" "}
                 <div className="models-div__box__img">
                   // <img src={CarImg3} alt="car_img" />
@@ -266,9 +249,9 @@ function Models() {
                   //{" "}
                 </div>
                 //{" "}
-              </div>
-              //{" "}
-              <div className="models-div__box">
+              </div> */}
+              {/* //{" "} */}
+              {/* <div className="models-div__box">
                 //{" "}
                 <div className="models-div__box__img">
                   // <img src={CarImg4} alt="car_img" />
@@ -336,9 +319,9 @@ function Models() {
                   //{" "}
                 </div>
                 //{" "}
-              </div>
-              //{" "}
-              <div className="models-div__box">
+              </div> */}
+              {/* //{" "} */}
+              {/* <div className="models-div__box">
                 //{" "}
                 <div className="models-div__box__img">
                   // <img src={CarImg5} alt="car_img" />
@@ -406,9 +389,9 @@ function Models() {
                   //{" "}
                 </div>
                 //{" "}
-              </div>
-              //{" "}
-              <div className="models-div__box">
+              </div> */}
+              {/* //{" "} */}
+              {/* <div className="models-div__box">
                 //{" "}
                 <div className="models-div__box__img">
                   // <img src={CarImg6} alt="car_img" />
@@ -475,11 +458,11 @@ function Models() {
                   //{" "}
                 </div>
                 //{" "}
-              </div>
+              </div> */}
             </div>
           </div>
         )}
-        <div className="book-banner">
+        {/* <div className="book-banner">
           <div className="book-banner__overlay"></div>
           <div className="container">
             <div className="text-content">
@@ -490,7 +473,7 @@ function Models() {
               </span>
             </div>
           </div>
-        </div>
+        </div> */}
         <Footer />
       </section>
     </>
