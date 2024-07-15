@@ -71,10 +71,10 @@ function Faq() {
       <Container maxWidth="md">
         <Box style={styles.faqContent}>
           <Box style={styles.faqTitle}>
-            <Typography variant="h3" fontWeight="bold">
+            <Typography variant="h2" fontWeight="bold">
               Frequently Asked Questions
             </Typography>
-            <Typography variant="h6" color="textSecondary" mb={5} mt={3}>
+            <Typography variant="h5" color="textSecondary" mb={5} mt={3}>
               All You Need to Know About Booking a Rental Car on Our Platform:
               Expert Answers to Your Most Pressing Questions.
             </Typography>
@@ -88,10 +88,10 @@ function Faq() {
                     expandIcon={<ExpandMoreIcon />}
                     style={styles.faqQuestion}
                   >
-                    <Typography variant="h6">{question}</Typography>
+                    <Typography variant="h5">{question}</Typography>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <Typography variant="h6">{answer}</Typography>
+                    <Typography variant="h5">{answer}</Typography>
                   </AccordionDetails>
                 </Accordion>
               </Paper>
