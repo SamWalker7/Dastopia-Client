@@ -25,7 +25,7 @@ function PlanTrip() {
 
               <div className="plan-container__boxes__box">
                 <img src={Contact} alt="icon_img" />
-                <h3>Contact Operator</h3>
+                <h3>Make a Payment</h3>
                 <p>
                   Our knowledgeable and friendly operators are always ready to
                   help with any questions or concerns
