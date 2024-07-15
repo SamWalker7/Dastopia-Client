@@ -18,6 +18,11 @@ const VehicleCard = ({ vehicle, index, handleClick, handleClose, toggleListing, 
                             image="https://via.placeholder.com/300"
                             alt="Loading..."
                             loading="lazy"
+                            sx={
+                               {
+                                border: 0
+                               }
+                            }
                         />
                     ) : (
                         Array.isArray(vehicle?.images) && vehicle?.images?.length > 0 ? (
@@ -29,6 +34,11 @@ const VehicleCard = ({ vehicle, index, handleClick, handleClose, toggleListing, 
                                 image="https://via.placeholder.com/300"
                                 alt={vehicle.name}
                                 loading="lazy"
+                                sx={
+                                    {
+                                     border: 0
+                                    }
+                                 }
                             />
                         )
                     )
