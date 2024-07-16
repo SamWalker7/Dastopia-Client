@@ -21,21 +21,111 @@ function Faq() {
   const FaqData = [
     {
       id: "q1",
-      question: "1. What makes comparing rental car deals worthwhile?",
+      question: "1. How do I book a car?",
       answer:
-        "Comparing rental car deals is important as it helps find the best deal that fits your budget and requirements, ensuring you get the most value for your money. By comparing various options, you can find deals that offer lower prices, additional services, or better car models. You can find car rental deals by researching online and comparing prices from different rental companies.",
+        "You can book a car by downloading our app and following the booking process or by calling our call center where an agent will assist you.",
     },
     {
       id: "q2",
-      question: "2. Where can I find the best car rental deals?",
+      question: "2. What documents do I need to provide to rent a car?",
       answer:
-        "You can find car rental deals by researching online and comparing prices from different rental companies. Websites such as Expedia, Kayak, and Travelocity allow you to compare prices and view available rental options. It is also recommended to sign up for email newsletters and follow rental car companies on social media to be informed of any special deals or promotions.",
+        "Typically, you will need to provide a valid driver’s license, a government-issued ID or passport, and a credit card for payment and security advance deposit.",
     },
     {
       id: "q3",
-      question: "3. How can I secure the lowest rental car prices?",
+      question: "3. What types of cars are available for rent?",
       answer:
-        "Book in advance: Booking your rental car ahead of time can often result in lower prices. Compare prices from multiple companies: Use websites like Kayak, Expedia, or Travelocity to compare prices from multiple rental car companies. Look for discount codes and coupons: Search for discount codes and coupons that you can use to lower the rental price. Renting from an off-airport location can sometimes result in lower prices.",
+        "We offer a wide range of cars from budget options to luxury vehicles. You can view all available options on our app or inquire through our call center.",
+    },
+    {
+      id: "q4",
+      question: "4. What is the minimum rental period?",
+      answer:
+        "The minimum rental period is typically 1 day. However, for specific requirements, you can contact our call center.",
+    },
+    {
+      id: "q5",
+      question: "5. How much does it cost to rent a car?",
+      answer:
+        "The cost varies depending on the type of car, rental period, and any additional services. You can get a detailed price in our app or by contacting our call center.",
+    },
+    {
+      id: "q6",
+      question: "6. Is there a mileage limit for rented cars?",
+      answer:
+        "Depending on the location there is a mileage limit, while others offer unlimited mileage. Details are provided during the booking process.",
+    },
+    {
+      id: "q7",
+      question: "7. What is your cancellation policy?",
+      answer:
+        "Our cancellation policy allows you to cancel your booking up to 24 hours before the rental period starts without any charges. Cancellations made less than 24 hours before the start time may incur a fee.",
+    },
+    {
+      id: "q8",
+      question: "8. Can I extend my rental period?",
+      answer:
+        "Yes, you can extend your rental period subject to availability. Please contact our call center or use the app to request an extension.",
+    },
+    {
+      id: "q9",
+      question: "9. What should I do in case of an accident or breakdown?",
+      answer:
+        "In case of an accident or breakdown, contact our customer support number provided in the rental agreement. We will assist you with roadside assistance or arrange a replacement vehicle.",
+    },
+    {
+      id: "q10",
+      question: "10. Are there any additional fees or charges?",
+      answer:
+        "Additional fees may apply for services such as child seats, additional drivers, or insurance coverage. Details are provided during the booking process.",
+    },
+    {
+      id: "q11",
+      question: "11. Can I rent a car without a driver?",
+      answer:
+        "Yes, you can choose to rent a car without a driver. We also offer cars with drivers for those who prefer it. But for without driver rent, we require an additional deposit.",
+    },
+    {
+      id: "q12",
+      question: "12. What payment methods do you accept?",
+      answer:
+        "We accept major credit cards, debit cards, and mobile payment options. Cash payments are not accepted. Payments should be done in advance.",
+    },
+    {
+      id: "q13",
+      question: "13. Is insurance included in the rental price?",
+      answer:
+        "Basic insurance is included in the rental price. You have the option to purchase additional coverage for extra protection.",
+    },
+    {
+      id: "q14",
+      question: "14. How do I return the car?",
+      answer:
+        "You can return the car to the designated return location specified in your rental agreement. For convenience, you can also arrange for a pick-up through our app or call center.",
+    },
+    {
+      id: "q15",
+      question: "15. Can I rent a car for someone else?",
+      answer:
+        "Yes, you can rent a car for someone else, but the person driving the car must meet our rental requirements and provide the necessary documents.",
+    },
+    {
+      id: "q16",
+      question: "16. What happens if I return the car late?",
+      answer:
+        "Late returns may incur additional charges. Please inform us in advance if you anticipate returning the car late to avoid extra fees.",
+    },
+    {
+      id: "q17",
+      question: "17. Can I choose a specific car model?",
+      answer:
+        "While we strive to provide the car model you prefer, specific models are subject to availability. You can specify your preference during booking, and we will do our best to accommodate it.",
+    },
+    {
+      id: "q18",
+      question: "18. Do you offer discounts or loyalty programs?",
+      answer:
+        "Yes, we offer various loyalty programs for our regular customers. Check our app or inquire through our call center for current promotions and loyalty benefits.",
     },
   ];
 
