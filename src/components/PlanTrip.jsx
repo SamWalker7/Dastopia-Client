@@ -26,10 +26,11 @@ function PlanTrip() {
               <div className="plan-container__boxes__box">
                 <img src={Contact} alt="icon_img" />
                 <h3>Make a payment</h3>
+                <h3>Make a Payment</h3>
                 <p>
-
-                  Make a Payment
-                  Quickly and securely process your transactions with our user-friendly system. Enjoy peace of mind with top-level security for all your payments.
+                  Quickly and securely process your transactions with our
+                  user-friendly system. Enjoy peace of mind with top-level
+                  security for all your payments.
                 </p>
               </div>
 
