@@ -14,7 +14,7 @@ import Search from "./Pages/Search";
 function App() {
   return (
     <>
-      {/* <Navbar /> */}
+      <Navbar />
       <Routes>
         <Route index path="/" element={<Home />} />
         <Route path="about" element={<About />} />

@@ -68,7 +68,7 @@ const Search = () => {
   };
 
   return (
-    <div style={{ padding: "30px" }}>
+    <div style={{ padding: "30px", position: "relative", paddingTop: "15%" }}>
       <main>
         <div>
           <SearchBar />
