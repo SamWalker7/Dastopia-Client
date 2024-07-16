@@ -31,6 +31,7 @@ const ResultsGrid = ({ vehicles }) => {
         overflowY: "scroll",
         maxHeight: "410px",
         marginTop: "2px",
+        width: "95%",
       }}
     >
       {vehicles.map((vehicle, index) => (
@@ -38,12 +39,12 @@ const ResultsGrid = ({ vehicles }) => {
           <Card
             sx={{
               display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              height: { xs: "400px", md: "200px" },
+              flexDirection: { xs: "row", md: "row" },
+              height: "100%", // Ensures each card takes full height of its container
               borderRadius: "8px",
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               border: "1px solid gray",
-              marginRight: "50px",
+              marginBottom: "20px", // Adds spacing between cards
             }}
           >
             <Grid container>
@@ -82,12 +83,13 @@ const ResultsGrid = ({ vehicles }) => {
                   )}
                 </div>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={6} md={4}>
                 <CardContent
                   sx={{
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
+                    height: "100%", // Ensures content stretches to full height
                   }}
                 >
                   <div>
@@ -139,12 +141,13 @@ const ResultsGrid = ({ vehicles }) => {
                   </div>
                 </CardContent>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={6} md={4}>
                 <CardContent
                   sx={{
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
+                    height: "100%",
                   }}
                 >
                   <div>
@@ -196,14 +199,14 @@ const ResultsGrid = ({ vehicles }) => {
                       <strong>Created Time:</strong>{" "}
                       {vehicle.createdAt ? vehicle.createdAt : "Unknown"}
                     </Typography>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      sx={{ alignSelf: "flex-end" }}
+                    >
+                      View Details
+                    </Button>
                   </div>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ alignSelf: "flex-end" }}
-                  >
-                    View Details
-                  </Button>
                 </CardContent>
               </Grid>
             </Grid>

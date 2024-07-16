@@ -27,7 +27,7 @@ const Search = () => {
       const response = await dispatch(fetchVehicles());
       if (fetchVehicles.fulfilled.match(response)) {
         const vehicles = response.payload;
-        vehicles.map(async (vehicle) => {
+        vehicles.forEach(async (vehicle) => {
           await dispatch(fetchImages(vehicle));
         });
       }
@@ -93,10 +93,11 @@ const Search = () => {
     border: "2px solid #6b7280",
     borderRadius: "5px",
     padding: "10px",
+    justifyContent: "center", // Aligning cards center horizontally
   };
 
   const colSpanStyle = {
-    width: "50%",
+    width: "100%",
   };
 
   const mapContainerStyle = {
@@ -105,17 +106,6 @@ const Search = () => {
     width: "50%",
     marginLeft: "50px",
   };
-
-  const isMobile = () => {
-    return window.innerWidth < 768;
-  };
-
-  if (isMobile()) {
-    gridContainerStyle.width = "100%";
-    colSpanStyle.width = "100%";
-    mapContainerStyle.width = "100%";
-    mapContainerStyle.marginLeft = "0";
-  }
 
   const mapDetailsStyle = {
     height: "100%",
@@ -133,16 +123,15 @@ const Search = () => {
       borderRadius: "4px",
       marginBottom: "16px",
       marginTop: "20px",
-    },
-    filterRow: {
       display: "flex",
       flexWrap: "wrap",
     },
     formControl: {
-      minWidth: "120px",
+      minWidth: "20%",
       marginRight: "16px",
       marginBottom: "10px",
-      marginLeft: "16px",
+      flex: "1 0 20%",
+      marginTop: "2rem",
     },
     label: {
       fontWeight: "bold",
@@ -156,10 +145,6 @@ const Search = () => {
       border: "1px solid #ccc",
       width: "100%",
     },
-    checkboxGroup: {
-      display: "flex",
-      flexWrap: "wrap",
-    },
     resultInfo: {
       marginTop: "10px",
       color: "#6b7280",
@@ -167,42 +152,39 @@ const Search = () => {
     },
   };
 
+  // Adjust styles for mobile view
+  if (typeof window !== "undefined" && window.innerWidth < 768) {
+    gridContainerStyle.flexDirection = "column";
+    colSpanStyle.width = "100%";
+    mapContainerStyle.width = "100%";
+    mapContainerStyle.marginLeft = "0";
+
+    // Make location and time filters full-width
+    styles.formControl = {
+      ...styles.formControl,
+      minWidth: "100%", // Adjusted width for PC
+    };
+  }
+
   return (
     <div style={{ padding: "30px", position: "relative", paddingTop: "23rem" }}>
       <main>
         <div>
-          <div
-            className="my-4 flex items-center space-x-4"
-            style={{
-              marginRight: "30px",
-              width: "100%",
-            }}
-          >
-            <FormControl
-              variant="outlined"
-              style={{ marginRight: "30px", width: "20%", fontSize: "16px" }}
-            >
+          <div className="my-4 flex items-center space-x-4">
+            <FormControl variant="outlined" style={styles.formControl}>
               <InputLabel id="location-label">Location</InputLabel>
               <Select
                 labelId="location-label"
                 value={selectedCity}
                 onChange={handleCityChange}
                 label="Location"
-                style={{
-                  fontSize: "16px",
-                }}
+                style={{ width: "100%" }}
               >
                 <MenuItem value="">
                   <em>Any</em>
                 </MenuItem>
                 {ethiopianCities.map((city) => (
-                  <MenuItem
-                    key={city}
-                    value={city}
-                    style={{
-                      fontSize: "16px",
-                    }}
-                  >
+                  <MenuItem key={city} value={city}>
                     {city}
                   </MenuItem>
                 ))}
@@ -215,17 +197,8 @@ const Search = () => {
               variant="outlined"
               value={startDate}
               onChange={handleStartDateChange}
-              InputLabelProps={{
-                style: { fontSize: "16px" },
-                shrink: true,
-              }}
-              InputProps={{
-                style: { fontSize: "16px" },
-              }}
-              style={{
-                marginRight: "30px",
-                width: "20%",
-              }}
+              InputLabelProps={{ shrink: true }}
+              style={styles.formControl}
             />
             <TextField
               label="End Date"
@@ -233,100 +206,91 @@ const Search = () => {
               variant="outlined"
               value={endDate}
               onChange={handleEndDateChange}
-              InputLabelProps={{
-                style: { fontSize: "16px" },
-                shrink: true,
-              }}
-              InputProps={{
-                style: { fontSize: "16px" },
-              }}
-              style={{
-                marginRight: "30px",
-                width: "20%",
-              }}
+              InputLabelProps={{ shrink: true }}
+              style={styles.formControl}
             />
           </div>
+
           <div style={styles.filterContainer}>
-            <div style={styles.filterRow}>
-              <div style={styles.formControl}>
-                <label style={styles.label}>Make</label>
-                <select
-                  style={styles.select}
-                  value={make}
-                  onChange={handleMakeChange}
-                >
-                  <option value="any">Any</option>
-                  <option value="Toyota">Toyota</option>
-                  <option value="Honda">Honda</option>
-                  <option value="Ford">Ford</option>
-                </select>
-              </div>
-              <div style={styles.formControl}>
-                <label style={styles.label}>Model</label>
-                <select
-                  style={styles.select}
-                  value={model}
-                  onChange={handleModelChange}
-                >
-                  <option value="any">Any</option>
-                  <option value="Camry">Camry</option>
-                  <option value="Accord">Accord</option>
-                  <option value="Focus">Focus</option>
-                </select>
-              </div>
-              <div style={styles.formControl}>
-                <label style={styles.label}>Transmission</label>
-                <select
-                  style={styles.select}
-                  value={transmission}
-                  onChange={handleTransmissionChange}
-                >
-                  <option value="any">Any</option>
-                  <option value="Automatic">Automatic</option>
-                  <option value="Manual">Manual</option>
-                </select>
-              </div>
-              <div style={styles.formControl}>
-                <label style={styles.label}>Category</label>
-                <select
-                  style={styles.select}
-                  value={category}
-                  onChange={handleCategoryChange}
-                >
-                  <option value="any">Any</option>
-                  <option value="Sedan">Sedan</option>
-                  <option value="Suv">SUV</option>
-                  <option value="Convertible">Convertible</option>
-                </select>
-              </div>
+            <div style={styles.formControl}>
+              <label style={styles.label}>Make</label>
+              <select
+                style={styles.select}
+                value={make}
+                onChange={handleMakeChange}
+              >
+                <option value="any">Any</option>
+                <option value="Toyota">Toyota</option>
+                <option value="Honda">Honda</option>
+                <option value="Ford">Ford</option>
+              </select>
+            </div>
+            <div style={styles.formControl}>
+              <label style={styles.label}>Model</label>
+              <select
+                style={styles.select}
+                value={model}
+                onChange={handleModelChange}
+              >
+                <option value="any">Any</option>
+                <option value="Camry">Camry</option>
+                <option value="Accord">Accord</option>
+                <option value="Focus">Focus</option>
+              </select>
+            </div>
+            <div style={styles.formControl}>
+              <label style={styles.label}>Transmission</label>
+              <select
+                style={styles.select}
+                value={transmission}
+                onChange={handleTransmissionChange}
+              >
+                <option value="any">Any</option>
+                <option value="Automatic">Automatic</option>
+                <option value="Manual">Manual</option>
+              </select>
+            </div>
+            <div style={styles.formControl}>
+              <label style={styles.label}>Category</label>
+              <select
+                style={styles.select}
+                value={category}
+                onChange={handleCategoryChange}
+              >
+                <option value="any">Any</option>
+                <option value="Sedan">Sedan</option>
+                <option value="Suv">SUV</option>
+                <option value="Convertible">Convertible</option>
+              </select>
             </div>
           </div>
+
           <div style={gridContainerStyle}>
             <div style={colSpanStyle}>
               {isLoading ? (
-                <div
-                  style={{
-                    margin: "auto",
-                    textAlign: "center",
-                  }}
-                >
-                  {" "}
+                <div style={{ textAlign: "center", marginTop: "20px" }}>
                   <CircularProgress />
                 </div>
               ) : filteredVehicles.length > 0 ? (
-                <>
+                <div
+                  style={{
+                    width: "90vw",
+                    maxWidth: "800px",
+                    margin: "0 auto",
+                    "@media (max-width: 768px)": { width: "100vw" },
+                  }}
+                >
                   <div style={styles.resultInfo}>
                     {filteredVehicles.length} vehicle(s) found.
                   </div>
                   <ResultsGrid vehicles={filteredVehicles} />
-                </>
+                </div>
               ) : (
                 <div
                   style={{
                     textAlign: "center",
-                    color: "#6b7280",
-                    fontSize: "16px",
                     marginTop: "20px",
+                    color: "#6b7280",
                   }}
                 >
                   No vehicles found.
