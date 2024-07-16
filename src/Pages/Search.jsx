@@ -93,18 +93,17 @@ const Search = () => {
     border: "2px solid #6b7280",
     borderRadius: "5px",
     padding: "10px",
-    justifyContent: "center", // Aligning cards center horizontally
+    justifyContent: "center",
   };
 
   const colSpanStyle = {
-    width: "100%",
+    width: "60%",
   };
 
   const mapContainerStyle = {
     backgroundColor: "white",
     padding: "16px",
     width: "50%",
-    marginLeft: "50px",
   };
 
   const mapDetailsStyle = {
@@ -149,6 +148,7 @@ const Search = () => {
       marginTop: "10px",
       color: "#6b7280",
       fontSize: "15px",
+      paddingLeft: "30px",
     },
   };
 
@@ -274,10 +274,16 @@ const Search = () => {
               ) : filteredVehicles.length > 0 ? (
                 <div
                   style={{
-                    width: "90vw",
-                    maxWidth: "800px",
-                    margin: "0 auto",
-                    "@media (max-width: 768px)": { width: "100vw" },
+                    "@media (min-width: 768px)": {
+                      width: "90vw",
+                      maxWidth: "800px",
+                      margin: "0 auto",
+                      paddingLeft: "30px",
+                    },
+                    "@media (max-width: 768px)": {
+                      width: "100vw",
+                      paddingLeft: "0px",
+                    },
                   }}
                 >
                   <div style={styles.resultInfo}>

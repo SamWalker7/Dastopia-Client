@@ -35,16 +35,28 @@ const ResultsGrid = ({ vehicles }) => {
       }}
     >
       {vehicles.map((vehicle, index) => (
-        <Grid item xs={12} key={vehicle.id}>
+        <Grid
+          item
+          xs={12}
+          key={vehicle.id}
+          style={{
+            "@media (min-width: 768px)": {
+              marginLeft: "20px",
+              marginRight: "100px",
+            },
+            "@media (max-width: 768px)": {
+              margin: "0 auto",
+            },
+          }}
+        >
           <Card
             sx={{
               display: "flex",
               flexDirection: { xs: "row", md: "row" },
-              height: "100%", // Ensures each card takes full height of its container
+              height: "100%",
               borderRadius: "8px",
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               border: "1px solid gray",
-              marginBottom: "20px", // Adds spacing between cards
             }}
           >
             <Grid container>
