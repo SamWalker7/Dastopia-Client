@@ -27,8 +27,9 @@ function PlanTrip() {
                 <img src={Contact} alt="icon_img" />
                 <h3>Make a Payment</h3>
                 <p>
-                  Our knowledgeable and friendly operators are always ready to
-                  help with any questions or concerns
+                  Quickly and securely process your transactions with our
+                  user-friendly system. Enjoy peace of mind with top-level
+                  security for all your payments.
                 </p>
               </div>
 
