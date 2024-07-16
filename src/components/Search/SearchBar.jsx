@@ -13,6 +13,13 @@ const SearchBar = () => {
       <TextField
         label="Location"
         variant="outlined"
+        InputProps={{
+          style: { fontSize: "16px" },
+        }}
+        InputLabelProps={{
+          style: { fontSize: "16px" },
+          shrink: true,
+        }}
         style={{
           marginRight: "30px",
           width: "20%",
@@ -22,7 +29,13 @@ const SearchBar = () => {
         label="Start Date"
         type="date"
         variant="outlined"
-        InputLabelProps={{ shrink: true }}
+        InputLabelProps={{
+          style: { fontSize: "16px" },
+          shrink: true,
+        }}
+        InputProps={{
+          style: { fontSize: "16px" },
+        }}
         style={{
           marginRight: "30px",
           width: "20%",
@@ -32,7 +45,13 @@ const SearchBar = () => {
         label="End Date"
         type="date"
         variant="outlined"
-        InputLabelProps={{ shrink: true }}
+        InputLabelProps={{
+          style: { fontSize: "16px" },
+          shrink: true,
+        }}
+        InputProps={{
+          style: { fontSize: "16px" },
+        }}
         style={{
           marginRight: "30px",
           width: "20%",
@@ -44,7 +63,7 @@ const SearchBar = () => {
         style={{
           padding: "13px",
           width: "20%",
-          fontSize: "12px",
+          fontSize: "13px",
         }}
       >
         Search

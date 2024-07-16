@@ -7,38 +7,37 @@ import {
   Button,
   Grid,
 } from "@mui/material";
+import VehicleImageSlider from "../../components/shared/VehcileImageSlider";
 
-const mockResults = [
-  {
-    title: "Car 1",
-    description: "Description for Car 1",
-    carType: "Sedan",
-    amount: "$50/day",
-    imageUrl: "https://via.placeholder.com/150",
-  },
-  {
-    title: "Car 2",
-    description: "Description for Car 2",
-    carType: "SUV",
-    amount: "$70/day",
-    imageUrl: "https://via.placeholder.com/150",
-  },
-];
-
-const ResultsGrid = () => {
+const ResultsGrid = ({ vehicles }) => {
   return (
-    <Grid container spacing={3}>
-      {mockResults.map((result, index) => (
-        <Grid item xs={12} key={index}>
+    <Grid
+      container
+      spacing={3}
+      style={{
+        overflowY: "scroll",
+        maxHeight: "auto",
+        marginTop: "10px",
+      }}
+    >
+      {vehicles.map((vehicle) => (
+        <Grid item xs={12} key={vehicle.id}>
           <Card>
             <Grid container>
               <Grid item xs={4}>
-                <CardMedia
-                  component="img"
-                  alt={result.title}
-                  height={160}
-                  image={result.imageUrl}
-                />
+                {Array.isArray(vehicle.images) && vehicle.images.length > 0 ? (
+                  <VehicleImageSlider images={vehicle.images} />
+                ) : (
+                  <CardMedia
+                    component="img"
+                    alt={vehicle.name}
+                    height="100%"
+                    image={vehicle.imageUrl}
+                    onError={(e) => {
+                      e.target.src = "https://via.placeholder.com/300";
+                    }}
+                  />
+                )}
               </Grid>
               <Grid item xs={8}>
                 <CardContent>
@@ -48,7 +47,7 @@ const ResultsGrid = () => {
                     component="div"
                     sx={{ color: "#354148" }}
                   >
-                    {result.title}
+                    {vehicle.make} {vehicle.model}
                   </Typography>
                   <Typography
                     variant="body1"
@@ -56,7 +55,7 @@ const ResultsGrid = () => {
                     gutterBottom
                     sx={{ marginBottom: "8px" }}
                   >
-                    {result.description}
+                    {vehicle.description}
                   </Typography>
                   <Typography
                     variant="body2"
@@ -64,14 +63,35 @@ const ResultsGrid = () => {
                     gutterBottom
                     sx={{ marginBottom: "8px" }}
                   >
-                    <strong>Type:</strong> {result.carType}
+                    <strong>Transmission:</strong> {vehicle.transmission}
                   </Typography>
                   <Typography
                     variant="body2"
                     color="textSecondary"
                     sx={{ marginBottom: "8px" }}
                   >
-                    <strong>Amount:</strong> {result.amount}
+                    <strong>Color:</strong> {vehicle.color}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    sx={{ marginBottom: "8px" }}
+                  >
+                    <strong>Seats:</strong> {vehicle.seats}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    sx={{ marginBottom: "8px" }}
+                  >
+                    <strong>Doors:</strong> {vehicle.doors}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    sx={{ marginBottom: "8px" }}
+                  >
+                    <strong>City:</strong> {vehicle.city}
                   </Typography>
                   <Button variant="contained" color="primary">
                     Save
