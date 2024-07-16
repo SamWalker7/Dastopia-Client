@@ -32,6 +32,9 @@ const Search = () => {
     display: "flex",
     marginTop: "20px",
     width: "100%",
+    border: "2px solid #6b7280",
+    borderRadius: "5px",
+    padding: "10px",
   };
 
   const colSpanStyle = {
@@ -44,6 +47,17 @@ const Search = () => {
     width: "50%",
     marginLeft: "50px",
   };
+
+  const isMobile = () => {
+    return window.innerWidth < 768;
+  };
+
+  if (isMobile()) {
+    gridContainerStyle.width = "100%";
+    colSpanStyle.width = "100%";
+    mapContainerStyle.width = "100%";
+    mapContainerStyle.marginLeft = "0";
+  }
 
   const mapDetailsStyle = {
     height: "100%",
@@ -62,7 +76,15 @@ const Search = () => {
           <div style={gridContainerStyle}>
             <div style={colSpanStyle}>
               {isLoading ? (
-                <CircularProgress />
+                <div
+                  style={{
+                    margin: "auto",
+                    textAlign: "center",
+                  }}
+                >
+                  {" "}
+                  <CircularProgress />
+                </div>
               ) : (
                 <ResultsGrid vehicles={vehicles} />
               )}

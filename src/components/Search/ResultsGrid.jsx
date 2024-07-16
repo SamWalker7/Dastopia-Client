@@ -16,8 +16,8 @@ const ResultsGrid = ({ vehicles }) => {
       spacing={3}
       style={{
         overflowY: "scroll",
-        maxHeight: "auto",
-        marginTop: "10px",
+        maxHeight: "410px",
+        marginTop: "2px",
       }}
     >
       {vehicles.map((vehicle) => (
