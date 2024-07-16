@@ -20,7 +20,7 @@ const VehicleImageSlider = ({ images }) => {
           <div key={index}>
             <CardMedia
               component="img"
-              height="auto"
+              height="300"
               image={url}
               alt={`Vehicle Image ${index}`}
             />

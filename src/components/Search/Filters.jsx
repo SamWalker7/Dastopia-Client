@@ -51,32 +51,6 @@ const Filters = () => {
           </select>
         </div>
         <div style={styles.formControl}>
-          <label style={styles.label}>Daily Price Range</label>
-          <select style={styles.select}>
-            <option value="any">Any</option>
-            <option value="0-50">$0 - $50</option>
-            <option value="51-100">$51 - $100</option>
-            <option value="101-200">$101 - $200</option>
-          </select>
-        </div>
-        <div style={styles.formControl}>
-          <label style={styles.label}>Collection</label>
-          <select style={styles.select}>
-            <option value="any">Any</option>
-            <option value="summer">Summer Collection</option>
-            <option value="winter">Winter Collection</option>
-          </select>
-        </div>
-        <div style={styles.formControl}>
-          <label style={styles.label}>Vehicle Type</label>
-          <select style={styles.select}>
-            <option value="any">Any</option>
-            <option value="sedan">Sedan</option>
-            <option value="suv">SUV</option>
-            <option value="convertible">Convertible</option>
-          </select>
-        </div>
-        <div style={styles.formControl}>
           <label style={styles.label}>Make</label>
           <select style={styles.select}>
             <option value="any">Any</option>
@@ -85,12 +59,33 @@ const Filters = () => {
             <option value="ford">Ford</option>
           </select>
         </div>
+        <div style={styles.formControl}>
+          <label style={styles.label}>Model</label>
+          <select style={styles.select}>
+            <option value="any">Any</option>
+            <option value="camry">Camry</option>
+            <option value="accord">Accord</option>
+            <option value="focus">Focus</option>
+          </select>
+        </div>
+        <div style={styles.formControl}>
+          <label style={styles.label}>Transmission</label>
+          <select style={styles.select}>
+            <option value="any">Any</option>
+            <option value="automatic">Automatic</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+        <div style={styles.formControl}>
+          <label style={styles.label}>Category</label>
+          <select style={styles.select}>
+            <option value="any">Any</option>
+            <option value="sedan">Sedan</option>
+            <option value="suv">SUV</option>
+            <option value="convertible">Convertible</option>
+          </select>
+        </div>
       </div>
-      {/* <FormGroup row style={styles.checkboxGroup}>
-        <FormControlLabel control={<Checkbox />} label="Free Cancellation" />
-        <FormControlLabel control={<Checkbox />} label="Instant Book" />
-        <FormControlLabel control={<Checkbox />} label="Delivered to You" />
-      </FormGroup> */}
     </div>
   );
 };

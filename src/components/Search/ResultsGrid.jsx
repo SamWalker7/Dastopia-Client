@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -6,10 +6,23 @@ import {
   Typography,
   Button,
   Grid,
+  Skeleton,
 } from "@mui/material";
-import VehicleImageSlider from "../../components/shared/VehcileImageSlider";
 
 const ResultsGrid = ({ vehicles }) => {
+  const [imageUrls, setImageUrls] = useState([]);
+
+  useEffect(() => {
+    const urls = vehicles.map((vehicle) => {
+      if (Array.isArray(vehicle.images) && vehicle.images.length > 0) {
+        return vehicle.images[0]; // Get the first image URL
+      } else {
+        return "https://via.placeholder.com/300"; // Placeholder image URL if no image is available
+      }
+    });
+    setImageUrls(urls);
+  }, [vehicles]);
+
   return (
     <Grid
       container
@@ -20,7 +33,7 @@ const ResultsGrid = ({ vehicles }) => {
         marginTop: "2px",
       }}
     >
-      {vehicles.map((vehicle) => (
+      {vehicles.map((vehicle, index) => (
         <Grid item xs={12} key={vehicle.id}>
           <Card
             sx={{
@@ -36,18 +49,34 @@ const ResultsGrid = ({ vehicles }) => {
             <Grid container>
               <Grid item xs={12} md={4}>
                 <div>
-                  {Array.isArray(vehicle.images) &&
-                  vehicle.images.length > 0 ? (
-                    <VehicleImageSlider images={vehicle.images} />
-                  ) : (
+                  {imageUrls[index] ? (
                     <CardMedia
                       component="img"
-                      alt={vehicle.name}
                       height="auto"
-                      image={vehicle.imageUrl}
+                      image={imageUrls[index]}
+                      alt={`Vehicle Image ${index}`}
                       style={{ maxHeight: "100%", objectFit: "cover" }}
                       onError={(e) => {
                         e.target.src = "https://via.placeholder.com/300";
+                      }}
+                      onLoad={(e) => {
+                        e.target.style.opacity = 1;
+                      }}
+                      sx={{
+                        opacity: 0,
+                        transition: "opacity 0.5s ease-in-out",
+                        borderRadius: "8px",
+                      }}
+                    />
+                  ) : (
+                    <Skeleton
+                      variant="rectangular"
+                      width="100%"
+                      height="auto"
+                      style={{ marginBottom: "8px" }}
+                      animation="wave"
+                      sx={{
+                        borderRadius: "8px",
                       }}
                     />
                   )}
