@@ -1,15 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { CircularProgress } from "@mui/material";
-import SearchBar from "../components/Search/SearchBar";
 import ResultsGrid from "../components/Search/ResultsGrid";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchVehicles, fetchImages } from "../store/slices/vehicleSlice";
+import { TextField } from "@mui/material";
+import { Select, MenuItem, InputLabel, FormControl } from "@mui/material";
 
 const Search = () => {
   const dispatch = useDispatch();
 
   const vehicles = useSelector((state) => state?.vehicle.vehicles);
   const isLoading = useSelector((state) => state?.vehicle.loading);
+
+  const ethiopianCities = [
+    "Addis Ababa",
+    "Dire Dawa",
+    "Mekelle",
+    "Gondar",
+    "Bahir Dar",
+    "Jimma",
+    "Hawassa",
+  ];
 
   useEffect(() => {
     const loadData = async () => {
@@ -31,6 +42,21 @@ const Search = () => {
   const [model, setModel] = useState("any");
   const [transmission, setTransmission] = useState("any");
   const [category, setCategory] = useState("any");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const handleCityChange = (event) => {
+    setSelectedCity(event.target.value);
+  };
+
+  const handleStartDateChange = (event) => {
+    setStartDate(event.target.value);
+  };
+
+  const handleEndDateChange = (event) => {
+    setEndDate(event.target.value);
+  };
 
   const handleMakeChange = (event) => {
     setMake(event.target.value);
@@ -53,7 +79,10 @@ const Search = () => {
       (make === "any" || vehicle.make === make) &&
       (model === "any" || vehicle.model === model) &&
       (transmission === "any" || vehicle.transmission === transmission) &&
-      (category === "any" || vehicle.category === category)
+      (category === "any" || vehicle.category === category) &&
+      (!selectedCity || vehicle.city === selectedCity) &&
+      (!startDate || new Date(vehicle.startDate) >= new Date(startDate)) &&
+      (!endDate || new Date(vehicle.endDate) <= new Date(endDate))
     );
   });
 
@@ -142,7 +171,81 @@ const Search = () => {
     <div style={{ padding: "30px", position: "relative", paddingTop: "23rem" }}>
       <main>
         <div>
-          <SearchBar />
+          <div
+            className="my-4 flex items-center space-x-4"
+            style={{
+              marginRight: "30px",
+              width: "100%",
+            }}
+          >
+            <FormControl
+              variant="outlined"
+              style={{ marginRight: "30px", width: "20%", fontSize: "16px" }}
+            >
+              <InputLabel id="location-label">Location</InputLabel>
+              <Select
+                labelId="location-label"
+                value={selectedCity}
+                onChange={handleCityChange}
+                label="Location"
+                style={{
+                  fontSize: "16px",
+                }}
+              >
+                <MenuItem value="">
+                  <em>Any</em>
+                </MenuItem>
+                {ethiopianCities.map((city) => (
+                  <MenuItem
+                    key={city}
+                    value={city}
+                    style={{
+                      fontSize: "16px",
+                    }}
+                  >
+                    {city}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Start Date"
+              type="date"
+              variant="outlined"
+              value={startDate}
+              onChange={handleStartDateChange}
+              InputLabelProps={{
+                style: { fontSize: "16px" },
+                shrink: true,
+              }}
+              InputProps={{
+                style: { fontSize: "16px" },
+              }}
+              style={{
+                marginRight: "30px",
+                width: "20%",
+              }}
+            />
+            <TextField
+              label="End Date"
+              type="date"
+              variant="outlined"
+              value={endDate}
+              onChange={handleEndDateChange}
+              InputLabelProps={{
+                style: { fontSize: "16px" },
+                shrink: true,
+              }}
+              InputProps={{
+                style: { fontSize: "16px" },
+              }}
+              style={{
+                marginRight: "30px",
+                width: "20%",
+              }}
+            />
+          </div>
           <div style={styles.filterContainer}>
             <div style={styles.filterRow}>
               <div style={styles.formControl}>
@@ -218,7 +321,14 @@ const Search = () => {
                   <ResultsGrid vehicles={filteredVehicles} />
                 </>
               ) : (
-                <div style={{ textAlign: "center", color: "#6b7280" }}>
+                <div
+                  style={{
+                    textAlign: "center",
+                    color: "#6b7280",
+                    fontSize: "16px",
+                    marginTop: "20px",
+                  }}
+                >
                   No vehicles found.
                 </div>
               )}
