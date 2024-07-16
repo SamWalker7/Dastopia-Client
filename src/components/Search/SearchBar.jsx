@@ -96,17 +96,6 @@ const SearchBar = () => {
           width: "20%",
         }}
       />
-      <Button
-        variant="contained"
-        color="primary"
-        style={{
-          padding: "13px",
-          width: "20%",
-          fontSize: "13px",
-        }}
-      >
-        Search
-      </Button>
     </div>
   );
 };

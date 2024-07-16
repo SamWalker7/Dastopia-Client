@@ -43,14 +43,6 @@ const Filters = () => {
     <div style={styles.filterContainer}>
       <div style={styles.filterRow}>
         <div style={styles.formControl}>
-          <label style={styles.label}>Sort By</label>
-          <select style={styles.select}>
-            <option value="relevance">Relevance</option>
-            <option value="price-low-to-high">Price: Low to High</option>
-            <option value="price-high-to-low">Price: High to Low</option>
-          </select>
-        </div>
-        <div style={styles.formControl}>
           <label style={styles.label}>Make</label>
           <select style={styles.select}>
             <option value="any">Any</option>
