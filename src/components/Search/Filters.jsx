@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-} from "@mui/material";
+import { Checkbox, FormControlLabel, FormGroup } from "@mui/material";
 
 const styles = {
   filterContainer: {
@@ -20,17 +12,25 @@ const styles = {
   },
   filterRow: {
     display: "flex",
-    marginBottom: "16px",
     flexWrap: "wrap",
   },
   formControl: {
     minWidth: "120px",
     marginRight: "16px",
     marginBottom: "10px",
+    marginLeft: "16px",
   },
   label: {
     fontWeight: "bold",
     marginBottom: "8px",
+    display: "block",
+  },
+  select: {
+    padding: "8px",
+    paddingRight: "100px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    width: "100%",
   },
   checkboxGroup: {
     display: "flex",
@@ -42,100 +42,55 @@ const Filters = () => {
   return (
     <div style={styles.filterContainer}>
       <div style={styles.filterRow}>
-        <FormControl style={styles.formControl}>
-          <InputLabel style={styles.label}>Sort By</InputLabel>
-          <Select
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  maxHeight: 200,
-                  width: 250,
-                },
-              },
-            }}
-          >
-            <MenuItem value="relevance">Relevance</MenuItem>
-            <MenuItem value="price-low-to-high">Price: Low to High</MenuItem>
-            <MenuItem value="price-high-to-low">Price: High to Low</MenuItem>
-          </Select>
-        </FormControl>
-        <FormControl style={styles.formControl}>
-          <InputLabel style={styles.label}>Daily Price Range</InputLabel>
-          <Select
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  maxHeight: 200,
-                  width: 250,
-                },
-              },
-            }}
-          >
-            <MenuItem value="any">Any</MenuItem>
-            <MenuItem value="0-50">$0 - $50</MenuItem>
-            <MenuItem value="51-100">$51 - $100</MenuItem>
-            <MenuItem value="101-200">$101 - $200</MenuItem>
-          </Select>
-        </FormControl>
-        <FormControl style={styles.formControl}>
-          <InputLabel style={styles.label}>Collection</InputLabel>
-          <Select
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  maxHeight: 200,
-                  width: 250,
-                },
-              },
-            }}
-          >
-            <MenuItem value="any">Any</MenuItem>
-            <MenuItem value="summer">Summer Collection</MenuItem>
-            <MenuItem value="winter">Winter Collection</MenuItem>
-          </Select>
-        </FormControl>
-        <FormControl style={styles.formControl}>
-          <InputLabel style={styles.label}>Vehicle Type</InputLabel>
-          <Select
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  maxHeight: 200,
-                  width: 250,
-                },
-              },
-            }}
-          >
-            <MenuItem value="any">Any</MenuItem>
-            <MenuItem value="sedan">Sedan</MenuItem>
-            <MenuItem value="suv">SUV</MenuItem>
-            <MenuItem value="convertible">Convertible</MenuItem>
-          </Select>
-        </FormControl>
-        <FormControl style={styles.formControl}>
-          <InputLabel style={styles.label}>Make</InputLabel>
-          <Select
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  maxHeight: 200,
-                  width: 250,
-                },
-              },
-            }}
-          >
-            <MenuItem value="any">Any</MenuItem>
-            <MenuItem value="toyota">Toyota</MenuItem>
-            <MenuItem value="honda">Honda</MenuItem>
-            <MenuItem value="ford">Ford</MenuItem>
-          </Select>
-        </FormControl>
+        <div style={styles.formControl}>
+          <label style={styles.label}>Sort By</label>
+          <select style={styles.select}>
+            <option value="relevance">Relevance</option>
+            <option value="price-low-to-high">Price: Low to High</option>
+            <option value="price-high-to-low">Price: High to Low</option>
+          </select>
+        </div>
+        <div style={styles.formControl}>
+          <label style={styles.label}>Daily Price Range</label>
+          <select style={styles.select}>
+            <option value="any">Any</option>
+            <option value="0-50">$0 - $50</option>
+            <option value="51-100">$51 - $100</option>
+            <option value="101-200">$101 - $200</option>
+          </select>
+        </div>
+        <div style={styles.formControl}>
+          <label style={styles.label}>Collection</label>
+          <select style={styles.select}>
+            <option value="any">Any</option>
+            <option value="summer">Summer Collection</option>
+            <option value="winter">Winter Collection</option>
+          </select>
+        </div>
+        <div style={styles.formControl}>
+          <label style={styles.label}>Vehicle Type</label>
+          <select style={styles.select}>
+            <option value="any">Any</option>
+            <option value="sedan">Sedan</option>
+            <option value="suv">SUV</option>
+            <option value="convertible">Convertible</option>
+          </select>
+        </div>
+        <div style={styles.formControl}>
+          <label style={styles.label}>Make</label>
+          <select style={styles.select}>
+            <option value="any">Any</option>
+            <option value="toyota">Toyota</option>
+            <option value="honda">Honda</option>
+            <option value="ford">Ford</option>
+          </select>
+        </div>
       </div>
-      <FormGroup row style={styles.checkboxGroup}>
+      {/* <FormGroup row style={styles.checkboxGroup}>
         <FormControlLabel control={<Checkbox />} label="Free Cancellation" />
         <FormControlLabel control={<Checkbox />} label="Instant Book" />
         <FormControlLabel control={<Checkbox />} label="Delivered to You" />
-      </FormGroup>
+      </FormGroup> */}
     </div>
   );
 };
