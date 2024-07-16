@@ -30,7 +30,7 @@ const ResultsGrid = ({ vehicles }) => {
       style={{
         overflowY: "scroll",
         maxHeight: "410px",
-        marginTop: "2px",
+        // marginTop: "2px",
         width: "95%",
       }}
     >

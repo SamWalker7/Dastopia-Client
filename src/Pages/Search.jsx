@@ -89,7 +89,7 @@ const Search = () => {
 
   const gridContainerStyle = {
     display: "flex",
-    // marginTop: "20px",
+    marginTop: "20px",
     width: "100%",
     border: "2px solid #6b7280",
     borderRadius: "5px",
