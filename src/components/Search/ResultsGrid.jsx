@@ -39,14 +39,9 @@ const ResultsGrid = ({ vehicles }) => {
           item
           xs={12}
           key={vehicle.id}
-          style={{
-            "@media (min-width: 768px)": {
-              marginLeft: "20px",
-              marginRight: "100px",
-            },
-            "@media (max-width: 768px)": {
-              margin: "0 auto",
-            },
+          sx={{
+            marginLeft: { xs: "20px", md: "20px" },
+            marginRight: { xs: "0px", md: "100px" },
           }}
         >
           <Card
