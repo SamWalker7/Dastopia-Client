@@ -27,18 +27,15 @@ export default function Details(props) {
                 vehicles.map(async (vehicle) => {
                     await dispatch(fetchImages(vehicle))
                 })
-
             }
         }
-
         if (vehicles.length < 1) {
             loadData();
         }
     }, []);
 
     useEffect(() => {
-        const f = vehicles.map((v) => {
-
+       vehicles.map((v) => {
             if (v.id === id){
                 setSelected(v);
                 if(!v.imageLoading) {
@@ -50,10 +47,7 @@ export default function Details(props) {
         })
     }, [vehicles]);
 
-    console.log(vehicles,"selected")
-
-   
-
+    
     return (
         <>
             {
@@ -67,8 +61,6 @@ export default function Details(props) {
                         </Carousel>
 
                     </div>
-
-
                     <div style={{ display: "flex", justifyContent: "flex-start", alignContent: "flex-start", alignItems: "flex-start", maxWidth: "1500px", width: "100%", padding: "15px", }}>
                         <div style={{ width: "100%" }}>
                             <h1 style={{ fontSize: "45px", fontWeight: "bolder" }}>{selected.make} {selected.model}</h1>
@@ -153,13 +145,12 @@ export default function Details(props) {
                             </div>
 
                             <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "2px" }}>
-                                <button style={{ maxWidth: "190px", background: "", padding: "4px 20px 4px 20px", border: "1px solid blue", borderRadius: "10px" }} className="colored-button">
+                                <button style={{ maxWidth: "190px", background: "", padding: "10px 20px 10px 20px", border: "1px solid blue", borderRadius: "10px", cursor: "pointer" }} className="colored-button">
                                     Continue
                                 </button>
                             </div>
                         </div>
                     </div>
-
                     <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1500px" }}>
                         <div style={{ width: "100%", }}>
 
@@ -174,14 +165,11 @@ export default function Details(props) {
                             </p>
                         </div>
                     </div>
-
                     <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1500px", marginTop: "20px" }}>
                         <div style={{ width: "100%", }}>
                             <MapComponent />
                         </div>
                     </div>
-
-
                 </div>) : <div style={{ paddingTop: "200px" }}> <p style={{ fontSize: "20px" }}> loading ... </p></div>
             }
         </>
