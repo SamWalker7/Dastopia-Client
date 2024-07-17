@@ -9,10 +9,10 @@ const containerStyle = {
     height: '400px'
 };
 
-//, 
+
 const center = {
-    lat: 8.680278890373764,
-    lng: 39.633608174965495
+    lat: 8.99150046103335,
+    lng: 38.773171909982715
 };
 
 
@@ -24,14 +24,19 @@ const createCustomIcon = (text) => {
       </svg>
     `;
     return {
-      url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+        url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
     };
-  };
+};
 
 const locations = [
 
-    { id: 1, position : {lat: 8.706280431641833, lng: 38.809424652692734}, text:"37$" },
-    
+    {
+        id: 1, position: {
+            lat: 8.99150046103335,
+            lng: 38.773171909982715
+        }, text: "37$"
+    },
+
 ];
 
 const MapComponent = () => {
@@ -45,11 +50,11 @@ const MapComponent = () => {
                 <GoogleMap
                     mapContainerStyle={containerStyle}
                     center={center}
-                    zoom={7}
+                    zoom={13}
                     onLoad={onLoad}
                 >
                     {locations.map((location, index) => (
-                        <Marker key={index} position={location.position} icon={createCustomIcon(location.text)} />
+                        <Marker key={index} position={location.position} />
                     ))}
                 </GoogleMap>
             </LoadScript>
