@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import Logo from "../images/logo/logo192.png";
 import { useState } from "react";
 
@@ -19,34 +19,34 @@ function Navbar() {
           </div>
           <ul className="mobile-navbar__links">
             <li>
-              <Link onClick={openNav} to="/">
+              <NavLink onClick={openNav} to="/">
                 Home
-              </Link>
+              </NavLink>
             </li>
             <li>
-              <Link onClick={openNav} to="/about">
+              <NavLink onClick={openNav} to="/about">
                 About
-              </Link>
+              </NavLink>
             </li>
             <li>
-              <Link onClick={openNav} to="/models">
+              <NavLink onClick={openNav} to="/models">
                 Vehicles
-              </Link>
+              </NavLink>
             </li>
             <li>
-              <Link onClick={openNav} to="/testimonials">
+              <NavLink onClick={openNav} to="/testimonials">
                 Testimonials
-              </Link>
+              </NavLink>
             </li>
             <li>
-              <Link onClick={openNav} to="/team">
+              <NavLink onClick={openNav} to="/team">
                 Our Team
-              </Link>
+              </NavLink>
             </li>
             <li>
-              <Link onClick={openNav} to="/contact">
+              <NavLink onClick={openNav} to="/contact">
                 Contact
-              </Link>
+              </NavLink>
             </li>
           </ul>
         </div>
