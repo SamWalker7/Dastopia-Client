@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchVehicles, fetchImages } from "../store/slices/vehicleSlice";
 import { TextField } from "@mui/material";
 import { Select, MenuItem, InputLabel, FormControl } from "@mui/material";
+import shadows from "@mui/material/styles/shadows";
 
 const Search = () => {
   const dispatch = useDispatch();
@@ -104,6 +105,9 @@ const Search = () => {
     backgroundColor: "white",
     padding: "16px",
     width: "50%",
+    "@media (max-width: 768px)": {
+      display: "none",
+    },
   };
 
   const mapDetailsStyle = {
@@ -116,12 +120,15 @@ const Search = () => {
 
   const styles = {
     filterContainer: {
-      padding: "16px",
-      backgroundColor: "#f0f0f0",
+      paddingLeft: "16px",
+      paddingRight: "16px",
+      paddingTop: "7px",
+      backgroundColor: "#ffffff",
+      boxShadow: shadows[1],
       border: "1px solid #ccc",
       borderRadius: "4px",
       marginBottom: "16px",
-      marginTop: "20px",
+      marginTop: "16px",
       display: "flex",
       flexWrap: "wrap",
     },
@@ -130,7 +137,7 @@ const Search = () => {
       marginRight: "16px",
       marginBottom: "10px",
       flex: "1 0 20%",
-      marginTop: "2rem",
+      marginTop: "0.5rem",
     },
     label: {
       fontWeight: "bold",
@@ -152,17 +159,14 @@ const Search = () => {
     },
   };
 
-  // Adjust styles for mobile view
   if (typeof window !== "undefined" && window.innerWidth < 768) {
     gridContainerStyle.flexDirection = "column";
     colSpanStyle.width = "100%";
-    mapContainerStyle.width = "100%";
-    mapContainerStyle.marginLeft = "0";
+    mapContainerStyle.display = "none";
 
-    // Make location and time filters full-width
     styles.formControl = {
       ...styles.formControl,
-      minWidth: "100%", // Adjusted width for PC
+      minWidth: "100%",
     };
   }
 

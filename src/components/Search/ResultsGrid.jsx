@@ -73,7 +73,8 @@ const ResultsGrid = ({ vehicles }) => {
                       sx={{
                         opacity: 0,
                         transition: "opacity 0.5s ease-in-out",
-                        borderRadius: "8px",
+                        borderTopLeftRadius: "8px",
+                        borderBottomLeftRadius: "8px",
                       }}
                     />
                   ) : (
