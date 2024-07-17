@@ -16,7 +16,7 @@ function Contact() {
                 years of experience.
               </p>
               <a href="/">
-                <i className="fa-solid fa-phone"></i>&nbsp; (123) 456-7869
+                <i className="fa-solid fa-phone"></i>&nbsp; +251946888444
               </a>
               <a href="/">
                 <i className="fa-solid fa-envelope"></i>&nbsp;
@@ -59,7 +59,7 @@ function Contact() {
               <h2>Book a car by getting in touch with us</h2>
               <span>
                 <i className="fa-solid fa-phone"></i>
-                <h3>(123) 456-7869</h3>
+                <h3>+251946888444</h3>
               </span>
             </div>
           </div>
