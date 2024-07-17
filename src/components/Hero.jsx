@@ -3,7 +3,7 @@ import BgShape from "../images/hero/hero-bg.png";
 import HeroCar from "../images/hero/main-car.png";
 import { useEffect, useState } from "react";
 
-function Hero() {
+function Hero({ isHome = false }) {
   const [goUp, setGoUp] = useState(false);
 
   const scrollToTop = () => {
@@ -34,7 +34,9 @@ function Hero() {
     <>
       <section id="home" className="hero-section">
         <div className="container">
-          <img className="bg-shape" src={BgShape} alt="bg-shape" />
+          {
+            <img className="bg-shape" src={BgShape} alt="bg-shape" />
+          }
           <div className="hero-content">
             <div className="hero-content__text">
               <h4>Plan your trip now</h4>
