@@ -9,18 +9,22 @@ import Person6 from "../images/team/6.png";
 
 function Team() {
   const teamPpl = [
-    { img: Person1, name: "Luke Miller", job: "Salesman" },
-    { img: Person2, name: "Michael Diaz", job: "Business Owner" },
-    { img: Person3, name: "Briana Ross", job: "Photographer" },
-    { img: Person4, name: "Lauren Rivera", job: "Car Detailist" },
-    { img: Person5, name: "Martin Rizz", job: "Mechanic" },
-    { img: Person6, name: "Caitlyn Hunt", job: "Menager" },
+    { img: Person1, name: "Abraham Wendmeneh", job: "Developer" },
+    { img: Person1, name: "Michael Demeke", job: "Business Lead" },
+    { img: Person3, name: "Sosina Yitay", job: "Marketer" },
+    { img: Person1, name: "Dawit Aschalew", job: "Developer" },
+    { img: Person1, name: "Biniam Haile", job: "Developer" },
+    { img: Person1, name: "Yonathan Tesfaye", job: "Designer" },
+    { img: Person1, name: "Samuel Derib", job: "Team Lead" },
+    { img: Person1, name: "Dagimawi Woldesenbet", job: "Team Lead" },
+    { img: Person1, name: "Naol Zebene", job: "Junior Software Developer" },
+    { img: Person1, name: "Tinsaye Simeneh", job: "Junior Software Developer" },
   ];
   return (
     <>
       <section className="team-page">
         <HeroPages name="Our Team" />
-        <div className="cotnainer">
+        <div className="container">
           <div className="team-container">
             {teamPpl.map((ppl, id) => (
               <div key={id} className="team-container__box">
