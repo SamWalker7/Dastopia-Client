@@ -98,13 +98,14 @@ const Search = () => {
   };
 
   const colSpanStyle = {
-    width: "60%",
+    width: "50%",
   };
 
   const mapContainerStyle = {
     backgroundColor: "white",
     padding: "16px",
     width: "50%",
+
     "@media (max-width: 768px)": {
       display: "none",
     },

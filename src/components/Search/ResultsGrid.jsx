@@ -54,8 +54,8 @@ const ResultsGrid = ({ vehicles }) => {
             xs={12}
             key={vehicle.id}
             sx={{
-              marginLeft: { xs: "20px", md: "20px" },
-              marginRight: { xs: "0px", md: "100px" },
+              marginLeft: { xs: "20px", md: "10px" },
+              marginRight: { xs: "0px", md: "20px" },
             }}
           >
             <Card
