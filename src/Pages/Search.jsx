@@ -184,7 +184,7 @@ const Search = () => {
           style={{
             boxShadow: "shadows[4]",
             paddingBottom: "16px",
-            marginBottom: "16px",
+            marginBottom: "5px",
           }}
         >
           <div style={styles.filterContainer}>
