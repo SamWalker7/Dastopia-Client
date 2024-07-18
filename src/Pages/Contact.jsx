@@ -11,16 +11,13 @@ function Contact() {
             <div className="contact-div__text">
               <h2>Need additional information?</h2>
               <p>
-                A multifaceted professional skilled in multiple fields of
-                research, development as well as a learning specialist. Over 15
-                years of experience.
+              Need assistance? We're here to help. Contact us for any questions about our vehicles, rental policies, or booking process. Our team is dedicated to ensuring a smooth and enjoyable rental experience. Reach out today!
               </p>
               <a href="/">
-                <i className="fa-solid fa-phone"></i>&nbsp; (123) 456-7869
+                <i className="fa-solid fa-phone"></i>&nbsp; +251946888444
               </a>
               <a href="/">
-                <i className="fa-solid fa-envelope"></i>&nbsp;
-                carrental@xyz.com
+                <i className="fa-solid fa-envelope"></i>&nbsp; carrental@xyz.com
               </a>
               <a href="/">
                 <i className="fa-solid fa-location-dot"></i>&nbsp; Bengaluru,
@@ -30,9 +27,32 @@ function Contact() {
             <div className="contact-div__form">
               <form>
                 <label>
-                  Full Name <b>*</b>
+                  First Name <b>*</b>
                 </label>
-                <input type="text" placeholder='E.g: "Joe Shmoe"'></input>
+                <input type="text" placeholder='E.g: "John"'></input>
+
+                <label>
+                  Last Name <b>*</b>
+                </label>
+                <input type="text" placeholder='E.g: "Doe"'></input>
+
+                <label>
+                  Phone Number <b>*</b>
+                </label>
+                <input type="number" placeholder='E.g: "+123456789"'></input>
+
+                <label>
+                  Company Name (Optional) <b>*</b>
+                </label>
+                <input
+                  type="text"
+                  placeholder='E.g: "Das Technologies"'
+                ></input>
+
+                <label>
+                  Job Role (Optional) <b>*</b>
+                </label>
+                <input type="text" placeholder='E.g: "CEO"'></input>
 
                 <label>
                   Email <b>*</b>
@@ -59,7 +79,7 @@ function Contact() {
               <h2>Book a car by getting in touch with us</h2>
               <span>
                 <i className="fa-solid fa-phone"></i>
-                <h3>(123) 456-7869</h3>
+                <h3>+251946888444</h3>
               </span>
             </div>
           </div>
