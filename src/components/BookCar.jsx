@@ -48,6 +48,9 @@ function BookCar() {
                   <select value={pickUp} onChange={handlePick}>
                     <option>Select pick up location</option>
                     <option>Addis Ababa</option>
+                    <option>Adama</option>
+                    <option>Hawassa</option>
+                    <option>Bahir Dar</option>
                   </select>
                 </div>
 

@@ -48,6 +48,18 @@ const Search = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  useEffect(() => {
+    // Function to extract query parameters from URL
+    const getQueryParam = (name) => {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    };
+    const pickupLocation = getQueryParam("pickUp");
+    if (pickupLocation && ethiopianCities.includes(pickupLocation)) {
+      setSelectedCity(pickupLocation);
+    }
+  }, []);
+
   const handleCityChange = (event) => {
     setSelectedCity(event.target.value);
   };
