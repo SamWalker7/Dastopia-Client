@@ -158,6 +158,7 @@ const Search = () => {
       color: "#6b7280",
       fontSize: "15px",
       paddingLeft: "30px",
+      marginBottom: "3px",
     },
   };
 
@@ -168,6 +169,10 @@ const Search = () => {
 
     styles.formControl = {
       ...styles.formControl,
+      minWidth: "100%",
+    };
+    styles.topFormControl = {
+      ...styles.topFormControl,
       minWidth: "100%",
     };
   }
@@ -275,7 +280,12 @@ const Search = () => {
         <div style={gridContainerStyle}>
           <div style={colSpanStyle}>
             {isLoading ? (
-              <div style={{ textAlign: "center", marginTop: "20px" }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  marginTop: "20px",
+                }}
+              >
                 <CircularProgress />
               </div>
             ) : filteredVehicles.length > 0 ? (
