@@ -26,25 +26,24 @@ function Models() {
 
   const vehicles = useSelector((state) => state.vehicle.vehicles);
   const isLoading = useSelector((state) => state.vehicle.loading);
+  console.log(vehicles);
 
   useEffect(() => {
     const loadData = async () => {
-      const response = await dispatch(fetchVehicles())
+      const response = await dispatch(fetchVehicles());
       if (fetchVehicles.fulfilled.match(response)) {
         const vehicles = response.payload;
         vehicles.map(async (vehicle) => {
-          await dispatch(fetchImages(vehicle))
-        })
-
+          await dispatch(fetchImages(vehicle));
+        });
       }
-    }
+    };
 
     if (vehicles.length < 1) {
       loadData();
     }
     // loadData();
-  }, [])
-
+  }, []);
 
   return (
     <>
@@ -56,11 +55,7 @@ function Models() {
           <div className="container">
             <div className="models-div">
               {vehicles.map((vehicle, index) => (
-                <VehicleCard 
-                  vehicle={vehicle}
-                  key={vehicle.id}
-                  index={index}
-                  />
+                <VehicleCard vehicle={vehicle} key={vehicle.id} index={index} />
                 // <div className="models-div__box">
                 //   <div className="models-div__box__img">
                 //     <img src={CarImg1} alt="car_img" />
@@ -110,8 +105,7 @@ function Models() {
                 //     </div>
                 //   </div>
                 // </div>
-              ))}
-              {" "}
+              ))}{" "}
               {/* <div className="models-div__box">
                 //{" "}
                 <div className="models-div__box__img">
