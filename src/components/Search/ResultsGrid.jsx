@@ -12,6 +12,7 @@ import {
 
 const ResultsGrid = ({ vehicles }) => {
   const [imageUrls, setImageUrls] = useState([]);
+  const [imageLoaded, setImageLoaded] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const indexOfLastVehicle = currentPage * itemsPerPage;
@@ -34,7 +35,14 @@ const ResultsGrid = ({ vehicles }) => {
       }
     });
     setImageUrls(urls);
+    setImageLoaded(new Array(urls.length).fill(false)); // Initialize all imageLoaded states to false
   }, [vehicles]);
+
+  const handleImageLoad = (index) => {
+    const updatedImageLoaded = [...imageLoaded];
+    updatedImageLoaded[index] = true;
+    setImageLoaded(updatedImageLoaded);
+  };
 
   return (
     <>
@@ -45,10 +53,11 @@ const ResultsGrid = ({ vehicles }) => {
           overflowY: "scroll",
           maxHeight: "410px",
           marginTop: "2px",
+          paddingBottom: "3rem",
           width: "95%",
-          scrollbarWidth: "none", // For Firefox
+          scrollbarWidth: "none",
           "&::-webkit-scrollbar": {
-            display: "none", // For Chrome, Safari, and Opera
+            display: "none",
           },
         }}
       >
@@ -75,7 +84,7 @@ const ResultsGrid = ({ vehicles }) => {
               <Grid container>
                 <Grid item xs={12} md={4}>
                   <div>
-                    {imageUrls[indexOfFirstVehicle + index] ? (
+                    {imageLoaded[indexOfFirstVehicle + index] ? (
                       <CardMedia
                         component="img"
                         height="auto"
@@ -85,12 +94,12 @@ const ResultsGrid = ({ vehicles }) => {
                         onError={(e) => {
                           e.target.src = "https://via.placeholder.com/300";
                         }}
-                        onLoad={(e) => {
-                          e.target.style.opacity = 1;
-                        }}
+                        onLoad={() =>
+                          handleImageLoad(indexOfFirstVehicle + index)
+                        }
                         sx={{
-                          opacity: 0,
                           transition: "opacity 0.5s ease-in-out",
+                          opacity: 1,
                           borderTopLeftRadius: "8px",
                           borderBottomLeftRadius: "8px",
                         }}

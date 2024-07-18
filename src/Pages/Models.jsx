@@ -47,10 +47,18 @@ function Models() {
 
   return (
     <>
-      <section className="models-section" style={{paddingTop: "100px"}}>
-        
+      <section
+        className="models-section"
+        style={{ paddingTop: "100px", textAlign: "center" }}
+      >
         {isLoading ? (
-          <CircularProgress />
+          <div
+            style={{
+              paddingTop: "5rem",
+            }}
+          >
+            <CircularProgress />
+          </div>
         ) : (
           <div className="container">
             <div className="models-div">
