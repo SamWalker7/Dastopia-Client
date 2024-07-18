@@ -89,9 +89,7 @@ const Search = () => {
 
   const gridContainerStyle = {
     display: "flex",
-    marginTop: "20px",
     width: "100%",
-    border: "2px solid #6b7280",
     borderRadius: "5px",
     padding: "10px",
     justifyContent: "center",
@@ -123,15 +121,18 @@ const Search = () => {
     filterContainer: {
       paddingLeft: "16px",
       paddingRight: "16px",
-      paddingTop: "7px",
+      paddingTop: "5px",
       backgroundColor: "#ffffff",
-      boxShadow: shadows[1],
-      border: "1px solid #ccc",
       borderRadius: "4px",
-      marginBottom: "16px",
-      marginTop: "16px",
       display: "flex",
       flexWrap: "wrap",
+    },
+    topFormControl: {
+      minWidth: "20%",
+      marginRight: "16px",
+      marginTop: "0.5rem",
+      marginBottom: "2rem",
+      height: "3vh",
     },
     formControl: {
       minWidth: "20%",
@@ -139,21 +140,21 @@ const Search = () => {
       marginBottom: "10px",
       flex: "1 0 20%",
       marginTop: "0.5rem",
+      height: "6vh",
     },
     label: {
       fontWeight: "bold",
-      marginBottom: "8px",
+      marginBottom: "2px",
       display: "block",
     },
     select: {
-      padding: "8px",
-      paddingRight: "100px",
+      padding: "3px",
       borderRadius: "4px",
       border: "1px solid #ccc",
       width: "100%",
+      height: "4vh",
     },
     resultInfo: {
-      marginTop: "10px",
       color: "#6b7280",
       fontSize: "15px",
       paddingLeft: "30px",
@@ -172,52 +173,52 @@ const Search = () => {
   }
 
   return (
-    <div style={{ padding: "30px", position: "relative", paddingTop: "23rem" }}>
+    <div style={{ padding: "30px", position: "relative", paddingTop: "20rem" }}>
       <main>
-        <div>
-          <div className="my-4 flex items-center space-x-4">
-            <FormControl variant="outlined" style={styles.formControl}>
-              <InputLabel id="location-label">Location</InputLabel>
-              <Select
-                labelId="location-label"
+        <div
+          style={{
+            boxShadow: "shadows[4]",
+            paddingBottom: "16px",
+            marginBottom: "16px",
+          }}
+        >
+          <div style={styles.filterContainer}>
+            <div style={styles.topFormControl}>
+              <label style={styles.label}>Location</label>
+              <select
+                style={styles.select}
                 value={selectedCity}
                 onChange={handleCityChange}
-                label="Location"
-                style={{ width: "100%" }}
               >
-                <MenuItem value="">
-                  <em>Any</em>
-                </MenuItem>
                 {ethiopianCities.map((city) => (
-                  <MenuItem key={city} value={city}>
+                  <option key={city} value={city}>
                     {city}
-                  </MenuItem>
+                  </option>
                 ))}
-              </Select>
-            </FormControl>
+              </select>
+            </div>
 
-            <TextField
-              label="Start Date"
-              type="date"
-              variant="outlined"
-              value={startDate}
-              onChange={handleStartDateChange}
-              InputLabelProps={{ shrink: true }}
-              style={styles.formControl}
-            />
-            <TextField
-              label="End Date"
-              type="date"
-              variant="outlined"
-              value={endDate}
-              onChange={handleEndDateChange}
-              InputLabelProps={{ shrink: true }}
-              style={styles.formControl}
-            />
+            <div style={styles.topFormControl}>
+              <label style={styles.label}>Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={handleStartDateChange}
+                style={styles.select}
+              />
+            </div>
+            <div style={styles.topFormControl}>
+              <label style={styles.label}>End Date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={handleEndDateChange}
+                style={styles.select}
+              />
+            </div>
           </div>
-
           <div style={styles.filterContainer}>
-            <div style={styles.formControl}>
+            <div style={styles.topFormControl}>
               <label style={styles.label}>Make</label>
               <select
                 style={styles.select}
@@ -230,7 +231,7 @@ const Search = () => {
                 <option value="Ford">Ford</option>
               </select>
             </div>
-            <div style={styles.formControl}>
+            <div style={styles.topFormControl}>
               <label style={styles.label}>Model</label>
               <select
                 style={styles.select}
@@ -243,7 +244,7 @@ const Search = () => {
                 <option value="Focus">Focus</option>
               </select>
             </div>
-            <div style={styles.formControl}>
+            <div style={styles.topFormControl}>
               <label style={styles.label}>Transmission</label>
               <select
                 style={styles.select}
@@ -255,7 +256,7 @@ const Search = () => {
                 <option value="Manual">Manual</option>
               </select>
             </div>
-            <div style={styles.formControl}>
+            <div style={styles.topFormControl}>
               <label style={styles.label}>Category</label>
               <select
                 style={styles.select}
@@ -269,49 +270,49 @@ const Search = () => {
               </select>
             </div>
           </div>
+        </div>
 
-          <div style={gridContainerStyle}>
-            <div style={colSpanStyle}>
-              {isLoading ? (
-                <div style={{ textAlign: "center", marginTop: "20px" }}>
-                  <CircularProgress />
-                </div>
-              ) : filteredVehicles.length > 0 ? (
-                <div
-                  style={{
-                    "@media (min-width: 768px)": {
-                      width: "90vw",
-                      maxWidth: "800px",
-                      margin: "0 auto",
-                      paddingLeft: "30px",
-                    },
-                    "@media (max-width: 768px)": {
-                      width: "100vw",
-                      paddingLeft: "0px",
-                    },
-                  }}
-                >
-                  <div style={styles.resultInfo}>
-                    {filteredVehicles.length} vehicle(s) found.
-                  </div>
-                  <ResultsGrid vehicles={filteredVehicles} />
-                </div>
-              ) : (
-                <div
-                  style={{
-                    textAlign: "center",
-                    marginTop: "20px",
-                    color: "#6b7280",
-                  }}
-                >
-                  No vehicles found.
-                </div>
-              )}
-            </div>
-            <div style={mapContainerStyle}>
-              <div style={mapDetailsStyle}>
-                Map details will be displayed here.
+        <div style={gridContainerStyle}>
+          <div style={colSpanStyle}>
+            {isLoading ? (
+              <div style={{ textAlign: "center", marginTop: "20px" }}>
+                <CircularProgress />
               </div>
+            ) : filteredVehicles.length > 0 ? (
+              <div
+                style={{
+                  "@media (min-width: 768px)": {
+                    width: "90vw",
+                    maxWidth: "800px",
+                    margin: "0 auto",
+                    paddingLeft: "30px",
+                  },
+                  "@media (max-width: 768px)": {
+                    width: "100vw",
+                    paddingLeft: "0px",
+                  },
+                }}
+              >
+                <div style={styles.resultInfo}>
+                  {filteredVehicles.length} vehicle(s) found.
+                </div>
+                <ResultsGrid vehicles={filteredVehicles} />
+              </div>
+            ) : (
+              <div
+                style={{
+                  textAlign: "center",
+                  marginTop: "20px",
+                  color: "#6b7280",
+                }}
+              >
+                No vehicles found.
+              </div>
+            )}
+          </div>
+          <div style={mapContainerStyle}>
+            <div style={mapDetailsStyle}>
+              Map details will be displayed here.
             </div>
           </div>
         </div>
