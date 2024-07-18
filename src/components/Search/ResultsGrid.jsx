@@ -92,6 +92,7 @@ const ResultsGrid = ({ vehicles }) => {
                         alt={`Vehicle Image ${index}`}
                         style={{ maxHeight: "100%", objectFit: "cover" }}
                         onError={(e) => {
+                          e.target.onerror = null; // Prevent looping in case placeholder also fails
                           e.target.src = "https://via.placeholder.com/300";
                         }}
                         onLoad={() =>
@@ -124,7 +125,7 @@ const ResultsGrid = ({ vehicles }) => {
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "space-between",
-                      height: "100%", // Ensures content stretches to full height
+                      height: "100%",
                     }}
                   >
                     <div>
@@ -240,6 +241,9 @@ const ResultsGrid = ({ vehicles }) => {
                         variant="contained"
                         color="primary"
                         sx={{ alignSelf: "flex-end" }}
+                        onClick={() => {
+                          window.location.href = `/details/${vehicle.id}`;
+                        }}
                       >
                         View Details
                       </Button>
