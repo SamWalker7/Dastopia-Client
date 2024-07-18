@@ -17,8 +17,7 @@ function Contact() {
                 <i className="fa-solid fa-phone"></i>&nbsp; +251946888444
               </a>
               <a href="/">
-                <i className="fa-solid fa-envelope"></i>&nbsp;
-                carrental@xyz.com
+                <i className="fa-solid fa-envelope"></i>&nbsp; carrental@xyz.com
               </a>
               <a href="/">
                 <i className="fa-solid fa-location-dot"></i>&nbsp; Bengaluru,
@@ -28,9 +27,32 @@ function Contact() {
             <div className="contact-div__form">
               <form>
                 <label>
-                  Full Name <b>*</b>
+                  First Name <b>*</b>
                 </label>
-                <input type="text" placeholder='E.g: "Joe Shmoe"'></input>
+                <input type="text" placeholder='E.g: "John"'></input>
+
+                <label>
+                  Last Name <b>*</b>
+                </label>
+                <input type="text" placeholder='E.g: "Doe"'></input>
+
+                <label>
+                  Phone Number <b>*</b>
+                </label>
+                <input type="number" placeholder='E.g: "+123456789"'></input>
+
+                <label>
+                  Company Name (Optional) <b>*</b>
+                </label>
+                <input
+                  type="text"
+                  placeholder='E.g: "Das Technologies"'
+                ></input>
+
+                <label>
+                  Job Role (Optional) <b>*</b>
+                </label>
+                <input type="text" placeholder='E.g: "CEO"'></input>
 
                 <label>
                   Email <b>*</b>
