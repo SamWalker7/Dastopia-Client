@@ -711,31 +711,37 @@ body {
 .info-form__1col {
   grid-template-columns: 1fr !important;
 }
-.info-form__2col, .info-form__1col {
+.info-form__2col,
+.info-form__1col {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   padding: 1rem 0;
 }
 @media (max-width: 650px) {
-  .info-form__2col, .info-form__1col {
+  .info-form__2col,
+  .info-form__1col {
     grid-template-columns: 1fr;
   }
 }
-.info-form__2col span, .info-form__1col span {
+.info-form__2col span,
+.info-form__1col span {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
 }
-.info-form__2col span label, .info-form__1col span label {
+.info-form__2col span label,
+.info-form__1col span label {
   font-size: 1.6rem;
   font-weight: 500;
   color: #777777;
 }
-.info-form__2col span label b, .info-form__1col span label b {
+.info-form__2col span label b,
+.info-form__1col span label b {
   color: #2a43cf;
 }
-.info-form__2col span input, .info-form__1col span input {
+.info-form__2col span input,
+.info-form__1col span input {
   padding: 14px 15px;
   background-color: #dbdbdb;
   color: #555;
@@ -1518,7 +1524,8 @@ footer {
   line-height: 1.7;
   margin-bottom: 3rem;
 }
-.footer-content__1 li:nth-child(3), .footer-content__1 li:nth-child(4) {
+.footer-content__1 li:nth-child(3),
+.footer-content__1 li:nth-child(4) {
   font-size: 1.6rem;
   font-family: "Rubik", sans-serif;
   font-weight: 500;
@@ -1819,8 +1826,10 @@ footer {
   }
 }
 .models-div__box {
-  border: 1px solid #d5d5d5;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   border-radius: 0.3rem;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
   display: flex;
   width: 35rem;
   flex-direction: column;
@@ -1887,7 +1896,7 @@ footer {
   grid-template-columns: 1fr 1fr;
   row-gap: 2rem;
   -moz-column-gap: 7rem;
-       column-gap: 7rem;
+  column-gap: 7rem;
   margin-top: 2.5rem;
   margin: 2rem auto;
   padding-bottom: 2.5rem;
@@ -2079,4 +2088,4 @@ footer {
 .contact-div__form form button:hover {
   box-shadow: 0 10px 15px 0 rgba(118, 134, 202, 0.35);
   background-color: #3b2280;
-}/*# sourceMappingURL=styles.css.map */
+} /*# sourceMappingURL=styles.css.map */

@@ -11,12 +11,10 @@ function Contact() {
             <div className="contact-div__text">
               <h2>Need additional information?</h2>
               <p>
-                A multifaceted professional skilled in multiple fields of
-                research, development as well as a learning specialist. Over 15
-                years of experience.
+              Need assistance? We're here to help. Contact us for any questions about our vehicles, rental policies, or booking process. Our team is dedicated to ensuring a smooth and enjoyable rental experience. Reach out today!
               </p>
               <a href="/">
-                <i className="fa-solid fa-phone"></i>&nbsp; (123) 456-7869
+                <i className="fa-solid fa-phone"></i>&nbsp; +251946888444
               </a>
               <a href="/">
                 <i className="fa-solid fa-envelope"></i>&nbsp;
@@ -59,7 +57,7 @@ function Contact() {
               <h2>Book a car by getting in touch with us</h2>
               <span>
                 <i className="fa-solid fa-phone"></i>
-                <h3>(123) 456-7869</h3>
+                <h3>+251946888444</h3>
               </span>
             </div>
           </div>

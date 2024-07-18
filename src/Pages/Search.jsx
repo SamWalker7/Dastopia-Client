@@ -101,7 +101,7 @@ const Search = () => {
 
   const mapContainerStyle = {
     backgroundColor: "white",
-    padding: "16px",
+    // padding: "16px",
     width: "50%",
 
     "@media (max-width: 768px)": {
