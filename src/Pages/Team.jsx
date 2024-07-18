@@ -1,31 +1,34 @@
 import Footer from "../components/Footer";
 import HeroPages from "../components/HeroPages";
-import Person1 from "../images/team/1.png";
-import Person2 from "../images/team/2.png";
-import Person3 from "../images/team/3.png";
-import Person4 from "../images/team/4.png";
-import Person5 from "../images/team/5.png";
-import Person6 from "../images/team/6.png";
+import PersonIcon from "@mui/icons-material/Person";
 
 function Team() {
   const teamPpl = [
-    { img: Person1, name: "Luke Miller", job: "Salesman" },
-    { img: Person2, name: "Michael Diaz", job: "Business Owner" },
-    { img: Person3, name: "Briana Ross", job: "Photographer" },
-    { img: Person4, name: "Lauren Rivera", job: "Car Detailist" },
-    { img: Person5, name: "Martin Rizz", job: "Mechanic" },
-    { img: Person6, name: "Caitlyn Hunt", job: "Menager" },
+    { img: PersonIcon, name: "Abraham Wendmeneh", job: "Developer" },
+    { img: PersonIcon, name: "Michael Demeke", job: "Business Lead" },
+    { img: PersonIcon, name: "Sosina Yitay", job: "Marketer" },
+    { img: PersonIcon, name: "Dawit Aschalew", job: "Developer" },
+    { img: PersonIcon, name: "Biniam Haile", job: "Developer" },
+    { img: PersonIcon, name: "Yonathan Tesfaye", job: "Designer" },
+    { img: PersonIcon, name: "Samuel Derib", job: "Team Lead" },
+    { img: PersonIcon, name: "Dagimawi Woldesenbet", job: "Team Lead" },
+    { img: PersonIcon, name: "Naol Zebene", job: "Junior Software Developer" },
+    {
+      img: PersonIcon,
+      name: "Tinsaye Simeneh",
+      job: "Junior Software Developer",
+    },
   ];
   return (
     <>
       <section className="team-page">
         <HeroPages name="Our Team" />
-        <div className="cotnainer">
+        <div className="container">
           <div className="team-container">
             {teamPpl.map((ppl, id) => (
               <div key={id} className="team-container__box">
                 <div className="team-container__box__img-div">
-                  <img src={ppl.img} alt="team_img" />
+                  <PersonIcon sx={{ fontSize: 100 }} />
                 </div>
                 <div className="team-container__box__descr">
                   <h3>{ppl.name}</h3>
