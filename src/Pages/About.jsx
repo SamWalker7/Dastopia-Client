@@ -3,8 +3,8 @@ import HeroPages from "../components/HeroPages";
 import PlanTrip from "../components/PlanTrip";
 import AboutMain from "../images/about/about-main.jpg";
 import Box1 from "../images/about/icon1.png";
-import Box2 from "../images/about/icon2.png";
-import Box3 from "../images/about/icon3.png";
+import Box3 from "../images/about/icon2.png";
+import Box2 from "../images/about/icon3.png";
 
 function About() {
   return (
@@ -29,25 +29,50 @@ function About() {
                 strongly attended.
               </p>
               <div className="about-main__text__icons">
-                <div className="about-main__text__icons__box">
+                <div
+                  className="about-main__text__icons__box"
+                  style={{ marginTop: "10px" }}
+                >
                   <img src={Box1} alt="car-icon" />
                   <span>
-                    <h4>20</h4>
-                    <p>Car Types</p>
+                    <p>Car Type Varieties</p>
                   </span>
                 </div>
-                <div className="about-main__text__icons__box">
-                  <img src={Box2} alt="car-icon" />
+                <div
+                  className="about-main__text__icons__box"
+                  style={{
+                    textAlign: "center",
+                  }}
+                >
+                  <img
+                    src={Box2}
+                    alt="car-icon"
+                    style={{
+                      width: "50px",
+                      margin: "0 auto",
+                    }}
+                  />
                   <span>
-                    <h4>85</h4>
                     <p>24/7 Customer Support</p>
                   </span>
                 </div>
-                <div className="about-main__text__icons__box">
-                  <img src={Box3} alt="car-icon" className="last-fk" />
+                <div
+                  className="about-main__text__icons__box"
+                  style={{
+                    textAlign: "center",
+                  }}
+                >
+                  <img
+                    src={Box3}
+                    alt="car-icon"
+                    className="last-fk"
+                    style={{
+                      width: "60px",
+                      margin: "0 auto",
+                    }}
+                  />
                   <span>
-                    <h4>75</h4>
-                    <p>Insurance Coverage</p>
+                    <p>Full Insurance Coverage</p>
                   </span>
                 </div>
               </div>
