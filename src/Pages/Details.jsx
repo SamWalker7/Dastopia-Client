@@ -143,7 +143,7 @@ export default function Details(props) {
                             </div>
 
                             <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", maxWidth: "190px" }}>
-                                <label style={{ fontSize: "15px", fontWeight: "bold" }}>Trip start</label>
+                                <label style={{ fontSize: "15px", fontWeight: "bold" }}>Trip End</label>
                                 <TextField
                                     label="End Date"
                                     type="date"
