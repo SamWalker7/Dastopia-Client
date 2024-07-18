@@ -6,6 +6,7 @@ import { fetchVehicles, fetchImages } from "../store/slices/vehicleSlice";
 import { TextField } from "@mui/material";
 import { Select, MenuItem, InputLabel, FormControl } from "@mui/material";
 import shadows from "@mui/material/styles/shadows";
+import MapComponent from "../components/GoogleMaps";
 
 const Search = () => {
   const dispatch = useDispatch();
@@ -322,7 +323,7 @@ const Search = () => {
           </div>
           <div style={mapContainerStyle}>
             <div style={mapDetailsStyle}>
-              Map details will be displayed here.
+              <MapComponent />
             </div>
           </div>
         </div>
