@@ -9,8 +9,8 @@ import Box3 from "../images/about/icon3.png";
 function About() {
   return (
     <>
-      <section className="about-page">
-        <HeroPages name="About" />
+      <section className="about-page" style={{paddingTop: "100px"}}>
+       
         <div className="container">
           <div className="about-main">
             <img

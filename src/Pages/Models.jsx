@@ -65,8 +65,8 @@ function Models() {
 
   return (
     <>
-      <section className="models-section">
-        <HeroPages name="Vehicles List" />
+      <section className="models-section" style={{paddingTop: "100px"}}>
+        
         {isLoading ? (
           <CircularProgress />
         ) : (

@@ -18,8 +18,8 @@ function Team() {
   ];
   return (
     <>
-      <section className="team-page">
-        <HeroPages name="Our Team" />
+      <section className="team-page" style={{paddingTop: "100px"}}>
+       
         <div className="cotnainer">
           <div className="team-container">
             {teamPpl.map((ppl, id) => (

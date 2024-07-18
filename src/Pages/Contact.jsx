@@ -4,8 +4,8 @@ import HeroPages from "../components/HeroPages";
 function Contact() {
   return (
     <>
-      <section className="contact-page">
-        <HeroPages name="Contact" />
+      <section className="contact-page" style={{paddingTop: "100px"}}>
+       
         <div className="container">
           <div className="contact-div">
             <div className="contact-div__text">
