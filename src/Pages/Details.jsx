@@ -3,7 +3,7 @@ import Carousel from 'react-material-ui-carousel'
 import { Paper, Button } from '@mui/material'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchImages, fetchVehicles } from '../store/slices/vehicleSlice';
-import { Antenna, Armchair, Calendar, Car, CarFront, CircleDollarSign, DoorOpen, Fuel, List, PaintBucket, Phone } from 'lucide-react';
+import { Antenna, Armchair, Calendar, Car, CarFront, CircleDollarSign, CircleUser, DoorOpen, Fuel, List, PaintBucket, Phone } from 'lucide-react';
 import MapComponent from '../components/GoogleMaps';
 import { useParams } from 'react-router-dom';
 
@@ -35,25 +35,25 @@ export default function Details(props) {
     }, []);
 
     useEffect(() => {
-       vehicles.map((v) => {
-            if (v.id === id){
+        vehicles.map((v) => {
+            if (v.id === id) {
                 setSelected(v);
-                if(!v.imageLoading) {
+                if (!v.imageLoading) {
                     console.log(imageLoading, "image loading")
-                   
+
                     setImageLoading(false);
                 }
             }
         })
     }, [vehicles]);
 
-    
+
     return (
         <>
             {
                 selected ? (<div style={{ paddingTop: "300px", display: "flex", flexDirection: "column", justifyContent: "center", maxWidth: "2000px", alignItems: "center", alignContent: "center" }}>
                     <div style={{ maxWidth: "1500px", width: "100%", height: "fit-content", boxShadow: "none !important" }}>
-                       
+
                         <Carousel sx={{ boxShadow: 0 }}>
                             {
                                 selected.images.map((item) => <Item item={item} imageLoading={imageLoading} />)
@@ -165,7 +165,56 @@ export default function Details(props) {
                             </p>
                         </div>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1500px", marginTop: "20px" }}>
+
+
+                    <div style={{ display: "flex", flexDirection: "column",marginTop: "10px",  marginBottom: "10px", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1500px" , gap: "14px"}}>
+                        <p style={{fontSize: "16px", color: "gray"}}>Reviews</p>
+
+                    <div style={{display: "flex", flexDirection: "column", gap: "14px"}}>
+
+                        {selected.row ? 
+                        (<><div style={{ display: "flex", gap: "14px", borderBottom: "1px solid gray", paddingBottom: "18px" }}>
+                            <div style={{ maxWidth: "60px", maxHeight: "60px" }}>
+                                <CircleUser style={{ width: "60px", height: "60px" }} />
+                            </div>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                <p style={{ fontSize: "16px" }}> ⭐ ⭐ ⭐ ⭐ ⭐ </p>
+                                <div style={{ display: "flex", gap: "2px", color: "gray" }}>
+                                    <p> User </p>
+                                    <p>July 3, 2024</p>
+                                </div>
+                                <p style={{ width: "50%", fontSize: "13px" }}>
+                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                                    Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style={{ display: "flex", gap: "14px"}}>
+                            <div style={{ maxWidth: "60px", maxHeight: "60px" }}>
+                                <CircleUser style={{ width: "60px", height: "60px" }} />
+                            </div>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                <p style={{ fontSize: "16px" }}> ⭐ ⭐ ⭐ ⭐ ⭐ </p>
+                                <div style={{ display: "flex", gap: "2px", color: "gray" }}>
+                                    <p> User </p>
+                                    <p>July 3, 2024</p>
+                                </div>
+                                <p style={{ width: "50%", fontSize: "13px" }}>
+                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                                    Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown
+                                </p>
+                            </div>
+                        </div> </>) : <p style={{fontSize : "16px"}}>No reviews yet</p> }
+
+
+
+                        </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1500px", marginTop: "20px", flexDirection: "column", gap:"14px", paddingBottom: "10px" }}>
+                    <p style={{fontSize: "16px", color: "gray"}}>Location</p>
                         <div style={{ width: "100%", }}>
                             <MapComponent />
                         </div>
@@ -178,15 +227,15 @@ export default function Details(props) {
 
 function Item(props) {
 
-    const [loading, setLoading]= useState(true)
+    const [loading, setLoading] = useState(true)
     return (
 
         <Paper style={{ boxShadow: "none" }}>
-            
+
             <div style={{ maxHeight: "392px", maxWidth: "1500px", position: "relative" }}>
-            {loading && <span className="loader"></span>}
-                {!props.imageLoading && 
-                <img style={{ objectFit: "contain", width: "100%", height: "100%" }} src={props.item} onLoad={() => setLoading(false)} />
+                {loading && <span className="loader"></span>}
+                {!props.imageLoading &&
+                    <img style={{ objectFit: "contain", width: "100%", height: "100%" }} src={props.item} onLoad={() => setLoading(false)} />
                 }
             </div>
         </Paper>
