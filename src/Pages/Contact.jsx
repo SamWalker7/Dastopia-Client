@@ -4,14 +4,16 @@ import HeroPages from "../components/HeroPages";
 function Contact() {
   return (
     <>
-      <section className="contact-page" style={{paddingTop: "100px"}}>
-       
+      <section className="contact-page" style={{ paddingTop: "100px" }}>
         <div className="container">
           <div className="contact-div">
             <div className="contact-div__text">
               <h2>Need additional information?</h2>
               <p>
-              Need assistance? We're here to help. Contact us for any questions about our vehicles, rental policies, or booking process. Our team is dedicated to ensuring a smooth and enjoyable rental experience. Reach out today!
+                Need assistance? We're here to help. Contact us for any
+                questions about our vehicles, rental policies, or booking
+                process. Our team is dedicated to ensuring a smooth and
+                enjoyable rental experience. Reach out today!
               </p>
               <a href="/">
                 <i className="fa-solid fa-phone"></i>&nbsp; +251946888444
@@ -41,17 +43,13 @@ function Contact() {
                 </label>
                 <input type="number" placeholder='E.g: "+123456789"'></input>
 
-                <label>
-                  Company Name (Optional) <b>*</b>
-                </label>
+                <label>Company Name (Optional)</label>
                 <input
                   type="text"
                   placeholder='E.g: "Das Technologies"'
                 ></input>
 
-                <label>
-                  Job Role (Optional) <b>*</b>
-                </label>
+                <label>Job Role (Optional)</label>
                 <input type="text" placeholder='E.g: "CEO"'></input>
 
                 <label>
