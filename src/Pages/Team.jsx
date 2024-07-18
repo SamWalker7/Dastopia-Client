@@ -1,5 +1,5 @@
 import Footer from "../components/Footer";
-import HeroPages from "../components/HeroPages";
+
 import PersonIcon from "@mui/icons-material/Person";
 
 function Team() {
@@ -21,8 +21,7 @@ function Team() {
   ];
   return (
     <>
-      <section className="team-page">
-        <HeroPages name="Our Team" />
+      <section className="team-page" style={{paddingTop: "100px"}}>
         <div className="container">
           <div className="team-container">
             {teamPpl.map((ppl, id) => (
