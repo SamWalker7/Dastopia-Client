@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Carousel from 'react-material-ui-carousel'
-import { Paper, Button } from '@mui/material'
+import { Paper, Button, TextField } from '@mui/material'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchImages, fetchVehicles } from '../store/slices/vehicleSlice';
 import { Antenna, Armchair, Calendar, Car, CarFront, CircleDollarSign, CircleUser, DoorOpen, Fuel, List, PaintBucket, Phone } from 'lucide-react';
@@ -12,11 +12,21 @@ import { useParams } from 'react-router-dom';
 export default function Details(props) {
     const { id } = useParams();
     const [selected, setSelected] = useState(null)
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+
     const [imageLoading, setImageLoading] = useState(true)
     const vehicles = useSelector((state => state.vehicle.vehicles))
 
     const dispatch = useDispatch();
 
+    const handleStartDateChange = (event) => {
+        setStartDate(event.target.value);
+    };
+
+    const handleEndDateChange = (event) => {
+        setEndDate(event.target.value);
+    };
 
 
     useEffect(() => {
@@ -46,6 +56,18 @@ export default function Details(props) {
             }
         })
     }, [vehicles]);
+
+
+    const styles = {
+        formControl: {
+            minWidth: "20%",
+            marginRight: "16px",
+            marginBottom: "10px",
+            flex: "1 0 20%",
+            marginTop: "2rem",
+            fontSize: "16px"
+        },
+    }
 
 
     return (
@@ -103,6 +125,37 @@ export default function Details(props) {
                                     <p style={{ fontSize: "15px", fontWeight: "bold" }}>{selected.year} Year</p>
                                 </div>
                             </div>
+
+                            <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", maxWidth: "190px" }}>
+
+                                <label style={{ fontSize: "15px", fontWeight: "bold" }}>Trip start</label>
+                                <TextField
+                                    label="Start Date"
+                                    type="date"
+                                    variant="outlined"
+                                    value={startDate}
+                                    onChange={handleStartDateChange}
+                                    InputLabelProps={{ shrink: true }}
+                                    style={styles.formControl}
+                                />
+
+
+                            </div>
+
+                            <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", maxWidth: "190px" }}>
+                                <label style={{ fontSize: "15px", fontWeight: "bold" }}>Trip start</label>
+                                <TextField
+                                    label="End Date"
+                                    type="date"
+                                    variant="outlined"
+                                    value={endDate}
+                                    onChange={handleEndDateChange}
+                                    InputLabelProps={{ shrink: true }}
+                                    style={styles.formControl}
+                                />
+
+
+                            </div>
                         </div>
                         <div style={{ width: "100%", }}>
                             <div style={{ marginTop: "10px" }}>
@@ -137,6 +190,8 @@ export default function Details(props) {
                                 </div>
                             </div>
 
+
+
                             <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "2px" }}>
                                 <label style={{ fontSize: "15px", fontWeight: "bold" }}>Pickup loction</label>
                                 <select style={{ padding: "4px 20px 4px 20px", maxWidth: "190px", fontWeight: "bold" }}>
@@ -167,54 +222,54 @@ export default function Details(props) {
                     </div>
 
 
-                    <div style={{ display: "flex", flexDirection: "column",marginTop: "10px",  marginBottom: "10px", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1500px" , gap: "14px"}}>
-                        <p style={{fontSize: "16px", color: "gray"}}>Reviews</p>
+                    <div style={{ display: "flex", flexDirection: "column", marginTop: "10px", marginBottom: "10px", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1500px", gap: "14px" }}>
+                        <p style={{ fontSize: "16px", color: "gray" }}>Reviews</p>
 
-                    <div style={{display: "flex", flexDirection: "column", gap: "14px"}}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
 
-                        {selected.row ? 
-                        (<><div style={{ display: "flex", gap: "14px", borderBottom: "1px solid gray", paddingBottom: "18px" }}>
-                            <div style={{ maxWidth: "60px", maxHeight: "60px" }}>
-                                <CircleUser style={{ width: "60px", height: "60px" }} />
-                            </div>
+                            {selected.row ?
+                                (<><div style={{ display: "flex", gap: "14px", borderBottom: "1px solid gray", paddingBottom: "18px" }}>
+                                    <div style={{ maxWidth: "60px", maxHeight: "60px" }}>
+                                        <CircleUser style={{ width: "60px", height: "60px" }} />
+                                    </div>
 
-                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                                <p style={{ fontSize: "16px" }}> ⭐ ⭐ ⭐ ⭐ ⭐ </p>
-                                <div style={{ display: "flex", gap: "2px", color: "gray" }}>
-                                    <p> User </p>
-                                    <p>July 3, 2024</p>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                        <p style={{ fontSize: "16px" }}> ⭐ ⭐ ⭐ ⭐ ⭐ </p>
+                                        <div style={{ display: "flex", gap: "2px", color: "gray" }}>
+                                            <p> User </p>
+                                            <p>July 3, 2024</p>
+                                        </div>
+                                        <p style={{ width: "50%", fontSize: "13px" }}>
+                                            Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                                            Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown
+                                        </p>
+                                    </div>
                                 </div>
-                                <p style={{ width: "50%", fontSize: "13px" }}>
-                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-                                    Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown
-                                </p>
-                            </div>
-                        </div>
 
-                        <div style={{ display: "flex", gap: "14px"}}>
-                            <div style={{ maxWidth: "60px", maxHeight: "60px" }}>
-                                <CircleUser style={{ width: "60px", height: "60px" }} />
-                            </div>
+                                    <div style={{ display: "flex", gap: "14px" }}>
+                                        <div style={{ maxWidth: "60px", maxHeight: "60px" }}>
+                                            <CircleUser style={{ width: "60px", height: "60px" }} />
+                                        </div>
 
-                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                                <p style={{ fontSize: "16px" }}> ⭐ ⭐ ⭐ ⭐ ⭐ </p>
-                                <div style={{ display: "flex", gap: "2px", color: "gray" }}>
-                                    <p> User </p>
-                                    <p>July 3, 2024</p>
-                                </div>
-                                <p style={{ width: "50%", fontSize: "13px" }}>
-                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-                                    Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown
-                                </p>
-                            </div>
-                        </div> </>) : <p style={{fontSize : "16px"}}>No reviews yet</p> }
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                            <p style={{ fontSize: "16px" }}> ⭐ ⭐ ⭐ ⭐ ⭐ </p>
+                                            <div style={{ display: "flex", gap: "2px", color: "gray" }}>
+                                                <p> User </p>
+                                                <p>July 3, 2024</p>
+                                            </div>
+                                            <p style={{ width: "50%", fontSize: "13px" }}>
+                                                Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                                                Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown
+                                            </p>
+                                        </div>
+                                    </div> </>) : <p style={{ fontSize: "16px" }}>No reviews yet</p>}
 
 
 
                         </div>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1500px", marginTop: "20px", flexDirection: "column", gap:"14px", paddingBottom: "10px" }}>
-                    <p style={{fontSize: "16px", color: "gray"}}>Location</p>
+                    <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1500px", marginTop: "20px", flexDirection: "column", gap: "14px", paddingBottom: "10px" }}>
+                        <p style={{ fontSize: "16px", color: "gray" }}>Location</p>
                         <div style={{ width: "100%", }}>
                             <MapComponent />
                         </div>
