@@ -209,7 +209,7 @@ export default function Details(props) {
                     <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1000px" }}>
                         <div style={{ width: "100%", }}>
 
-                            <p style={{ fontSize: "15px", fontWeight: "bold", marginBottom: "10px" }} >Description: </p>
+                            <p style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "10px" }} >Description: </p>
                             <p style={{ fontSize: "13px", width: "50%" }}>
                                 Lorem Ipsum is simply dummy text of the printing and typesetting industry.
                                 Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown
@@ -223,7 +223,7 @@ export default function Details(props) {
 
 
                     <div style={{ display: "flex", flexDirection: "column", marginTop: "10px", marginBottom: "10px", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1000px", gap: "14px" }}>
-                        <p style={{ fontSize: "16px", color: "gray" }}>Reviews</p>
+                        <p style={{ fontSize: "18px", color: "black", fontWeight: "bold" }}>Reviews</p>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
 
@@ -269,7 +269,7 @@ export default function Details(props) {
                         </div>
                     </div>
                     <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1000px", marginTop: "20px", flexDirection: "column", gap: "14px", paddingBottom: "10px" }}>
-                        <p style={{ fontSize: "16px", color: "gray" }}>Location</p>
+                        <p style={{ fontSize: "18px", color: "black", fontWeight: "bold" }}>Location</p>
                         <div style={{ width: "100%", }}>
                             <MapComponent />
                         </div>
