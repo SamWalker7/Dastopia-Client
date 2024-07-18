@@ -153,6 +153,7 @@ function Faq() {
       paddingLeft: "10px",
       border: "1px solid #ddd",
       backgroundColor: "#fff",
+      color: "black",
     },
   };
 
