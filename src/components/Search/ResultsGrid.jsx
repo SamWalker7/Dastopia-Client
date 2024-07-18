@@ -41,11 +41,15 @@ const ResultsGrid = ({ vehicles }) => {
       <Grid
         container
         spacing={3}
-        style={{
+        sx={{
           overflowY: "scroll",
           maxHeight: "410px",
           marginTop: "2px",
           width: "95%",
+          scrollbarWidth: "none", // For Firefox
+          "&::-webkit-scrollbar": {
+            display: "none", // For Chrome, Safari, and Opera
+          },
         }}
       >
         {currentVehicles.map((vehicle, index) => (
