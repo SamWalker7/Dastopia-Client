@@ -74,7 +74,7 @@ export default function Details(props) {
         <>
             {
                 selected ? (<div style={{ paddingTop: "300px", display: "flex", flexDirection: "column", justifyContent: "center", maxWidth: "2000px", alignItems: "center", alignContent: "center" }}>
-                    <div style={{ maxWidth: "1500px", width: "100%", height: "fit-content", boxShadow: "none !important" }}>
+                    <div style={{ maxWidth: "1000px", width: "100%", height: "fit-content", boxShadow: "none !important" }}>
 
                         <Carousel sx={{ boxShadow: 0 }}>
                             {
@@ -83,7 +83,7 @@ export default function Details(props) {
                         </Carousel>
 
                     </div>
-                    <div style={{ display: "flex", justifyContent: "flex-start", alignContent: "flex-start", alignItems: "flex-start", maxWidth: "1500px", width: "100%", padding: "15px", }}>
+                    <div style={{ display: "flex", justifyContent: "flex-start", alignContent: "flex-start", alignItems: "flex-start", maxWidth: "1000px", width: "100%", padding: "15px", }}>
                         <div style={{ width: "100%" }}>
                             <h1 style={{ fontSize: "45px", fontWeight: "bolder" }}>{selected.make} {selected.model}</h1>
 
@@ -206,7 +206,7 @@ export default function Details(props) {
                             </div>
                         </div>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1500px" }}>
+                    <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1000px" }}>
                         <div style={{ width: "100%", }}>
 
                             <p style={{ fontSize: "15px", fontWeight: "bold", marginBottom: "10px" }} >Description: </p>
@@ -222,7 +222,7 @@ export default function Details(props) {
                     </div>
 
 
-                    <div style={{ display: "flex", flexDirection: "column", marginTop: "10px", marginBottom: "10px", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1500px", gap: "14px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", marginTop: "10px", marginBottom: "10px", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1000px", gap: "14px" }}>
                         <p style={{ fontSize: "16px", color: "gray" }}>Reviews</p>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -268,7 +268,7 @@ export default function Details(props) {
 
                         </div>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1500px", marginTop: "20px", flexDirection: "column", gap: "14px", paddingBottom: "10px" }}>
+                    <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex_start", width: "100%", maxWidth: "1000px", marginTop: "20px", flexDirection: "column", gap: "14px", paddingBottom: "10px" }}>
                         <p style={{ fontSize: "16px", color: "gray" }}>Location</p>
                         <div style={{ width: "100%", }}>
                             <MapComponent />
