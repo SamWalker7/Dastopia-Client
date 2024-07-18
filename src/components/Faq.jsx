@@ -179,10 +179,26 @@ function Faq() {
                     expandIcon={<ExpandMoreIcon />}
                     style={styles.faqQuestion}
                   >
-                    <Typography variant="h5">{question}</Typography>
+                    <Typography
+                      variant="h5"
+                      style={{
+                        color: "black",
+                        fontWeight: "bold",
+                        fontSize: "2rem",
+                      }}
+                    >
+                      {question}
+                    </Typography>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <Typography variant="h5">{answer}</Typography>
+                    <Typography
+                      variant="h5"
+                      style={{
+                        fontSize: "1.7rem",
+                      }}
+                    >
+                      {answer}
+                    </Typography>
                   </AccordionDetails>
                 </Accordion>
               </Paper>
