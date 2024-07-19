@@ -20,7 +20,7 @@ function Team() {
   const boardMembers = [
     { img: PersonIcon, name: "Samuel Derib", job: "Board Member" },
     { img: PersonIcon, name: "Dagimawi Woldesenbet", job: "Board Member" },
-    { img: PersonIcon, name: "Alemayehu Gemeda", job: "Board Member" },
+    { img: PersonIcon, name: "Alemayehu Kebede", job: "Board Member" },
   ];
   return (
     <>
