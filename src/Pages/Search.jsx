@@ -3,9 +3,8 @@ import { CircularProgress } from "@mui/material";
 import ResultsGrid from "../components/Search/ResultsGrid";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchVehicles, fetchImages } from "../store/slices/vehicleSlice";
-import { TextField } from "@mui/material";
-import { Select, MenuItem, InputLabel, FormControl } from "@mui/material";
-import shadows from "@mui/material/styles/shadows";
+import makesData from "../api/makes.json";
+import modelData from "../api/models.json";
 import MapComponent from "../components/GoogleMaps";
 
 const Search = () => {
@@ -41,12 +40,25 @@ const Search = () => {
   }, [dispatch, vehicles.length]);
 
   const [make, setMake] = useState("any");
-  const [model, setModel] = useState("any");
+  const [model, setModel] = useState([]);
+  const [selectedModel, setSelectedModel] = useState("any");
   const [transmission, setTransmission] = useState("any");
   const [category, setCategory] = useState("any");
   const [selectedCity, setSelectedCity] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  useEffect(() => {
+    // Function to extract query parameters from URL
+    const getQueryParam = (name) => {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    };
+    const pickupLocation = getQueryParam("pickUp");
+    if (pickupLocation && ethiopianCities.includes(pickupLocation)) {
+      setSelectedCity(pickupLocation);
+    }
+  }, []);
 
   const handleCityChange = (event) => {
     setSelectedCity(event.target.value);
@@ -61,11 +73,24 @@ const Search = () => {
   };
 
   const handleMakeChange = (event) => {
-    setMake(event.target.value);
+    const value = event.target.value;
+    setMake(value);
+
+    const filteredModels = modelData.filter((model) => {
+      return Object.keys(model)[0] === value;
+    });
+
+    let newModel = [];
+    if (filteredModels.length > 0) {
+      newModel = Object.values(filteredModels[0])[0];
+    }
+
+    setModel(newModel);
+    setSelectedModel(newModel.length > 0 ? newModel[0] : "any");
   };
 
   const handleModelChange = (event) => {
-    setModel(event.target.value);
+    setSelectedModel(event.target.value);
   };
 
   const handleTransmissionChange = (event) => {
@@ -79,7 +104,7 @@ const Search = () => {
   const filteredVehicles = vehicles.filter((vehicle) => {
     return (
       (make === "any" || vehicle.make === make) &&
-      (model === "any" || vehicle.model === model) &&
+      (selectedModel === "any" || vehicle.model === selectedModel) &&
       (transmission === "any" || vehicle.transmission === transmission) &&
       (category === "any" || vehicle.category === category) &&
       (!selectedCity || vehicle.city === selectedCity) &&
@@ -102,7 +127,6 @@ const Search = () => {
 
   const mapContainerStyle = {
     backgroundColor: "white",
-    // padding: "16px",
     width: "50%",
 
     "@media (max-width: 768px)": {
@@ -232,22 +256,27 @@ const Search = () => {
                 onChange={handleMakeChange}
               >
                 <option value="any">Any</option>
-                <option value="Toyota">Toyota</option>
-                <option value="Honda">Honda</option>
-                <option value="Ford">Ford</option>
+                {makesData.Makes.map((make) => (
+                  <option key={make.make_id} value={make.make_display}>
+                    {make.make_display}
+                  </option>
+                ))}
               </select>
             </div>
             <div style={styles.topFormControl}>
               <label style={styles.label}>Model</label>
               <select
                 style={styles.select}
-                value={model}
+                value={selectedModel}
                 onChange={handleModelChange}
+                disabled={make === "any" || model.length === 0}
               >
                 <option value="any">Any</option>
-                <option value="Camry">Camry</option>
-                <option value="Accord">Accord</option>
-                <option value="Focus">Focus</option>
+                {model.map((model) => (
+                  <option key={model} value={model}>
+                    {model}
+                  </option>
+                ))}
               </select>
             </div>
             <div style={styles.topFormControl}>
