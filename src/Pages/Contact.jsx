@@ -56,14 +56,14 @@ function Contact() {
                 enjoyable rental experience. Reach out today!
               </p>
               <a href="/">
-                <i className="fa-solid fa-phone"></i>&nbsp; +251946888444
+                <i className="fa-solid fa-phone"></i>&nbsp; (251) 946-888444
               </a>
               <a href="/">
-                <i className="fa-solid fa-envelope"></i>&nbsp; carrental@xyz.com
+                <i className="fa-solid fa-envelope"></i>&nbsp; contact@dastopia.com
               </a>
               <a href="/">
-                <i className="fa-solid fa-location-dot"></i>&nbsp; Bengaluru,
-                Karnatka
+                <i className="fa-solid fa-location-dot"></i>&nbsp; Ethiopia,
+                Addis Abab, Bole Dani Plaza
               </a>
             </div>
             <div className="contact-div__form">
@@ -138,7 +138,7 @@ function Contact() {
               <h2>Book a car by getting in touch with us</h2>
               <span>
                 <i className="fa-solid fa-phone"></i>
-                <h3>+251946888444</h3>
+                <h3>(251) 946-888444</h3>
               </span>
             </div>
           </div>
