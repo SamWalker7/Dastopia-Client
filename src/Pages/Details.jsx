@@ -3,7 +3,7 @@ import Carousel from 'react-material-ui-carousel'
 import { Paper, Button, TextField } from '@mui/material'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchImages, fetchVehicles } from '../store/slices/vehicleSlice';
-import { Antenna, Armchair, Calendar, Car, CarFront, CircleDollarSign, CircleUser, DoorOpen, Fuel, List, PaintBucket, Phone } from 'lucide-react';
+import { Antenna, Armchair, Calendar, Car, CarFront, ChevronLeft, ChevronRight, Circle, CircleDollarSign, CircleUser, DoorOpen, Fuel, List, PaintBucket, Phone } from 'lucide-react';
 import MapComponent from '../components/GoogleMaps';
 import { useParams } from 'react-router-dom';
 
@@ -97,7 +97,17 @@ export default function Details(props) {
                 selected ? (
                     <div style={styles.container}>
                         <div style={{ maxWidth: "1000px", width: "100%", height: "fit-content", boxShadow: "none !important" }}>
-                            <Carousel sx={{ boxShadow: 0 }} interval={4000}>
+                            <Carousel 
+                            sx={{ boxShadow: 0 }} 
+                            interval={10000} 
+                            NextIcon={<ChevronRight />} 
+                            PrevIcon={<ChevronLeft />} 
+                            navButtonsProps={{
+                                style: {
+                                    backgroundColor: "#1732c6e9"
+                                }
+                            }}
+                            >
                                 {
                                     selected.images.map((item) => <Item item={item} imageLoading={imageLoading} />)
                                 }
