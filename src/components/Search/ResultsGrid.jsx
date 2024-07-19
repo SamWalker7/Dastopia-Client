@@ -6,13 +6,13 @@ import {
   Typography,
   Button,
   Grid,
-  Skeleton,
   Pagination,
 } from "@mui/material";
+import Skeleton from "@mui/material/Skeleton";
 
 const ResultsGrid = ({ vehicles }) => {
   const [imageUrls, setImageUrls] = useState([]);
-  const [imageLoaded, setImageLoaded] = useState([]);
+  const [loadingStates, setLoadingStates] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const indexOfLastVehicle = currentPage * itemsPerPage;
@@ -31,17 +31,19 @@ const ResultsGrid = ({ vehicles }) => {
       if (Array.isArray(vehicle.images) && vehicle.images.length > 0) {
         return vehicle.images[0]; // Get the first image URL
       } else {
-        return "https://via.placeholder.com/300"; // Placeholder image URL if no image is available
+        return null;
       }
     });
     setImageUrls(urls);
-    setImageLoaded(new Array(urls.length).fill(false)); // Initialize all imageLoaded states to false
+    setLoadingStates({});
   }, [vehicles]);
 
   const handleImageLoad = (index) => {
-    const updatedImageLoaded = [...imageLoaded];
-    updatedImageLoaded[index] = true;
-    setImageLoaded(updatedImageLoaded);
+    setLoadingStates((prev) => ({ ...prev, [index]: false }));
+  };
+
+  const handleImageError = (index) => {
+    setLoadingStates((prev) => ({ ...prev, [index]: false }));
   };
 
   return (
@@ -53,11 +55,10 @@ const ResultsGrid = ({ vehicles }) => {
           overflowY: "scroll",
           maxHeight: "410px",
           marginTop: "2px",
-          paddingBottom: "3rem",
           width: "95%",
-          scrollbarWidth: "none",
+          scrollbarWidth: "none", // For Firefox
           "&::-webkit-scrollbar": {
-            display: "none",
+            display: "none", // For Chrome, Safari, and Opera
           },
         }}
       >
@@ -83,40 +84,52 @@ const ResultsGrid = ({ vehicles }) => {
             >
               <Grid container>
                 <Grid item xs={12} md={4}>
-                  <div>
-                    {imageLoaded[indexOfFirstVehicle + index] ? (
-                      <CardMedia
-                        component="img"
-                        height="auto"
-                        image={imageUrls[indexOfFirstVehicle + index]}
-                        alt={`Vehicle Image ${index}`}
-                        style={{ maxHeight: "100%", objectFit: "cover" }}
-                        onError={(e) => {
-                          e.target.onerror = null; // Prevent looping in case placeholder also fails
-                          e.target.src = "https://via.placeholder.com/300";
-                        }}
-                        onLoad={() =>
-                          handleImageLoad(indexOfFirstVehicle + index)
-                        }
-                        sx={{
-                          transition: "opacity 0.5s ease-in-out",
-                          opacity: 1,
-                          borderTopLeftRadius: "8px",
-                          borderBottomLeftRadius: "8px",
-                        }}
-                      />
-                    ) : (
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      height: "100%",
+                    }}
+                  >
+                    {loadingStates[indexOfFirstVehicle + index] !== false ? (
                       <Skeleton
                         variant="rectangular"
                         width="100%"
-                        height="auto"
-                        style={{ marginBottom: "8px" }}
+                        height={200}
+                        style={{ marginBottom: "1px" }}
                         animation="wave"
                         sx={{
                           borderRadius: "8px",
                         }}
                       />
-                    )}
+                    ) : null}
+                    <CardMedia
+                      component="img"
+                      image={imageUrls[indexOfFirstVehicle + index] || ""}
+                      alt={`Vehicle Image ${index}`}
+                      style={{
+                        maxHeight: "100%",
+                        objectFit: "cover",
+                        opacity:
+                          loadingStates[indexOfFirstVehicle + index] !== false
+                            ? 0
+                            : 1,
+                        transition: "opacity 0.5s ease-in-out",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        borderTopLeftRadius: "8px",
+                        borderBottomLeftRadius: "8px",
+                      }}
+                      onLoad={() =>
+                        handleImageLoad(indexOfFirstVehicle + index)
+                      }
+                      onError={() =>
+                        handleImageError(indexOfFirstVehicle + index)
+                      }
+                    />
                   </div>
                 </Grid>
                 <Grid item xs={6} md={4}>
@@ -125,7 +138,7 @@ const ResultsGrid = ({ vehicles }) => {
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "space-between",
-                      height: "100%",
+                      height: "100%", // Ensures content stretches to full height
                     }}
                   >
                     <div>
@@ -241,9 +254,6 @@ const ResultsGrid = ({ vehicles }) => {
                         variant="contained"
                         color="primary"
                         sx={{ alignSelf: "flex-end" }}
-                        onClick={() => {
-                          window.location.href = `/details/${vehicle.id}`;
-                        }}
                       >
                         View Details
                       </Button>
