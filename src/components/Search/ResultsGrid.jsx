@@ -254,6 +254,9 @@ const ResultsGrid = ({ vehicles }) => {
                         variant="contained"
                         color="primary"
                         sx={{ alignSelf: "flex-end" }}
+                        onClick={() => {
+                          window.location.href = `/Details/${vehicle.id}`;
+                        }}
                       >
                         View Details
                       </Button>
