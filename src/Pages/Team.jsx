@@ -1,19 +1,26 @@
 import Footer from "../components/Footer";
 import Sosina from "../images/team/sosina.jpg";
 import Yonathan from "../images/team/yonathan.jpg";
+import Abraham from "../images/team/abraham.JPG";
+import Tinsaye from "../images/team/Tinsaye.jpg";
 import PersonIcon from "@mui/icons-material/Person";
 
 function Team() {
   const teamPpl = [
-    { img: PersonIcon, name: "Abraham Wendmeneh", job: "Role Placeholder" },
     { img: PersonIcon, name: "Michael Demeke", job: "Role Placeholder" },
     { img: Sosina, name: "Sosina Yitay", job: "Procurement Consultant" },
+
+    { img: Yonathan, name: "Yonathan Tesfaye", job: "UI/UX Designer" },
+    {
+      img: Abraham,
+      name: "Abraham Wendmeneh",
+      job: "Junior Software Developer",
+    },
     { img: PersonIcon, name: "Dawit Aschalew", job: "Role Placeholder" },
     { img: PersonIcon, name: "Biniam Haile", job: "Role Placeholder" },
-    { img: Yonathan, name: "Yonathan Tesfaye", job: "UI/UX Designer" },
     { img: PersonIcon, name: "Naol Zebene", job: "Junior Software Engineer" },
     {
-      img: PersonIcon,
+      img: Tinsaye,
       name: "Tinsaye Simeneh",
       job: "Junior Software Developer",
     },
@@ -34,7 +41,7 @@ function Team() {
                   {ppl.img === PersonIcon ? (
                     <PersonIcon sx={{ fontSize: 100 }} />
                   ) : (
-                    <img src={ppl.img} alt="team member" height={250} />
+                    <img src={ppl.img} alt="team member" height={350} />
                   )}
                 </div>
                 <div className="team-container__box__descr">
