@@ -65,7 +65,13 @@ const Search = () => {
     if (dropOffTime) {
       setEndDate(dropOffTime);
     }
-  }, []);
+  }, [
+    ethiopianCities,
+    setSelectedCity,
+    setStartDate,
+    setEndDate,
+    setSelectedModel,
+  ]);
 
   const handleCityChange = (event) => {
     setSelectedCity(event.target.value);
