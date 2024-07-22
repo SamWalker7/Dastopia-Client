@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import Skeleton from "@mui/material/Skeleton";
 
-const ResultsGrid = ({ vehicles }) => {
+const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
   const [imageUrls, setImageUrls] = useState([]);
   const [loadingStates, setLoadingStates] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -255,7 +255,7 @@ const ResultsGrid = ({ vehicles }) => {
                         color="primary"
                         sx={{ alignSelf: "flex-end" }}
                         onClick={() => {
-                          window.location.href = `/Details/${vehicle.id}`;
+                          window.location.href = `/Details/${vehicle.id}?pickUpTime=${pickUpTime}&dropOffTime=${DropOffTime}`;
                         }}
                       >
                         View Details

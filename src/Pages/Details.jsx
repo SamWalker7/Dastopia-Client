@@ -75,6 +75,18 @@ export default function Details(props) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    const getQueryParam = (name) => {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    };
+    const pickUpTime = getQueryParam("pickUpTime");
+    const dropOffTime = getQueryParam("dropOffTime");
+
+    setStartDate(pickUpTime);
+    setEndDate(dropOffTime);
+  }, []);
+
   const styles = {
     formControl: {
       minWidth: "20%",
@@ -541,7 +553,7 @@ export default function Details(props) {
       ) : (
         <div style={{ paddingTop: "200px" }}>
           {" "}
-          <p style={{ fontSize: "20px" }}> loading ... </p>
+          <p style={{ fontSize: "20px", margin: "0 auto" }}> loading ... </p>
         </div>
       )}
     </>
