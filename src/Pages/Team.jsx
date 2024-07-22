@@ -3,11 +3,13 @@ import Sosina from "../images/team/sosina.jpg";
 import Yonathan from "../images/team/yonathan.jpg";
 import Abraham from "../images/team/abraham.JPG";
 import Tinsaye from "../images/team/Tinsaye.jpg";
+import Binyam from "../images/team/binyam.jpg";
+import Michael from "../images/team/michael.jpg";
 import PersonIcon from "@mui/icons-material/Person";
 
 function Team() {
   const teamPpl = [
-    { img: PersonIcon, name: "Michael Demeke", job: "Role Placeholder" },
+    { img: Michael, name: "Michael Demeke", job: "Commercial Manager" },
     { img: Sosina, name: "Sosina Yitay", job: "Procurement Consultant" },
 
     { img: Yonathan, name: "Yonathan Tesfaye", job: "UI/UX Designer" },
@@ -17,7 +19,7 @@ function Team() {
       job: "Junior Software Developer",
     },
     { img: PersonIcon, name: "Dawit Aschalew", job: "Role Placeholder" },
-    { img: PersonIcon, name: "Biniam Haile", job: "Role Placeholder" },
+    { img: Binyam, name: "Biniam Haile", job: "Mobile Application Developer" },
     { img: PersonIcon, name: "Naol Zebene", job: "Junior Software Engineer" },
     {
       img: Tinsaye,
