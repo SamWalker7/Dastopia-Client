@@ -1,15 +1,16 @@
 import Footer from "../components/Footer";
-
+import Sosina from "../images/team/sosina.jpg";
+import Yonathan from "../images/team/yonathan.jpg";
 import PersonIcon from "@mui/icons-material/Person";
 
 function Team() {
   const teamPpl = [
     { img: PersonIcon, name: "Abraham Wendmeneh", job: "Role Placeholder" },
     { img: PersonIcon, name: "Michael Demeke", job: "Role Placeholder" },
-    { img: PersonIcon, name: "Sosina Yitay", job: "Role Placeholder" },
+    { img: Sosina, name: "Sosina Yitay", job: "Procurement Consultant" },
     { img: PersonIcon, name: "Dawit Aschalew", job: "Role Placeholder" },
     { img: PersonIcon, name: "Biniam Haile", job: "Role Placeholder" },
-    { img: PersonIcon, name: "Yonathan Tesfaye", job: "Role Placeholder" },
+    { img: Yonathan, name: "Yonathan Tesfaye", job: "UI/UX Designer" },
     { img: PersonIcon, name: "Naol Zebene", job: "Junior Software Engineer" },
     {
       img: PersonIcon,
@@ -30,7 +31,11 @@ function Team() {
             {teamPpl.map((ppl, id) => (
               <div key={id} className="team-container__box">
                 <div className="team-container__box__img-div">
-                  <PersonIcon sx={{ fontSize: 100 }} />
+                  {ppl.img === PersonIcon ? (
+                    <PersonIcon sx={{ fontSize: 100 }} />
+                  ) : (
+                    <img src={ppl.img} alt="team member" height={250} />
+                  )}
                 </div>
                 <div className="team-container__box__descr">
                   <h3>{ppl.name}</h3>
