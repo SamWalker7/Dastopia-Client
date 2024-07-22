@@ -3,8 +3,9 @@ import Sosina from "../images/team/sosina.jpg";
 import Yonathan from "../images/team/yonathan.jpg";
 import Abraham from "../images/team/abraham.JPG";
 import Tinsaye from "../images/team/Tinsaye.jpg";
-import Binyam from "../images/team/binyam.jpg";
+import Binyam from "../images/team/binyam.png";
 import Michael from "../images/team/michael.jpg";
+import Alemayehu from "../images/team/alemayehu.jpg";
 import PersonIcon from "@mui/icons-material/Person";
 
 function Team() {
@@ -30,7 +31,7 @@ function Team() {
   const boardMembers = [
     { img: PersonIcon, name: "Samuel Derib", job: "Board Member" },
     { img: PersonIcon, name: "Dagimawi Woldesenbet", job: "Board Member" },
-    { img: PersonIcon, name: "Alemayehu Kebede", job: "Board Member" },
+    { img: Alemayehu, name: "Alemayehu Kebede", job: "Co-founder" },
   ];
   return (
     <>
@@ -67,7 +68,11 @@ function Team() {
             {boardMembers.map((ppl, id) => (
               <div key={id} className="team-container__box">
                 <div className="team-container__box__img-div">
-                  <PersonIcon sx={{ fontSize: 100 }} />
+                  {ppl.img === PersonIcon ? (
+                    <PersonIcon sx={{ fontSize: 100 }} />
+                  ) : (
+                    <img src={ppl.img} alt="team member" height={350} />
+                  )}
                 </div>
                 <div className="team-container__box__descr">
                   <h3>{ppl.name}</h3>
