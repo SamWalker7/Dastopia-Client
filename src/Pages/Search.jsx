@@ -243,7 +243,7 @@ const Search = () => {
               <label style={styles.label}>PickUp Time</label>
               <input
                 type="date"
-                value={startDate}
+                // value={startDate}
                 onChange={handleStartDateChange}
                 style={styles.select}
               />
@@ -252,7 +252,7 @@ const Search = () => {
               <label style={styles.label}>DropOff Time</label>
               <input
                 type="date"
-                value={endDate}
+                // value={endDate}
                 onChange={handleEndDateChange}
                 style={styles.select}
               />
