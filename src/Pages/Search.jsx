@@ -49,16 +49,29 @@ const Search = () => {
   const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
-    // Function to extract query parameters from URL
     const getQueryParam = (name) => {
       const params = new URLSearchParams(window.location.search);
       return params.get(name);
     };
     const pickupLocation = getQueryParam("pickUp");
+    const pickupTime = getQueryParam("pickTime");
+    const dropOffTime = getQueryParam("dropTime");
     if (pickupLocation && ethiopianCities.includes(pickupLocation)) {
       setSelectedCity(pickupLocation);
     }
-  }, []);
+    if (pickupTime) {
+      setStartDate(pickupTime);
+    }
+    if (dropOffTime) {
+      setEndDate(dropOffTime);
+    }
+  }, [
+    ethiopianCities,
+    setSelectedCity,
+    setStartDate,
+    setEndDate,
+    setSelectedModel,
+  ]);
 
   const handleCityChange = (event) => {
     setSelectedCity(event.target.value);
@@ -107,9 +120,7 @@ const Search = () => {
       (selectedModel === "any" || vehicle.model === selectedModel) &&
       (transmission === "any" || vehicle.transmission === transmission) &&
       (category === "any" || vehicle.category === category) &&
-      (!selectedCity || vehicle.city === selectedCity) &&
-      (!startDate || new Date(vehicle.startDate) >= new Date(startDate)) &&
-      (!endDate || new Date(vehicle.endDate) <= new Date(endDate))
+      (!selectedCity || vehicle.city === selectedCity)
     );
   });
 
@@ -229,19 +240,19 @@ const Search = () => {
             </div>
 
             <div style={styles.topFormControl}>
-              <label style={styles.label}>Start Date</label>
+              <label style={styles.label}>PickUp Time</label>
               <input
                 type="date"
-                value={startDate}
+                // value={startDate}
                 onChange={handleStartDateChange}
                 style={styles.select}
               />
             </div>
             <div style={styles.topFormControl}>
-              <label style={styles.label}>End Date</label>
+              <label style={styles.label}>DropOff Time</label>
               <input
                 type="date"
-                value={endDate}
+                // value={endDate}
                 onChange={handleEndDateChange}
                 style={styles.select}
               />
