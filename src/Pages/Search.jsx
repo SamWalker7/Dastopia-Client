@@ -336,7 +336,11 @@ const Search = () => {
                 <div style={styles.resultInfo}>
                   {filteredVehicles.length} vehicle(s) found.
                 </div>
-                <ResultsGrid vehicles={filteredVehicles} />
+                <ResultsGrid
+                  vehicles={filteredVehicles}
+                  pickUpTime={startDate}
+                  dropOffTime={endDate}
+                />
               </div>
             ) : (
               <div
