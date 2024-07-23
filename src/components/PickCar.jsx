@@ -1,10 +1,45 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CarBox from "./CarBox";
 import { CAR_DATA } from "./CarData";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchImages, fetchVehicles } from "../store/slices/vehicleSlice";
 
 function PickCar() {
   const [active, setActive] = useState("SecondCar");
   const [colorBtn, setColorBtn] = useState("btn1");
+  const [data, setData] = useState([]);
+
+  const dispatch = useDispatch();
+
+  const vehicles = useSelector((state => state.vehicle.vehicles));
+
+
+  useEffect(() => {
+    const loadData = async () => {
+      const response = await dispatch(fetchVehicles())
+      if (fetchVehicles.fulfilled.match(response)) {
+        const vehicles = response.payload;
+        vehicles.map(async (vehicle) => {
+          await dispatch(fetchImages(vehicle))
+        })
+      }
+    }
+    if (vehicles.length < 1) {
+      loadData();
+    }
+  }, []);
+
+  useEffect(() => {
+    setData(vehicles.slice(0, 5));
+    // console.log(vehicles[0], "first car")
+
+    if (vehicles.length) {
+      setActive(vehicles[0].id);
+    }
+  }, [vehicles])
+
+
+  console.log("vehicles", data)
 
   const btnID = (id) => {
     setColorBtn(colorBtn === id ? "" : id);
@@ -30,73 +65,37 @@ function PickCar() {
             <div className="pick-container__car-content">
               {/* pick car */}
               <div className="pick-box">
-                <button
-                  className={`${coloringButton("btn1")}`}
-                  onClick={() => {
-                    setActive("SecondCar");
-                    btnID("btn1");
-                  }}
-                >
-                  Suzuki Swift
-                </button>
-                <button
-                  className={`${coloringButton("btn2")}`}
-                  id="btn2"
-                  onClick={() => {
-                    setActive("FirstCar");
-                    btnID("btn2");
-                  }}
-                >
-                  Toyota Yaris
-                </button>
-                <button
-                  className={`${coloringButton("btn3")}`}
-                  id="btn3"
-                  onClick={() => {
-                    setActive("ThirdCar");
-                    btnID("btn3");
-                  }}
-                >
-                  Chang Alsvin
-                </button>
-                <button
-                  className={`${coloringButton("btn4")}`}
-                  id="btn4"
-                  onClick={() => {
-                    setActive("FourthCar");
-                    btnID("btn4");
-                  }}
-                >
-                  Suzuki Dzire
-                </button>
-                <button
-                  className={`${coloringButton("btn5")}`}
-                  id="btn5"
-                  onClick={() => {
-                    setActive("FifthCar");
-                    btnID("btn5");
-                  }}
-                >
-                  Toyota Corolla Executive
-                </button>
-                <button
-                  className={`${coloringButton("btn6")}`}
-                  id="btn6"
-                  onClick={() => {
-                    setActive("SixthCar");
-                    btnID("btn6");
-                  }}
-                >
-                  Suzuki Celerio
-                </button>
+                {
+                  data.map((d) => {
+                    return (
+                      <button
+                        className={`${d.id === active ? coloringButton("btn1") : ""}`}
+                        onClick={() => {
+                          setActive(d.id);
+                          if (d.id === active) {
+                            btnID("btn1");
+                          }
+                        }}
+                      >
+                        {d.model} {d.make}
+                      </button>
+                    )
+                  })
+
+                }
               </div>
 
-              {active === "FirstCar" && <CarBox data={CAR_DATA} carID={0} />}
-              {active === "SecondCar" && <CarBox data={CAR_DATA} carID={1} />}
-              {active === "ThirdCar" && <CarBox data={CAR_DATA} carID={2} />}
-              {active === "FourthCar" && <CarBox data={CAR_DATA} carID={3} />}
-              {active === "FifthCar" && <CarBox data={CAR_DATA} carID={4} />}
-              {active === "SixthCar" && <CarBox data={CAR_DATA} carID={5} />}
+
+              {data.map((d, i) => {
+                if (active === d.id) {
+                  return (
+                    <CarBox data={d} carID={i} />
+                  )
+                }
+              })}
+
+
+
             </div>
           </div>
         </div>
