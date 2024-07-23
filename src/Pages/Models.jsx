@@ -18,66 +18,52 @@ import CarImg6 from "../images/cars-big/passat-box.png";
 
 // Imported Functions
 import { getAllVehicles, getDownloadUrl } from "../api";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchImages, fetchVehicles } from "../store/slices/vehicleSlice";
 
 function Models() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [vehicles, setVehicles] = useState([]);
+  const dispatch = useDispatch();
+
+  const vehicles = useSelector((state) => state.vehicle.vehicles);
+  const isLoading = useSelector((state) => state.vehicle.loading);
+  console.log(vehicles);
 
   useEffect(() => {
-    fetchVehicles();
-  }, []);
-
-  const fetchVehicles = async () => {
-    setIsLoading(true);
-    const { body } = await getAllVehicles();
-    let data = [];
-    for (const vehicle of body) {
-      data.push({
-        ...vehicle,
-        status: vehicle?.isEnabled
-          ? "Approved"
-          : vehicle?.isEnabled === false
-          ? "Declined"
-          : "Pending",
-        images: [], // Initially, set images to an empty array
-        imageLoading: true, // Flag to indicate images are loading
-      });
-    }
-
-    setVehicles(data);
-    setIsLoading(false);
-
-    // Fetch images after setting vehicle data
-    for (let i = 0; i < body.length; i++) {
-      const vehicle = body[i];
-      if (vehicle?.vehicleImageKeys?.length > 0) {
-        let urls = [];
-        for (const image of vehicle?.vehicleImageKeys) {
-          const url = await getDownloadUrl(image.key);
-          urls.push(url.body || "https://via.placeholder.com/300");
-        }
-        data[i].images = urls;
-        data[i].imageLoading = false; // Set image loading flag to false
-        setVehicles([...data]); // Update state with new images
+    const loadData = async () => {
+      const response = await dispatch(fetchVehicles());
+      if (fetchVehicles.fulfilled.match(response)) {
+        const vehicles = response.payload;
+        vehicles.map(async (vehicle) => {
+          await dispatch(fetchImages(vehicle));
+        });
       }
+    };
+
+    if (vehicles.length < 1) {
+      loadData();
     }
-  };
+    // loadData();
+  }, []);
 
   return (
     <>
-      <section className="models-section" style={{paddingTop: "100px"}}>
-        
+      <section
+        className="models-section"
+        style={{ paddingTop: "100px", textAlign: "center" }}
+      >
         {isLoading ? (
-          <CircularProgress />
+          <div
+            style={{
+              paddingTop: "5rem",
+            }}
+          >
+            <CircularProgress />
+          </div>
         ) : (
           <div className="container">
             <div className="models-div">
               {vehicles.map((vehicle, index) => (
-                <VehicleCard 
-                  vehicle={vehicle}
-                  key={vehicle.id}
-                  index={index}
-                  />
+                <VehicleCard vehicle={vehicle} key={vehicle.id} index={index} />
                 // <div className="models-div__box">
                 //   <div className="models-div__box__img">
                 //     <img src={CarImg1} alt="car_img" />
@@ -127,9 +113,8 @@ function Models() {
                 //     </div>
                 //   </div>
                 // </div>
-              ))}
-              //{" "}
-              <div className="models-div__box">
+              ))}{" "}
+              {/* <div className="models-div__box">
                 //{" "}
                 <div className="models-div__box__img">
                   // <img src={CarImg2} alt="car_img" />
@@ -196,9 +181,9 @@ function Models() {
                   //{" "}
                 </div>
                 //{" "}
-              </div>
-              //{" "}
-              <div className="models-div__box">
+              </div> */}
+              {/* //{" "} */}
+              {/* <div className="models-div__box">
                 //{" "}
                 <div className="models-div__box__img">
                   // <img src={CarImg3} alt="car_img" />
@@ -266,9 +251,9 @@ function Models() {
                   //{" "}
                 </div>
                 //{" "}
-              </div>
-              //{" "}
-              <div className="models-div__box">
+              </div> */}
+              {/* //{" "} */}
+              {/* <div className="models-div__box">
                 //{" "}
                 <div className="models-div__box__img">
                   // <img src={CarImg4} alt="car_img" />
@@ -336,9 +321,9 @@ function Models() {
                   //{" "}
                 </div>
                 //{" "}
-              </div>
-              //{" "}
-              <div className="models-div__box">
+              </div> */}
+              {/* //{" "} */}
+              {/* <div className="models-div__box">
                 //{" "}
                 <div className="models-div__box__img">
                   // <img src={CarImg5} alt="car_img" />
@@ -406,9 +391,9 @@ function Models() {
                   //{" "}
                 </div>
                 //{" "}
-              </div>
-              //{" "}
-              <div className="models-div__box">
+              </div> */}
+              {/* //{" "} */}
+              {/* <div className="models-div__box">
                 //{" "}
                 <div className="models-div__box__img">
                   // <img src={CarImg6} alt="car_img" />
@@ -475,22 +460,22 @@ function Models() {
                   //{" "}
                 </div>
                 //{" "}
-              </div>
+              </div> */}
             </div>
           </div>
         )}
-        <div className="book-banner">
+        {/* <div className="book-banner">
           <div className="book-banner__overlay"></div>
           <div className="container">
             <div className="text-content">
               <h2>Book a car by getting in touch with us</h2>
               <span>
                 <i className="fa-solid fa-phone"></i>
-                <h3>(123) 456-7869</h3>
+                <h3>+251946888444</h3>
               </span>
             </div>
           </div>
-        </div>
+        </div> */}
         <Footer />
       </section>
     </>

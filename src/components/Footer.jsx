@@ -6,7 +6,7 @@ function Footer() {
           <div className="footer-content">
             <ul className="footer-content__1">
               <li>
-                <span>CAR</span> Rental
+                <span>DAS</span>Topia
               </li>
               <li>
                 We offers a big range of vehicles for all your driving needs. We
@@ -14,7 +14,7 @@ function Footer() {
               </li>
               <li>
                 <a href="tel:123456789">
-                  <i className="fa-solid fa-phone"></i> &nbsp; (650) -265-7514
+                  <i className="fa-solid fa-phone"></i> &nbsp; (251) 946-888444
                 </a>
               </li>
 

@@ -1,31 +1,78 @@
 import Footer from "../components/Footer";
-import HeroPages from "../components/HeroPages";
-import Person1 from "../images/team/1.png";
-import Person2 from "../images/team/2.png";
-import Person3 from "../images/team/3.png";
-import Person4 from "../images/team/4.png";
-import Person5 from "../images/team/5.png";
-import Person6 from "../images/team/6.png";
+import Sosina from "../images/team/sosina.jpg";
+import Yonathan from "../images/team/yonathan.jpg";
+import Abraham from "../images/team/abraham.JPG";
+import Tinsaye from "../images/team/Tinsaye.jpg";
+import Binyam from "../images/team/binyam.png";
+import Michael from "../images/team/michael.jpg";
+import Alemayehu from "../images/team/alemayehu.jpg";
+import PersonIcon from "@mui/icons-material/Person";
 
 function Team() {
   const teamPpl = [
-    { img: Person1, name: "Luke Miller", job: "Salesman" },
-    { img: Person2, name: "Michael Diaz", job: "Business Owner" },
-    { img: Person3, name: "Briana Ross", job: "Photographer" },
-    { img: Person4, name: "Lauren Rivera", job: "Car Detailist" },
-    { img: Person5, name: "Martin Rizz", job: "Mechanic" },
-    { img: Person6, name: "Caitlyn Hunt", job: "Menager" },
+    { img: Michael, name: "Michael Demeke", job: "Commercial Manager" },
+    { img: Sosina, name: "Sosina Yitay", job: "Procurement Consultant" },
+
+    { img: Yonathan, name: "Yonathan Tesfaye", job: "UI/UX Designer" },
+    {
+      img: Abraham,
+      name: "Abraham Wendmeneh",
+      job: "Junior Software Developer",
+    },
+    { img: PersonIcon, name: "Dawit Aschalew", job: "Role Placeholder" },
+    { img: Binyam, name: "Biniam Haile", job: "Mobile Application Developer" },
+    { img: PersonIcon, name: "Naol Zebene", job: "Junior Software Engineer" },
+    {
+      img: Tinsaye,
+      name: "Tinsaye Simeneh",
+      job: "Junior Software Developer",
+    },
+  ];
+  const boardMembers = [
+    { img: PersonIcon, name: "Samuel Derib", job: "Board Member" },
+    { img: PersonIcon, name: "Dagimawi Woldesenbet", job: "Board Member" },
+    { img: Alemayehu, name: "Alemayehu Kebede", job: "Co-founder" },
   ];
   return (
     <>
-      <section className="team-page" style={{paddingTop: "100px"}}>
-       
-        <div className="cotnainer">
+      <section className="team-page" style={{ paddingTop: "100px" }}>
+        <div className="container">
           <div className="team-container">
             {teamPpl.map((ppl, id) => (
               <div key={id} className="team-container__box">
                 <div className="team-container__box__img-div">
-                  <img src={ppl.img} alt="team_img" />
+                  {ppl.img === PersonIcon ? (
+                    <PersonIcon sx={{ fontSize: 100 }} />
+                  ) : (
+                    <img src={ppl.img} alt="team member" height={350} />
+                  )}
+                </div>
+                <div className="team-container__box__descr">
+                  <h3>{ppl.name}</h3>
+                  <p>{ppl.job}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p
+            style={{
+              fontSize: "2rem",
+              fontWeight: "bold",
+              marginBottom: "1rem",
+              textAlign: "center",
+            }}
+          >
+            Board Members
+          </p>
+          <div className="team-container">
+            {boardMembers.map((ppl, id) => (
+              <div key={id} className="team-container__box">
+                <div className="team-container__box__img-div">
+                  {ppl.img === PersonIcon ? (
+                    <PersonIcon sx={{ fontSize: 100 }} />
+                  ) : (
+                    <img src={ppl.img} alt="team member" height={350} />
+                  )}
                 </div>
                 <div className="team-container__box__descr">
                   <h3>{ppl.name}</h3>
@@ -42,7 +89,7 @@ function Team() {
               <h2>Book a car by getting in touch with us</h2>
               <span>
                 <i className="fa-solid fa-phone"></i>
-                <h3>(123) 456-7869</h3>
+                <h3>(251) 946-888444</h3>
               </span>
             </div>
           </div>

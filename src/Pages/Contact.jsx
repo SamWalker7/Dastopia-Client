@@ -1,48 +1,127 @@
 import Footer from "../components/Footer";
-import HeroPages from "../components/HeroPages";
+import { useState } from "react";
 
 function Contact() {
+  const [error, setError] = useState(false);
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const firstName = event.target.elements.firstName.value;
+    const lastName = event.target.elements.lastName.value;
+    const phoneNumber = event.target.elements.phoneNumber.value;
+    const companyName = event.target.elements.companyName.value;
+    const jobRole = event.target.elements.jobRole.value;
+    const email = event.target.elements.email.value;
+    const message = event.target.elements.message.value;
+
+    const subject = `Inquiry from ${firstName} ${lastName}`;
+    const body = `Name: ${firstName} ${lastName}%0D%0A
+                  Phone Number: ${phoneNumber}%0D%0A
+                  Company Name: ${companyName}%0D%0A
+                  Job Role: ${jobRole}%0D%0A
+                  Email: ${email}%0D%0A
+                  Message: ${message}`;
+
+    const emailLink = `mailto:contact@dastopia.com?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+
+    if (
+      firstName === "" ||
+      lastName === "" ||
+      phoneNumber === "" ||
+      email === "" ||
+      message === ""
+    ) {
+      setError(true);
+      setTimeout(() => {
+        setError(false);
+      }, 5000);
+    } else {
+      window.location.href = emailLink;
+    }
+  };
+
   return (
     <>
-      <section className="contact-page" style={{paddingTop: "100px"}}>
-       
+      <section className="contact-page" style={{ paddingTop: "100px" }}>
         <div className="container">
           <div className="contact-div">
             <div className="contact-div__text">
               <h2>Need additional information?</h2>
               <p>
-                A multifaceted professional skilled in multiple fields of
-                research, development as well as a learning specialist. Over 15
-                years of experience.
+                Need assistance? We're here to help. Contact us for any
+                questions about our vehicles, rental policies, or booking
+                process. Our team is dedicated to ensuring a smooth and
+                enjoyable rental experience. Reach out today!
               </p>
               <a href="/">
-                <i className="fa-solid fa-phone"></i>&nbsp; (123) 456-7869
+                <i className="fa-solid fa-phone"></i>&nbsp; (251) 946-888444
               </a>
               <a href="/">
-                <i className="fa-solid fa-envelope"></i>&nbsp;
-                carrental@xyz.com
+                <i className="fa-solid fa-envelope"></i>&nbsp; contact@dastopia.com
               </a>
               <a href="/">
-                <i className="fa-solid fa-location-dot"></i>&nbsp; Bengaluru,
-                Karnatka
+                <i className="fa-solid fa-location-dot"></i>&nbsp; Ethiopia,
+                Addis Abab, Bole Dani Plaza
               </a>
             </div>
             <div className="contact-div__form">
-              <form>
+              {error && (
+                <p
+                  style={{
+                    color: "red",
+                    textAlign: "center",
+                    marginBottom: "1rem",
+                    fontSize: "2rem",
+                  }}
+                >
+                  All fields marked with <b>*</b> are required!
+                </p>
+              )}
+              <form onSubmit={handleSubmit}>
                 <label>
-                  Full Name <b>*</b>
+                  First Name <b>*</b>
                 </label>
-                <input type="text" placeholder='E.g: "Joe Shmoe"'></input>
+                <input type="text" name="firstName" placeholder='E.g: "John"' />
+
+                <label>
+                  Last Name <b>*</b>
+                </label>
+                <input type="text" name="lastName" placeholder='E.g: "Doe"' />
+
+                <label>
+                  Phone Number <b>*</b>
+                </label>
+                <input
+                  type="tel"
+                  name="phoneNumber"
+                  placeholder='E.g: "+123456789"'
+                />
+
+                <label>Company Name (Optional)</label>
+                <input
+                  type="text"
+                  name="companyName"
+                  placeholder='E.g: "Das Technologies"'
+                />
+
+                <label>Job Role (Optional)</label>
+                <input type="text" name="jobRole" placeholder='E.g: "CEO"' />
 
                 <label>
                   Email <b>*</b>
                 </label>
-                <input type="email" placeholder="youremail@example.com"></input>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="youremail@example.com"
+                />
 
                 <label>
                   Tell us about it <b>*</b>
                 </label>
-                <textarea placeholder="Write Here.."></textarea>
+                <textarea name="message" placeholder="Write Here.."></textarea>
 
                 <button type="submit">
                   <i className="fa-solid fa-envelope-open-text"></i>&nbsp; Send
@@ -59,7 +138,7 @@ function Contact() {
               <h2>Book a car by getting in touch with us</h2>
               <span>
                 <i className="fa-solid fa-phone"></i>
-                <h3>(123) 456-7869</h3>
+                <h3>(251) 946-888444</h3>
               </span>
             </div>
           </div>

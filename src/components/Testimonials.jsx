@@ -1,5 +1,5 @@
-import Img2 from "../images/testimonials/pfp1.jpg";
-import Img3 from "../images/testimonials/pfp2.jpg";
+import Img2 from "../images/testimonials/white.png";
+import Img3 from "../images/testimonials/black.png";
 
 function Testimonials() {
   return (
@@ -32,8 +32,8 @@ function Testimonials() {
                   <div className="all-testimonials__box__name__profile">
                     <img src={Img2} alt="user_img" />
                     <span>
-                      <h4>Parry Hotter</h4>
-                      <p>Belgrade</p>
+                      <h4>Ezra Daniel</h4>
+                      <p>Washington</p>
                     </span>
                   </div>
                 </div>
@@ -51,8 +51,8 @@ function Testimonials() {
                   <div className="all-testimonials__box__name__profile">
                     <img src={Img3} alt="user_img" />
                     <span>
-                      <h4>Ron Rizzly</h4>
-                      <p>Novi Sad</p>
+                      <h4>Abrham Samuel </h4>
+                      <p>WAshington</p>
                     </span>
                   </div>
                 </div>
