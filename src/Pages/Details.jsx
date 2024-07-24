@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import MapComponent from "../components/GoogleMaps";
 import { useParams } from "react-router-dom";
+import Skeleton from "@mui/material/Skeleton";
 
 export default function Details(props) {
   const { id } = useParams();
@@ -131,6 +132,13 @@ export default function Details(props) {
               boxShadow: "none !important",
             }}
           >
+            {imageLoading && (
+              <Skeleton
+                variant="rectangular"
+                width={windowWidth > 1020 ? "50vw" : "100%"}
+                height={windowWidth > 1020 ? "50vh" : "30vh"}
+              />
+            )}
             <Carousel
               sx={{ boxShadow: 0 }}
               interval={10000}
