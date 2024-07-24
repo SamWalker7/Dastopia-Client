@@ -32,7 +32,7 @@ function Testimonials() {
                   <div className="all-testimonials__box__name__profile">
                     <img src={Img2} alt="user_img" />
                     <span>
-                      <h4>Ezra Daniel</h4>
+                      <h4>Rob Daniels</h4>
                       <p>Washington</p>
                     </span>
                   </div>
