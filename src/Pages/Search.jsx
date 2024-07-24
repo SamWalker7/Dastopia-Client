@@ -65,13 +65,7 @@ const Search = () => {
     if (dropOffTime) {
       setEndDate(dropOffTime);
     }
-  }, [
-    ethiopianCities,
-    setSelectedCity,
-    setStartDate,
-    setEndDate,
-    setSelectedModel,
-  ]);
+  }, []);
 
   const handleCityChange = (event) => {
     setSelectedCity(event.target.value);
@@ -225,7 +219,10 @@ const Search = () => {
         >
           <div style={styles.filterContainer}>
             <div style={styles.topFormControl}>
-              <label style={styles.label}>Location</label>
+              <label>
+                <i className="fa-solid fa-location-dot"></i> &nbsp; Pick-up
+                Location <b>*</b>
+              </label>
               <select
                 style={styles.select}
                 value={selectedCity}
@@ -240,19 +237,25 @@ const Search = () => {
             </div>
 
             <div style={styles.topFormControl}>
-              <label style={styles.label}>PickUp Time</label>
+              <label htmlFor="picktime">
+                <i className="fa-regular fa-calendar-days "></i> &nbsp; Pick-up{" "}
+                <b>*</b>
+              </label>
               <input
                 type="date"
-                // value={startDate}
+                value={startDate}
                 onChange={handleStartDateChange}
                 style={styles.select}
               />
             </div>
             <div style={styles.topFormControl}>
-              <label style={styles.label}>DropOff Time</label>
+              <label htmlFor="droptime">
+                <i className="fa-regular fa-calendar-days "></i> &nbsp; Drop-off{" "}
+                <b>*</b>
+              </label>
               <input
                 type="date"
-                // value={endDate}
+                value={endDate}
                 onChange={handleEndDateChange}
                 style={styles.select}
               />
