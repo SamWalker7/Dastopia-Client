@@ -562,7 +562,10 @@ export default function Details(props) {
       ) : (
         <div style={{ paddingTop: "200px" }}>
           {" "}
-          <p style={{ fontSize: "20px", margin: "0 auto" }}> loading ... </p>
+          <p style={{ fontSize: "20px", margin: "0 auto" }}>
+            {" "}
+            <span className="loader" style={{ marginTop: "20vh" }}></span>{" "}
+          </p>
         </div>
       )}
     </>
