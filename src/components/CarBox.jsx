@@ -1,71 +1,69 @@
 import { useState } from "react";
 
 function CarBox({ data, carID }) {
-
-
-  const [carLoad, setCarLoad] = useState(data.imageLoading);
+  const [carLoad, setCarLoad] = useState(true);
   return (
     <>
-
-      <div className="box-cars">
-        {/* car */}
-        <div className="pick-car">
-          {carLoad && <span className="loader"></span>}
-          <img
-            style={{ display: carLoad ? "none" : "block" }}
-            src={data.images[0]}
-            alt="car_img"
-            onLoad={() => setCarLoad(false)}
-          />
-        </div>
-        {/* description */}
-        <div className="pick-description">
-          <div className="pick-description__price">
-            <span>ETB {data.price}</span>/ Day
+      {data[carID].map((car, id) => (
+        <div key={id} className="box-cars">
+          {/* car */}
+          <div className="pick-car">
+            {carLoad && <span className="loader"></span>}
+            <img
+              style={{ display: carLoad ? "none" : "block" }}
+              src={car.img}
+              alt="car_img"
+              onLoad={() => setCarLoad(false)}
+            />
           </div>
-          <div className="pick-description__table">
-            <div className="pick-description__table__col">
-              <span>Model</span>
-              <span>{data.model}</span>
+          {/* description */}
+          <div className="pick-description">
+            <div className="pick-description__price">
+              <span>ETB {car.price}</span>/ Day
             </div>
+            <div className="pick-description__table">
+              <div className="pick-description__table__col">
+                <span>Model</span>
+                <span>{car.model}</span>
+              </div>
 
-            <div className="pick-description__table__col">
-              <span>Make</span>
-              <span>{data.make}</span>
-            </div>
+              <div className="pick-description__table__col">
+                <span>Mark</span>
+                <span>{car.mark}</span>
+              </div>
 
-            <div className="pick-description__table__col">
-              <span>Year</span>
-              <span>{data.year}</span>
-            </div>
+              <div className="pick-description__table__col">
+                <span>Year</span>
+                <span>{car.year}</span>
+              </div>
 
-            <div className="pick-description__table__col">
-              <span>Doors</span>
-              <span>{data.doors}</span>
-            </div>
+              <div className="pick-description__table__col">
+                <span>Doors</span>
+                <span>{car.doors}</span>
+              </div>
 
-            <div className="pick-description__table__col">
-              <span>Color</span>
-              <span>{data.color}</span>
-            </div>
+              <div className="pick-description__table__col">
+                <span>AC</span>
+                <span>{car.air}</span>
+              </div>
 
-            <div className="pick-description__table__col">
-              <span>Transmission</span>
-              <span>{data.transmission}</span>
-            </div>
+              <div className="pick-description__table__col">
+                <span>Transmission</span>
+                <span>{car.transmission}</span>
+              </div>
 
-            <div className="pick-description__table__col">
-              <span>Fuel</span>
-              <span>{data.fuelType}</span>
+              <div className="pick-description__table__col">
+                <span>Fuel</span>
+                <span>{car.fuel}</span>
+              </div>
             </div>
+            {/* btn cta */}
+            <a className="cta-btn" href="#booking-section">
+              Reserve Now
+            </a>
           </div>
-          {/* btn cta */}
-          <a className="cta-btn" href="#booking-section">
-            Reserve Now
-          </a>
         </div>
-      </div>
-
+      ))}
     </>
   );
 }

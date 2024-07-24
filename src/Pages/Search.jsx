@@ -39,6 +39,8 @@ const Search = () => {
     }
   }, [dispatch, vehicles.length]);
 
+  console.log("vehicles", vehicles)
+
   const [make, setMake] = useState("any");
   const [model, setModel] = useState([]);
   const [selectedModel, setSelectedModel] = useState("any");
