@@ -47,6 +47,7 @@ const Search = () => {
   const [selectedCity, setSelectedCity] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const getQueryParam = (name) => {
@@ -72,11 +73,37 @@ const Search = () => {
   };
 
   const handleStartDateChange = (event) => {
-    setStartDate(event.target.value);
+    const value = event.target.value;
+    const currentDate = new Date().setHours(0, 0, 0, 0);
+    const selectedStartDate = new Date(value).setHours(0, 0, 0, 0);
+    const selectedEndDate = endDate
+      ? new Date(endDate).setHours(0, 0, 0, 0)
+      : null;
+
+    if (selectedStartDate > currentDate) {
+      setError("Pickup date cannot be before the current date.");
+      setStartDate("");
+    } else if (selectedEndDate && selectedStartDate > selectedEndDate) {
+      setError("Pickup date cannot be after the end date.");
+      setStartDate("");
+    } else {
+      setError("");
+      setStartDate(value);
+    }
   };
 
   const handleEndDateChange = (event) => {
-    setEndDate(event.target.value);
+    const value = event.target.value;
+    if (new Date(value) <= new Date(startDate)) {
+      setError("End date must be after the pickup date.");
+      setEndDate("");
+    } else if (new Date(value).toDateString() === new Date().toDateString()) {
+      setError("End date cannot be the current date.");
+      setEndDate("");
+    } else {
+      setError("");
+      setEndDate(value);
+    }
   };
 
   const handleMakeChange = (event) => {
@@ -217,6 +244,9 @@ const Search = () => {
             marginBottom: "5px",
           }}
         >
+          {error && (
+            <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>
+          )}
           <div style={styles.filterContainer}>
             <div style={styles.topFormControl}>
               <label>
