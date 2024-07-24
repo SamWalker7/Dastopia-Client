@@ -276,6 +276,7 @@ const Search = () => {
                 value={startDate}
                 onChange={handleStartDateChange}
                 style={styles.select}
+                min={new Date().toISOString().split("T")[0]}
               />
             </div>
             <div style={styles.topFormControl}>
@@ -288,6 +289,7 @@ const Search = () => {
                 value={endDate}
                 onChange={handleEndDateChange}
                 style={styles.select}
+                min={startDate}
               />
             </div>
           </div>

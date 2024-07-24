@@ -44,8 +44,15 @@ function BookCar() {
 
   const handlePick = (e) => setPickUp(e.target.value);
   const handleDrop = (e) => setDropOff(e.target.value);
-  const handlePickTime = (e) => setPickTime(e.target.value);
+  const handlePickTime = (e) => {
+    setPickTime(e.target.value);
+    if (dropTime && e.target.value >= dropTime) {
+      setDropTime("");
+    }
+  };
   const handleDropTime = (e) => setDropTime(e.target.value);
+
+  const currentDate = new Date().toISOString().split("T")[0];
 
   return (
     <>
@@ -95,6 +102,7 @@ function BookCar() {
                     value={pickTime}
                     onChange={handlePickTime}
                     type="date"
+                    min={currentDate}
                   ></input>
                 </div>
 
@@ -108,6 +116,8 @@ function BookCar() {
                     value={dropTime}
                     onChange={handleDropTime}
                     type="date"
+                    min={pickTime || currentDate}
+                    disabled={!pickTime}
                   ></input>
                 </div>
 
