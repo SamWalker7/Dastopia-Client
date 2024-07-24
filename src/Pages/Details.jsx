@@ -132,28 +132,29 @@ export default function Details(props) {
               boxShadow: "none !important",
             }}
           >
-            {imageLoading && (
+            {imageLoading ? (
               <Skeleton
                 variant="rectangular"
                 width={windowWidth > 1020 ? "50vw" : "100%"}
                 height={windowWidth > 1020 ? "50vh" : "30vh"}
               />
+            ) : (
+              <Carousel
+                sx={{ boxShadow: 0 }}
+                interval={10000}
+                NextIcon={<ChevronRight />}
+                PrevIcon={<ChevronLeft />}
+                navButtonsProps={{
+                  style: {
+                    backgroundColor: "#1732c6e9",
+                  },
+                }}
+              >
+                {selected.images.map((item) => (
+                  <Item item={item} imageLoading={imageLoading} />
+                ))}
+              </Carousel>
             )}
-            <Carousel
-              sx={{ boxShadow: 0 }}
-              interval={10000}
-              NextIcon={<ChevronRight />}
-              PrevIcon={<ChevronLeft />}
-              navButtonsProps={{
-                style: {
-                  backgroundColor: "#1732c6e9",
-                },
-              }}
-            >
-              {selected.images.map((item) => (
-                <Item item={item} imageLoading={imageLoading} />
-              ))}
-            </Carousel>
           </div>
           <div style={boxStyle}>
             <div style={{ width: "100%" }}>
