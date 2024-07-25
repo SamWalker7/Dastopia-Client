@@ -1,14 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CarBox from "./CarBox";
-import { CAR_DATA } from "./CarData";
+import { fetchCarData } from "./CarData";
+
 
 function PickCar() {
   const [active, setActive] = useState("SecondCar");
   const [colorBtn, setColorBtn] = useState("btn1");
+  const [CAR_DATA, SET_CAR_DATA] = useState([])
 
+  useEffect(() => {
 
-
-
+    const fetchData = async () => {
+      const d = await fetchCarData();
+      SET_CAR_DATA(d);
+      console.log(d, "incomig")
+    }
+   fetchData();
+  }, [])
   const btnID = (id) => {
     setColorBtn(colorBtn === id ? "" : id);
   };
@@ -19,7 +27,7 @@ function PickCar() {
 
   return (
     <>
-      <section className="pick-section">
+      {CAR_DATA.length && <section className="pick-section">
         <div className="container">
           <div className="pick-container">
             <div className="pick-container__title">
@@ -103,7 +111,7 @@ function PickCar() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
     </>
   );
 }
