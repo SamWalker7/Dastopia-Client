@@ -1,7 +1,61 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, TextField, Typography, Container, Box } from "@mui/material";
 
 const SignUp = () => {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.firstName) newErrors.firstName = "First Name is required";
+    if (!formData.lastName) newErrors.lastName = "Last Name is required";
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = "Valid Email is required";
+    if (!formData.phoneNumber || !/^\d+$/.test(formData.phoneNumber))
+      newErrors.phoneNumber = "Valid Phone Number is required";
+    if (!formData.password) newErrors.password = "Password is required";
+    if (formData.password !== formData.confirmPassword)
+      newErrors.confirmPassword = "Passwords must match";
+    return newErrors;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    // Handle form submission (e.g., send data to server)
+    console.log("Form submitted successfully", formData);
+    // Clear form
+    setFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phoneNumber: "",
+      password: "",
+      confirmPassword: "",
+    });
+    setErrors({});
+  };
+
   return (
     <Container component="main" maxWidth="xs" style={{ paddingTop: 120 }}>
       <Box
@@ -20,7 +74,7 @@ const SignUp = () => {
         <Typography component="h1" variant="h3">
           Sign Up
         </Typography>
-        <Box component="form" sx={{ mt: 1 }}>
+        <Box component="form" sx={{ mt: 1 }} onSubmit={handleSubmit}>
           <TextField
             margin="normal"
             required
@@ -30,6 +84,8 @@ const SignUp = () => {
             name="firstName"
             autoComplete="fname"
             autoFocus
+            value={formData.firstName}
+            onChange={handleChange}
             InputProps={{
               sx: {
                 fontSize: "1.5rem",
@@ -40,6 +96,8 @@ const SignUp = () => {
                 fontSize: "1.5rem",
               },
             }}
+            error={!!errors.firstName}
+            helperText={errors.firstName}
           />
           <TextField
             margin="normal"
@@ -49,6 +107,8 @@ const SignUp = () => {
             label="Last Name"
             name="lastName"
             autoComplete="lname"
+            value={formData.lastName}
+            onChange={handleChange}
             InputProps={{
               sx: {
                 fontSize: "1.5rem",
@@ -59,6 +119,8 @@ const SignUp = () => {
                 fontSize: "1.5rem",
               },
             }}
+            error={!!errors.lastName}
+            helperText={errors.lastName}
           />
           <TextField
             margin="normal"
@@ -68,6 +130,8 @@ const SignUp = () => {
             label="Email Address"
             name="email"
             autoComplete="email"
+            value={formData.email}
+            onChange={handleChange}
             InputProps={{
               sx: {
                 fontSize: "1.5rem",
@@ -78,6 +142,8 @@ const SignUp = () => {
                 fontSize: "1.5rem",
               },
             }}
+            error={!!errors.email}
+            helperText={errors.email}
           />
           <TextField
             margin="normal"
@@ -87,6 +153,8 @@ const SignUp = () => {
             label="Phone Number"
             name="phoneNumber"
             autoComplete="tel"
+            value={formData.phoneNumber}
+            onChange={handleChange}
             InputProps={{
               sx: {
                 fontSize: "1.5rem",
@@ -97,6 +165,8 @@ const SignUp = () => {
                 fontSize: "1.5rem",
               },
             }}
+            error={!!errors.phoneNumber}
+            helperText={errors.phoneNumber}
           />
           <TextField
             margin="normal"
@@ -107,6 +177,8 @@ const SignUp = () => {
             type="password"
             id="password"
             autoComplete="new-password"
+            value={formData.password}
+            onChange={handleChange}
             InputProps={{
               sx: {
                 fontSize: "1.5rem",
@@ -117,6 +189,8 @@ const SignUp = () => {
                 fontSize: "1.5rem",
               },
             }}
+            error={!!errors.password}
+            helperText={errors.password}
           />
           <TextField
             margin="normal"
@@ -127,6 +201,8 @@ const SignUp = () => {
             type="password"
             id="confirmPassword"
             autoComplete="new-password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
             InputProps={{
               sx: {
                 fontSize: "1.5rem",
@@ -137,6 +213,8 @@ const SignUp = () => {
                 fontSize: "1.5rem",
               },
             }}
+            error={!!errors.confirmPassword}
+            helperText={errors.confirmPassword}
           />
           <Button
             type="submit"
