@@ -10,6 +10,11 @@ function SignIn() {
           flexDirection: "column",
           alignItems: "center",
           marginTop: 8,
+          backgroundColor: "white",
+          boxShadow: "10px 10px 10px rgba(0, 0, 0, 0.1)",
+          borderRadius: "5px",
+          py: 3,
+          px: 1,
         }}
       >
         <Typography component="h1" variant="h3">
