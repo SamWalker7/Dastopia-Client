@@ -129,7 +129,7 @@ const Booking = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      console.log("Form data:", formData);
+      window.location.href = "/booking-confirmation";
     }
   };
 
@@ -305,6 +305,7 @@ const Booking = () => {
                   color="primary"
                   type="submit"
                   sx={{ py: 1, px: 5, fontSize: 12 }}
+                  onClick={handleSubmit}
                 >
                   Book Now
                 </Button>
