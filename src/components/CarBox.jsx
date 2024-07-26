@@ -2,6 +2,7 @@ import { useState } from "react";
 
 function CarBox({ data, carID }) {
   const [carLoad, setCarLoad] = useState(true);
+
   return (
     <>
       {data[carID].map((car, id) => (
@@ -58,7 +59,7 @@ function CarBox({ data, carID }) {
               </div>
             </div>
             {/* btn cta */}
-            <a className="cta-btn" href={`/Details/${car.id}`}>
+            <a className="cta-btn" href={`/Details/${carID}`}>
               Reserve Now
             </a>
           </div>
