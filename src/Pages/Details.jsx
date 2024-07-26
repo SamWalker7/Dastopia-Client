@@ -436,8 +436,11 @@ export default function Details(props) {
                     cursor: "pointer",
                   }}
                   className="colored-button"
+                  onClick={() =>
+                    (window.location.href = `/booking/${selected.id}?pickUpTime=${startDate}&dropOffTime=${endDate}`)
+                  }
                 >
-                  Continue
+                  Book Now
                 </button>
               </div>
             </div>

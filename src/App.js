@@ -11,6 +11,8 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Search from "./Pages/Search";
 import Details from "./Pages/Details";
+import Booking from "./Pages/Booking";
+import BookingConfirmation from "./Pages/BookingConfirmation";
 import SignIn from "./Pages/Signin";
 import SignUp from "./Pages/SignUp";
 
@@ -27,6 +29,8 @@ function App() {
         <Route path="contact" element={<Contact />} />
         <Route path="/details/:id" element={<Details />} />
         <Route path="search" element={<Search />} />
+        <Route path="booking/:id" element={<Booking />} />
+        <Route path="booking-confirmation" element={<BookingConfirmation />} />
         <Route path="signin" element={<SignIn />} />
         <Route path="signup" element={<SignUp />} />
       </Routes>
