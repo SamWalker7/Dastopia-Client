@@ -39,7 +39,7 @@ const Search = () => {
     }
   }, [dispatch, vehicles.length]);
 
-  console.log("vehicles", vehicles)
+  console.log("vehicles", vehicles);
 
   const [make, setMake] = useState("any");
   const [model, setModel] = useState([]);
@@ -387,7 +387,7 @@ const Search = () => {
                 <ResultsGrid
                   vehicles={filteredVehicles}
                   pickUpTime={startDate}
-                  dropOffTime={endDate}
+                  DropOffTime={endDate}
                 />
               </div>
             ) : (
