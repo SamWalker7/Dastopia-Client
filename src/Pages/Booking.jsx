@@ -6,9 +6,6 @@ import {
   Grid,
   Typography,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from "@mui/material";
 import { useLocation, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -26,10 +23,12 @@ const Booking = () => {
     carMake: "",
     carModel: "",
     transmission: "",
+    year: "",
   });
   const [errors, setErrors] = useState({});
   const location = useLocation();
   const [selected, setSelected] = useState({});
+  const [vehiclesData, setVehiclesData] = useState([]);
 
   const vehicles = useSelector((state) => state.vehicle.vehicles);
   const dispatch = useDispatch();
@@ -44,12 +43,19 @@ const Booking = () => {
     if (vehicles.length < 1) {
       loadData();
     }
-  }, []);
+  }, [dispatch, vehicles.length]);
 
   useEffect(() => {
-    vehicles.map((v) => {
+    vehicles.forEach((v) => {
       if (v.id === id) {
         setSelected(v);
+        setFormData({
+          ...formData,
+          carMake: v.make,
+          carModel: v.model,
+          transmission: v.transmission,
+          year: v.year,
+        });
       }
     });
   }, [vehicles, id]);
@@ -107,6 +113,10 @@ const Booking = () => {
       tempErrors.transmission = "Transmission type is required";
       isValid = false;
     }
+    if (!formData.year) {
+      tempErrors.year = "Year of manufacturing is required";
+      isValid = false;
+    }
 
     setErrors(tempErrors);
     return isValid;
@@ -123,14 +133,11 @@ const Booking = () => {
     }
   };
 
-  console.log(selected);
+  const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+  const pickupDate = formData.pickupDate || today;
 
   return (
-    <Container
-      style={{
-        paddingTop: 220,
-      }}
-    >
+    <Container style={{ paddingTop: 220 }}>
       {selected ? (
         <>
           <Typography variant="h4" gutterBottom>
@@ -203,6 +210,7 @@ const Booking = () => {
                   name="pickupDate"
                   type="date"
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ min: today }}
                   value={formData.pickupDate}
                   onChange={handleChange}
                   error={!!errors.pickupDate}
@@ -219,6 +227,7 @@ const Booking = () => {
                   name="dropOffDate"
                   type="date"
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ min: pickupDate }}
                   value={formData.dropOffDate}
                   onChange={handleChange}
                   error={!!errors.dropOffDate}
@@ -239,7 +248,7 @@ const Booking = () => {
                   helperText={errors.carMake}
                   style={{ marginBottom: 16 }}
                   required
-                  autoFocus
+                  disabled
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -253,23 +262,21 @@ const Booking = () => {
                   helperText={errors.carModel}
                   style={{ marginBottom: 16 }}
                   required
-                  autoFocus
+                  disabled
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth style={{ marginBottom: 16 }}>
-                  <InputLabel>Transmission</InputLabel>
-                  <Select
+                  <TextField
+                    label="Transmission"
                     name="transmission"
                     value={formData.transmission}
                     onChange={handleChange}
                     error={!!errors.transmission}
                     required
                     autoFocus
-                  >
-                    <MenuItem value="manual">Manual</MenuItem>
-                    <MenuItem value="automatic">Automatic</MenuItem>
-                  </Select>
+                    disabled
+                  />
                 </FormControl>
                 {errors.transmission && (
                   <Typography color="error">{errors.transmission}</Typography>
@@ -277,21 +284,19 @@ const Booking = () => {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth style={{ marginBottom: 16 }}>
-                  <InputLabel>Transmission</InputLabel>
-                  <Select
-                    name="transmission"
-                    value={formData.transmission}
+                  <TextField
+                    label="Year of Manufacturing"
+                    name="year"
+                    value={formData.year}
                     onChange={handleChange}
-                    error={!!errors.transmission}
+                    error={!!errors.year}
                     required
                     autoFocus
-                  >
-                    <MenuItem value="manual">Manual</MenuItem>
-                    <MenuItem value="automatic">Automatic</MenuItem>
-                  </Select>
+                    disabled
+                  />
                 </FormControl>
-                {errors.transmission && (
-                  <Typography color="error">{errors.transmission}</Typography>
+                {errors.year && (
+                  <Typography color="error">{errors.year}</Typography>
                 )}
               </Grid>
               <Grid item xs={6}>

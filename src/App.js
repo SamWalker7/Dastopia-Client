@@ -12,6 +12,7 @@ import "slick-carousel/slick/slick-theme.css";
 import Search from "./Pages/Search";
 import Details from "./Pages/Details";
 import Booking from "./Pages/Booking";
+import BookingConfirmation from "./Pages/BookingConfirmation";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/details/:id" element={<Details />} />
         <Route path="search" element={<Search />} />
         <Route path="booking/:id" element={<Booking />} />
+        <Route path="booking-confirmation" element={<BookingConfirmation />} />
       </Routes>
     </>
   );
