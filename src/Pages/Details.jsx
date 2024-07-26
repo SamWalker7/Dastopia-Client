@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import MapComponent from "../components/GoogleMaps";
 import { useParams } from "react-router-dom";
+import Skeleton from "@mui/material/Skeleton";
 
 export default function Details(props) {
   const { id } = useParams();
@@ -30,16 +31,43 @@ export default function Details(props) {
   const [endDate, setEndDate] = useState("");
   const [imageLoading, setImageLoading] = useState(true);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [error, setError] = useState("");
 
   const vehicles = useSelector((state) => state.vehicle.vehicles);
   const dispatch = useDispatch();
 
   const handleStartDateChange = (event) => {
-    setStartDate(event.target.value);
+    const value = event.target.value;
+    const currentDate = new Date().setHours(0, 0, 0, 0);
+    const selectedStartDate = new Date(value).setHours(0, 0, 0, 0);
+    const selectedEndDate = endDate
+      ? new Date(endDate).setHours(0, 0, 0, 0)
+      : null;
+
+    if (selectedStartDate > currentDate) {
+      setError("Pickup date cannot be before the current date.");
+      setStartDate("");
+    } else if (selectedEndDate && selectedStartDate > selectedEndDate) {
+      setError("Pickup date cannot be after the end date.");
+      setStartDate("");
+    } else {
+      setError("");
+      setStartDate(value);
+    }
   };
 
   const handleEndDateChange = (event) => {
-    setEndDate(event.target.value);
+    const value = event.target.value;
+    if (new Date(value) <= new Date(startDate)) {
+      setError("End date must be after the pickup date.");
+      setEndDate("");
+    } else if (new Date(value).toDateString() === new Date().toDateString()) {
+      setError("End date cannot be the current date.");
+      setEndDate("");
+    } else {
+      setError("");
+      setEndDate(value);
+    }
   };
 
   useEffect(() => {
@@ -131,21 +159,29 @@ export default function Details(props) {
               boxShadow: "none !important",
             }}
           >
-            <Carousel
-              sx={{ boxShadow: 0 }}
-              interval={10000}
-              NextIcon={<ChevronRight />}
-              PrevIcon={<ChevronLeft />}
-              navButtonsProps={{
-                style: {
-                  backgroundColor: "#1732c6e9",
-                },
-              }}
-            >
-              {selected.images.map((item) => (
-                <Item item={item} imageLoading={imageLoading} />
-              ))}
-            </Carousel>
+            {imageLoading ? (
+              <Skeleton
+                variant="rectangular"
+                width={windowWidth > 1020 ? "50vw" : "100%"}
+                height={windowWidth > 1020 ? "50vh" : "30vh"}
+              />
+            ) : (
+              <Carousel
+                sx={{ boxShadow: 0 }}
+                interval={10000}
+                NextIcon={<ChevronRight />}
+                PrevIcon={<ChevronLeft />}
+                navButtonsProps={{
+                  style: {
+                    backgroundColor: "#1732c6e9",
+                  },
+                }}
+              >
+                {selected.images.map((item) => (
+                  <Item item={item} imageLoading={imageLoading} />
+                ))}
+              </Carousel>
+            )}
           </div>
           <div style={boxStyle}>
             <div style={{ width: "100%" }}>
@@ -233,6 +269,11 @@ export default function Details(props) {
                   </p>
                 </div>
               </div>
+              {error && (
+                <div style={{ color: "red", marginBottom: "10px" }}>
+                  {error}
+                </div>
+              )}
               <div
                 style={{
                   marginTop: "20px",
@@ -244,7 +285,7 @@ export default function Details(props) {
                 <label style={{ fontSize: "15px", fontWeight: "bold" }}>
                   Trip start
                 </label>
-                <TextField
+                <input
                   label="Start Date"
                   type="date"
                   variant="outlined"
@@ -252,6 +293,7 @@ export default function Details(props) {
                   onChange={handleStartDateChange}
                   InputLabelProps={{ shrink: true }}
                   style={styles.formControl}
+                  min={new Date().toISOString().split("T")[0]}
                 />
               </div>
               <div
@@ -265,7 +307,7 @@ export default function Details(props) {
                 <label style={{ fontSize: "15px", fontWeight: "bold" }}>
                   Trip End
                 </label>
-                <TextField
+                <input
                   label="End Date"
                   type="date"
                   variant="outlined"
@@ -273,6 +315,7 @@ export default function Details(props) {
                   onChange={handleEndDateChange}
                   InputLabelProps={{ shrink: true }}
                   style={styles.formControl}
+                  min={startDate}
                 />
               </div>
             </div>
@@ -546,7 +589,10 @@ export default function Details(props) {
       ) : (
         <div style={{ paddingTop: "200px" }}>
           {" "}
-          <p style={{ fontSize: "20px", margin: "0 auto" }}> loading ... </p>
+          <p style={{ fontSize: "20px", margin: "0 auto" }}>
+            {" "}
+            <span className="loader" style={{ marginTop: "20vh" }}></span>{" "}
+          </p>
         </div>
       )}
     </>
