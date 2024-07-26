@@ -33,7 +33,7 @@ function Testimonials() {
                     <img src={Img2} alt="user_img" />
                     <span>
                       <h4>Rob Daniels</h4>
-                      <p>Washington</p>
+                      <p>Washington DC</p>
                     </span>
                   </div>
                 </div>
