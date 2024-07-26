@@ -58,7 +58,7 @@ function CarBox({ data, carID }) {
               </div>
             </div>
             {/* btn cta */}
-            <a className="cta-btn" href="#booking-section">
+            <a className="cta-btn" href={`/Details/${car.id}`}>
               Reserve Now
             </a>
           </div>

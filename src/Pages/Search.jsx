@@ -39,6 +39,8 @@ const Search = () => {
     }
   }, [dispatch, vehicles.length]);
 
+  console.log("vehicles", vehicles)
+
   const [make, setMake] = useState("any");
   const [model, setModel] = useState([]);
   const [selectedModel, setSelectedModel] = useState("any");
@@ -47,6 +49,7 @@ const Search = () => {
   const [selectedCity, setSelectedCity] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const getQueryParam = (name) => {
@@ -65,24 +68,44 @@ const Search = () => {
     if (dropOffTime) {
       setEndDate(dropOffTime);
     }
-  }, [
-    ethiopianCities,
-    setSelectedCity,
-    setStartDate,
-    setEndDate,
-    setSelectedModel,
-  ]);
+  }, []);
 
   const handleCityChange = (event) => {
     setSelectedCity(event.target.value);
   };
 
   const handleStartDateChange = (event) => {
-    setStartDate(event.target.value);
+    const value = event.target.value;
+    const currentDate = new Date().setHours(0, 0, 0, 0);
+    const selectedStartDate = new Date(value).setHours(0, 0, 0, 0);
+    const selectedEndDate = endDate
+      ? new Date(endDate).setHours(0, 0, 0, 0)
+      : null;
+
+    if (selectedStartDate > currentDate) {
+      setError("Pickup date cannot be before the current date.");
+      setStartDate("");
+    } else if (selectedEndDate && selectedStartDate > selectedEndDate) {
+      setError("Pickup date cannot be after the end date.");
+      setStartDate("");
+    } else {
+      setError("");
+      setStartDate(value);
+    }
   };
 
   const handleEndDateChange = (event) => {
-    setEndDate(event.target.value);
+    const value = event.target.value;
+    if (new Date(value) <= new Date(startDate)) {
+      setError("End date must be after the pickup date.");
+      setEndDate("");
+    } else if (new Date(value).toDateString() === new Date().toDateString()) {
+      setError("End date cannot be the current date.");
+      setEndDate("");
+    } else {
+      setError("");
+      setEndDate(value);
+    }
   };
 
   const handleMakeChange = (event) => {
@@ -223,9 +246,15 @@ const Search = () => {
             marginBottom: "5px",
           }}
         >
+          {error && (
+            <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>
+          )}
           <div style={styles.filterContainer}>
             <div style={styles.topFormControl}>
-              <label style={styles.label}>Location</label>
+              <label>
+                <i className="fa-solid fa-location-dot"></i> &nbsp; Pick-up
+                Location <b>*</b>
+              </label>
               <select
                 style={styles.select}
                 value={selectedCity}
@@ -240,21 +269,29 @@ const Search = () => {
             </div>
 
             <div style={styles.topFormControl}>
-              <label style={styles.label}>PickUp Time</label>
+              <label htmlFor="picktime">
+                <i className="fa-regular fa-calendar-days "></i> &nbsp; Pick-up{" "}
+                <b>*</b>
+              </label>
               <input
                 type="date"
-                // value={startDate}
+                value={startDate}
                 onChange={handleStartDateChange}
                 style={styles.select}
+                min={new Date().toISOString().split("T")[0]}
               />
             </div>
             <div style={styles.topFormControl}>
-              <label style={styles.label}>DropOff Time</label>
+              <label htmlFor="droptime">
+                <i className="fa-regular fa-calendar-days "></i> &nbsp; Drop-off{" "}
+                <b>*</b>
+              </label>
               <input
                 type="date"
-                // value={endDate}
+                value={endDate}
                 onChange={handleEndDateChange}
                 style={styles.select}
+                min={startDate}
               />
             </div>
           </div>
