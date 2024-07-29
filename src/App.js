@@ -15,6 +15,9 @@ import Booking from "./Pages/Booking";
 import BookingConfirmation from "./Pages/BookingConfirmation";
 import SignIn from "./Pages/Signin";
 import SignUp from "./Pages/SignUp";
+import AWS from 'aws-sdk';
+
+AWS.config.region = 'us-east-1';
 
 function App() {
   return (

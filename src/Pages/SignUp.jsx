@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import { Button, TextField, Typography, Container, Box } from "@mui/material";
+import { useDispatch } from "react-redux";
+
+import { signup } from "../api/auth";
 
 const SignUp = () => {
+
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -35,7 +40,7 @@ const SignUp = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -44,6 +49,13 @@ const SignUp = () => {
     }
     // Handle form submission (e.g., send data to server)
     console.log("Form submitted successfully", formData);
+
+    try{
+      const d = await signup(formData.email, formData.firstName, formData.lastName, formData.phoneNumber, formData.password);
+      console.log("resolved data", d);
+    }catch(e){
+      console.log(e, "returned error");
+    }
     // Clear form
     setFormData({
       firstName: "",
