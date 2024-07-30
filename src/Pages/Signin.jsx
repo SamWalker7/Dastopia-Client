@@ -1,7 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, TextField, Typography, Container, Box } from "@mui/material";
+import { useDispatch } from "react-redux";
+
+import { getCurrentUser, signin } from "../api/auth";
 
 function SignIn() {
+  const dispatch = useDispatch();
+
+  // useEffect(() => {
+  //   const fetchUser = async () => {
+  //     try {
+  //       const user = await getCurrentUser()
+  //       console.log("user", user)
+  //     } catch (err) {
+  //       console.error(err)
+  //     }
+  //   }
+
+  //   fetchUser()
+  // }, [])
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -36,8 +54,28 @@ function SignIn() {
     e.preventDefault();
     const formErrors = validate();
     if (Object.keys(formErrors).length === 0) {
-      // Handle form submission
-      console.log("Form submitted successfully", formData);
+      try {
+         signin(formData.email, formData.password).then((response) => {
+          const responseData = {
+            email_verified: response.idToken.payload.email_verified,
+            email: response.idToken.payload.email,
+            firstName: response.idToken.payload.given_name,
+            lastName: response.idToken.payload.family_name,
+            phoneNumber: response.idToken.payload.phone_number,
+            refreshToken: response.refreshToken.token,
+            accessToken: response.accessToken.jwtToken,
+            accExp: response.accessToken.payload.exp,
+            userId: response.accessToken.payload.username,
+          };
+
+          localStorage.setItem("token", responseData.accessToken);
+          localStorage.setItem("accExp", responseData.accExp);
+          localStorage.setItem("refreshToken", responseData.refreshToken);
+          localStorage.setItem("user", JSON.stringify(responseData));
+        });
+      } catch (err) {
+        setErrors(err.message)
+      }
     } else {
       setErrors(formErrors);
     }

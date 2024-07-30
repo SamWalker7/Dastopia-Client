@@ -1,64 +1,119 @@
-import { CognitoUserPool, CognitoUser, AuthenticationDetails } from "amazon-cognito-identity-js";
+import {
+  CognitoUserPool,
+  CognitoUser,
+  AuthenticationDetails,
+} from "amazon-cognito-identity-js";
 
 import { cognitoConfig } from "../cognitoConfig";
 
 const userPool = new CognitoUserPool({
-    UserPoolId: cognitoConfig.UserPoolId,
-    ClientId: cognitoConfig.ClientId
-})
+  UserPoolId: cognitoConfig.UserPoolId,
+  ClientId: cognitoConfig.ClientId,
+});
 
+export function signup(email, firstName, lastName, phoneNumber, password) {
+  return new Promise((resolve, reject) => {
+    userPool.signUp(
+      email,
+      password,
+      [
+        { Name: "email", Value: email },
+        { Name: "given_name", Value: firstName },
+        { Name: "family_name", Value: lastName },
+        { Name: "phone_number", Value: `+251${phoneNumber}` },
+      ],
+      null,
+      (err, result) => {
+        if (err) {
+          console.log("error while sign up", err);
+          reject(err);
+          return;
+        }
 
-export function signup(email, firstName, lastName, phoneNumber, password){
+        console.log("sucess", result);
+        resolve(result.user);
+      }
+    );
+  });
+}
+
+export function signin(email, password) {
+  return new Promise((resolve, reject) => {
+    const authenticationDetails = new AuthenticationDetails({
+      Username: email,
+      Password: password,
+    });
+
+    const cognitoUser = new CognitoUser({
+      Username: email,
+      Pool: userPool,
+    });
+
+    cognitoUser.authenticateUser(authenticationDetails, {
+      onSuccess: (result) => {
+        resolve(result);
+      },
+      onFailure: (err) => {
+        reject(err);
+      },
+    });
+  });
+}
+
+export function confirmSignup(email, code) {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({
+      Username: email,
+      Pool: userPool,
+    });
+
+    cognitoUser.confirmRegistration(code, true, (err, result) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      resolve(result);
+    });
+  });
+}
+
+export function signout() {
+  const cognitoUser = userPool.getCurrentUser()
+  if (cognitoUser) {
+    cognitoUser.signOut()
+  }
+}
+
+export function getCurrentUser() {
     return new Promise((resolve, reject) => {
-        userPool.signUp(
-            email,
-            password,
-            [{Name: "email", Value: email}, {Name: "given_name", Value: firstName}, {Name: "family_name", Value: lastName}, {Name:"phone_number", Value:`+251${phoneNumber}`}],
-            null, 
-            (err, result) => {
-                if(err){
-                    console.log("error while sign up", err)
-                    reject(err);
-                    return;
-                }
-
-                console.log("sucess", result)
-                resolve(result.user)
+        const cognitoUser = userPool.getCurrentUser()
+    
+        if (!cognitoUser) {
+          reject(new Error("No user found"))
+          return
+        }
+    
+        cognitoUser.getSession((err, session) => {
+          if (err) {
+            reject(err)
+            return
+          }
+          cognitoUser.getUserAttributes((err, attributes) => {
+            if (err) {
+              reject(err)
+              return
             }
-        )
-    })
-}
-
-export function signin(email, password){
-
-}
-
-export function confirmSignup(email, code){
-    return new Promise((resolve, reject) => {
-        const cognitoUser = new CognitoUser({
-            Username: email, 
-            Pool: userPool
+            const userData = attributes.reduce((acc, attribute) => {
+              acc[attribute.Name] = attribute.Value
+              return acc
+            }, {})
+    
+            resolve({ ...userData, username: cognitoUser.username })
+          })
         })
-
-        cognitoUser.confirmRegistration(code, true, (err, result) => {
-            if(err){
-                reject(err)
-                return
-            }
-
-            resolve(result)
-        })
-    })    
+      })
+    
 }
 
-export function signout(){
-
-}
-
-export function getCurrentUser(){
-
-}
-
-export function getSession(){
-
-}
+export function getSession() {}
