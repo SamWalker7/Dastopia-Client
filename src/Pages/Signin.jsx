@@ -3,27 +3,16 @@ import { Button, TextField, Typography, Container, Box } from "@mui/material";
 import { useDispatch } from "react-redux";
 
 import { getCurrentUser, signin } from "../api/auth";
+import { useNavigate } from "react-router-dom";
 
 function SignIn() {
-  const dispatch = useDispatch();
 
-  // useEffect(() => {
-  //   const fetchUser = async () => {
-  //     try {
-  //       const user = await getCurrentUser()
-  //       console.log("user", user)
-  //     } catch (err) {
-  //       console.error(err)
-  //     }
-  //   }
-
-  //   fetchUser()
-  // }, [])
-
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [error, setError] = useState(null)
 
   const [errors, setErrors] = useState({
     email: "",
@@ -50,12 +39,12 @@ function SignIn() {
     return errors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const formErrors = validate();
     if (Object.keys(formErrors).length === 0) {
       try {
-         signin(formData.email, formData.password).then((response) => {
+         const response = await signin(formData.email, formData.password)
           const responseData = {
             email_verified: response.idToken.payload.email_verified,
             email: response.idToken.payload.email,
@@ -72,9 +61,11 @@ function SignIn() {
           localStorage.setItem("accExp", responseData.accExp);
           localStorage.setItem("refreshToken", responseData.refreshToken);
           localStorage.setItem("user", JSON.stringify(responseData));
-        });
+          navigate("/")
+      
       } catch (err) {
-        setErrors(err.message)
+        console.log("here")
+        setError(err.message)
       }
     } else {
       setErrors(formErrors);
@@ -83,6 +74,9 @@ function SignIn() {
 
   return (
     <Container component="main" maxWidth="xs" style={{ paddingTop: 150 }}>
+      {error && (
+            <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>
+          )}
       <Box
         sx={{
           display: "flex",

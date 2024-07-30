@@ -54,7 +54,9 @@ export function signin(email, password) {
         resolve(result);
       },
       onFailure: (err) => {
+        
         reject(err);
+        return;
       },
     });
   });
@@ -85,7 +87,7 @@ export function signout() {
   }
 }
 
-export function getCurrentUser() {
+export function getCurrentUser() {  
     return new Promise((resolve, reject) => {
         const cognitoUser = userPool.getCurrentUser()
     
