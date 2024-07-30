@@ -6,7 +6,7 @@ import authReducer from "./slices/authSlice"
 const store = configureStore({
     reducer : {
         vehicle: vehicleReducer,
-        auth: authReducer
+        // auth: authReducer
     }
 });
 

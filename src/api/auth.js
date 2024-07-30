@@ -9,8 +9,6 @@ const userPool = new CognitoUserPool({
 
 
 export function signup(email, firstName, lastName, phoneNumber, password){
-
-  
     return new Promise((resolve, reject) => {
         userPool.signUp(
             email,
@@ -29,4 +27,38 @@ export function signup(email, firstName, lastName, phoneNumber, password){
             }
         )
     })
+}
+
+export function signin(email, password){
+
+}
+
+export function confirmSignup(email, code){
+    return new Promise((resolve, reject) => {
+        const cognitoUser = new CognitoUser({
+            Username: email, 
+            Pool: userPool
+        })
+
+        cognitoUser.confirmRegistration(code, true, (err, result) => {
+            if(err){
+                reject(err)
+                return
+            }
+
+            resolve(result)
+        })
+    })    
+}
+
+export function signout(){
+
+}
+
+export function getCurrentUser(){
+
+}
+
+export function getSession(){
+
 }

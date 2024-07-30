@@ -3,10 +3,11 @@ import { Button, TextField, Typography, Container, Box } from "@mui/material";
 import { useDispatch } from "react-redux";
 
 import { signup } from "../api/auth";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
 
-  const dispatch = useDispatch();
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -47,7 +48,7 @@ const SignUp = () => {
       setErrors(validationErrors);
       return;
     }
-    // Handle form submission (e.g., send data to server)
+  
     console.log("Form submitted successfully", formData);
 
     try{
@@ -56,7 +57,9 @@ const SignUp = () => {
     }catch(e){
       console.log(e, "returned error");
     }
-    // Clear form
+
+    const email = formData.email;
+    
     setFormData({
       firstName: "",
       lastName: "",
@@ -66,6 +69,8 @@ const SignUp = () => {
       confirmPassword: "",
     });
     setErrors({});
+    navigate(`/confirmaccount/${email}`)
+
   };
 
   return (
