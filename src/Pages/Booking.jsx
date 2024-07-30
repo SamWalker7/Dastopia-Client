@@ -7,17 +7,21 @@ import {
   Typography,
   FormControl,
 } from "@mui/material";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchVehicles } from "../store/slices/vehicleSlice";
+import { initializePayment } from "../api";
 
 const Booking = () => {
   const { id } = useParams();
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  console.log(user);
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phoneNumber: "",
+    firstName: user ? user.firstName : "",
+    lastName: user ? user.lastName : "",
+    email: user ? user.email : "",
+    phoneNumber: user ? user.phoneNumber : "",
     pickupDate: "",
     dropOffDate: "",
     carMake: "",
@@ -32,6 +36,7 @@ const Booking = () => {
 
   const vehicles = useSelector((state) => state.vehicle.vehicles);
   const dispatch = useDispatch();
+  const navigate = useNavigate()
 
   useEffect(() => {
     const loadData = async () => {
@@ -126,10 +131,16 @@ const Booking = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) {
-      window.location.href = "/booking-confirmation";
+
+    try {
+      const response = await initializePayment(formData);
+      console.log(response.checkout_url, "url")
+      window.location.href = response.checkout_url
+    } catch (err) {
+      console.log("err");
+      setErrors(err.message)
     }
   };
 
