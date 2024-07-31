@@ -1,11 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, TextField, Typography, Container, Box } from "@mui/material";
+import { useDispatch } from "react-redux";
+
+import { getCurrentUser, signin } from "../api/auth";
+import { useNavigate } from "react-router-dom";
 
 function SignIn() {
+
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [error, setError] = useState(null)
 
   const [errors, setErrors] = useState({
     email: "",
@@ -32,12 +39,34 @@ function SignIn() {
     return errors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const formErrors = validate();
     if (Object.keys(formErrors).length === 0) {
-      // Handle form submission
-      console.log("Form submitted successfully", formData);
+      try {
+         const response = await signin(formData.email, formData.password)
+          const responseData = {
+            email_verified: response.idToken.payload.email_verified,
+            email: response.idToken.payload.email,
+            firstName: response.idToken.payload.given_name,
+            lastName: response.idToken.payload.family_name,
+            phoneNumber: response.idToken.payload.phone_number,
+            refreshToken: response.refreshToken.token,
+            accessToken: response.accessToken.jwtToken,
+            accExp: response.accessToken.payload.exp,
+            userId: response.accessToken.payload.username,
+          };
+
+          localStorage.setItem("token", responseData.accessToken);
+          localStorage.setItem("accExp", responseData.accExp);
+          localStorage.setItem("refreshToken", responseData.refreshToken);
+          localStorage.setItem("user", JSON.stringify(responseData));
+          navigate("/")
+      
+      } catch (err) {
+        console.log("here")
+        setError(err.message)
+      }
     } else {
       setErrors(formErrors);
     }
@@ -45,6 +74,9 @@ function SignIn() {
 
   return (
     <Container component="main" maxWidth="xs" style={{ paddingTop: 150 }}>
+      {error && (
+            <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>
+          )}
       <Box
         sx={{
           display: "flex",

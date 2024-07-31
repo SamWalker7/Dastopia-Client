@@ -60,13 +60,13 @@ body {
 }
 
 .navbar {
-  max-width: 133rem;
+  /* max-width: 133rem; */
   width: 100%;
   height: auto;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 2.7rem 2rem;
+  align-items: start;
+  padding: 2.7rem 7rem;
   position: absolute;
   top: 0;
   left: 0;
@@ -74,6 +74,8 @@ body {
   background-color: transparent;
   z-index: 99999;
   margin: 0 auto;
+  /* box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3); */
+
 }
 .navbar__img {
   width: 14.5rem;
@@ -143,7 +145,7 @@ body {
 
 .mobile-hamb {
   font-size: 2.8rem;
-  display: none;
+  display: block;
   cursor: pointer;
   transition: all 0.3s;
 }
@@ -1273,11 +1275,15 @@ body {
   gap: 2rem;
   align-items: center;
   margin-top: 3rem;
+  cursor: pointer;
+  
 }
 .all-testimonials__box__name__profile img {
+  border: "1px solid black";
   width: 7rem;
   height: 7rem;
   border-radius: 50%;
+  
 }
 .all-testimonials__box__name__profile h4 {
   font-size: 1.8rem;

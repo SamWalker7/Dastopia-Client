@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import { Button, TextField, Typography, Container, Box } from "@mui/material";
+import { useDispatch } from "react-redux";
+
+import { signup } from "../api/auth";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
+
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -35,16 +41,25 @@ const SignUp = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    // Handle form submission (e.g., send data to server)
+  
     console.log("Form submitted successfully", formData);
-    // Clear form
+
+    try{
+      const d = await signup(formData.email, formData.firstName, formData.lastName, formData.phoneNumber, formData.password);
+      console.log("resolved data", d);
+    }catch(e){
+      console.log(e, "returned error");
+    }
+
+    const email = formData.email;
+    
     setFormData({
       firstName: "",
       lastName: "",
@@ -54,6 +69,8 @@ const SignUp = () => {
       confirmPassword: "",
     });
     setErrors({});
+    navigate(`/confirmaccount/${email}`)
+
   };
 
   return (
