@@ -76,9 +76,9 @@ function Navbar() {
             )}
             {!user && (
               <li>
-                <Link className="navbar__buttons__register" to="/signup">
+                <NavLink onClick={openNav}  className="navbar__buttons__register" to="/signup">
                   Register
-                </Link>
+                </NavLink>
               </li>
             )}
 
