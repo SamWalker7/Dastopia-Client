@@ -194,7 +194,7 @@ function Faq() {
                     <Typography
                       variant="h5"
                       style={{
-                        fontSize: "1.7rem",
+                        fontSize: "2rem",
                       }}
                     >
                       {answer}

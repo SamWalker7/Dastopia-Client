@@ -32,8 +32,8 @@ function Testimonials() {
                   <div className="all-testimonials__box__name__profile">
                     <img src={Img2} alt="user_img" />
                     <span>
-                      <h4>Ezra Daniel</h4>
-                      <p>Washington</p>
+                      <h4>Rob Daniels</h4>
+                      <p>Washington DC</p>
                     </span>
                   </div>
                 </div>
@@ -44,15 +44,15 @@ function Testimonials() {
                   <i className="fa-solid fa-quote-right"></i>
                 </span>
                 <p>
-                  "The car was in great condition and made our trip even better.
-                  Highly recommend for this car rental website!"
+                  "በዚህ ድረገጽ ያገኘነው አገልግሎት በጣም አሪፍ ነው: ለመጠቀም በጣም ቀላል የሆነና የኪራይ
+                  ዋጋውም ተመጣጣኝ ነው። ሌሎች እንዲጠቀሙት በደንብ አበረታታለሁ።"
                 </p>
                 <div className="all-testimonials__box__name">
                   <div className="all-testimonials__box__name__profile">
                     <img src={Img3} alt="user_img" />
                     <span>
                       <h4>Abrham Samuel </h4>
-                      <p>WAshington</p>
+                      <p>Addis Ababa</p>
                     </span>
                   </div>
                 </div>

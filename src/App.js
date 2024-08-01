@@ -11,6 +11,14 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Search from "./Pages/Search";
 import Details from "./Pages/Details";
+import Booking from "./Pages/Booking";
+import BookingConfirmation from "./Pages/BookingConfirmation";
+import SignIn from "./Pages/Signin";
+import SignUp from "./Pages/SignUp";
+import AWS from 'aws-sdk';
+import OTPInput from "./Pages/OTP";
+
+AWS.config.region = 'us-east-1';
 
 function App() {
   return (
@@ -25,6 +33,11 @@ function App() {
         <Route path="contact" element={<Contact />} />
         <Route path="/details/:id" element={<Details />} />
         <Route path="search" element={<Search />} />
+        <Route path="booking/:id" element={<Booking />} />
+        <Route path="booking-confirmation" element={<BookingConfirmation />} />
+        <Route path="signin" element={<SignIn />} />
+        <Route path="signup" element={<SignUp />} />
+        <Route path="/confirmaccount/:email" element={<OTPInput />} />
       </Routes>
     </>
   );

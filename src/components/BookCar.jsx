@@ -5,27 +5,54 @@ function BookCar() {
   const [dropOff, setDropOff] = useState("");
   const [pickTime, setPickTime] = useState("");
   const [dropTime, setDropTime] = useState("");
+  const [error, setError] = useState("");
 
   const confirmBooking = () => {
-    if (!pickUp || !dropOff || !pickTime || !dropTime) {
-      document.querySelector(".error-message").style.display = "block";
-      return;
-    } else {
-      const queryParams = new URLSearchParams({
-        pickUp,
-        dropOff,
-        pickTime,
-        dropTime,
-      }).toString();
+    const currentDate = new Date().toISOString().split("T")[0];
 
-      window.location.href = `/search?${queryParams}`;
+    if (!pickUp || !dropOff || !pickTime || !dropTime) {
+      setError("All fields required!");
+      return;
     }
+
+    if (pickTime < currentDate) {
+      setError("Pick-up time cannot be before the current date!");
+      return;
+    }
+
+    if (pickTime >= dropTime) {
+      setError("Pick-up time should be before drop-off time!");
+      return;
+    }
+
+    if (dropTime <= currentDate) {
+      setError("Drop-off time cannot be on or before the current date!");
+      return;
+    }
+
+    setError(""); // Clear any previous error
+
+    const queryParams = new URLSearchParams({
+      pickUp,
+      dropOff,
+      pickTime,
+      dropTime,
+    }).toString();
+
+    window.location.href = `/search?${queryParams}`;
   };
 
   const handlePick = (e) => setPickUp(e.target.value);
   const handleDrop = (e) => setDropOff(e.target.value);
-  const handlePickTime = (e) => setPickTime(e.target.value);
+  const handlePickTime = (e) => {
+    setPickTime(e.target.value);
+    if (dropTime && e.target.value >= dropTime) {
+      setDropTime("");
+    }
+  };
   const handleDropTime = (e) => setDropTime(e.target.value);
+
+  const currentDate = new Date().toISOString().split("T")[0];
 
   return (
     <>
@@ -34,11 +61,11 @@ function BookCar() {
           <div className="book-content">
             <div className="book-content__box">
               <h2>Book a car</h2>
-
-              <p className="error-message">
-                All fields required! <i className="fa-solid fa-xmark"></i>
-              </p>
-
+              {error && (
+                <div style={{ color: "red", marginBottom: "10px" }}>
+                  {error}
+                </div>
+              )}
               <form className="box-form">
                 <div className="box-form__car-type">
                   <label>
@@ -75,6 +102,7 @@ function BookCar() {
                     value={pickTime}
                     onChange={handlePickTime}
                     type="date"
+                    min={currentDate}
                   ></input>
                 </div>
 
@@ -88,6 +116,8 @@ function BookCar() {
                     value={dropTime}
                     onChange={handleDropTime}
                     type="date"
+                    min={pickTime || currentDate}
+                    disabled={!pickTime}
                   ></input>
                 </div>
 
