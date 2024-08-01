@@ -151,7 +151,7 @@ const Booking = () => {
     <Container style={{ paddingTop: 220 }}>
       {selected ? (
         <>
-          <Typography variant="h4" gutterBottom>
+          <Typography style={{fontWeight:"bolder", fontSize: "35px"}} variant="h4" gutterBottom>
             Booking Page
           </Typography>
           <form onSubmit={handleSubmit} style={{ paddingTop: "2rem" }}>
