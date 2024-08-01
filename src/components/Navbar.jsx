@@ -69,15 +69,23 @@ function Navbar() {
 
             {!user && (
               <li>
-                <NavLink onClick={openNav} className="navbar__buttons__sign-in" to="/signin">
-                  Sign In
+                <NavLink
+                  onClick={openNav}
+                  className="navbar__buttons__sign-in"
+                  to="/signin"
+                >
+                  <p>Sign In</p>
                 </NavLink>
               </li>
             )}
-            {!user && (
+            {!user && ( 
               <li>
-                <NavLink onClick={openNav}  className="navbar__buttons__register" to="/signup">
-                  Register
+                <NavLink
+                  onClick={openNav}
+                  className="navbar__buttons__register"
+                  to="/signup"
+                >
+                  <p>Register</p>
                 </NavLink>
               </li>
             )}
@@ -146,21 +154,24 @@ function Navbar() {
 
           {/* mobile */}
           {!user ? (
-            <div style={{
-              display: "flex",
-              gap: "30px",
-               justifyContent: "center", 
-               alignItems: "center", 
-               
-            }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "30px",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
               {!user && (
-                <li style={{listStyle: "none", textDecoration: "none"}}>
+                <li style={{ listStyle: "none", textDecoration: "none" }}>
                   <NavLink
                     onClick={openNav}
                     className="navbar__buttons__sign-in"
                     to="/signin"
                   >
+                    <p>
                     Sign In
+                    </p>
                   </NavLink>
                 </li>
               )}
