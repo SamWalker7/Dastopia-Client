@@ -6,19 +6,19 @@ import { signout } from "../api/auth";
 
 function Navbar() {
   const [nav, setNav] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user"));
 
   const handleLogout = async () => {
     await signout();
     localStorage.removeItem("user");
-    localStorage.removeItem("accToken")
-    localStorage.removeItem("refreshToken")
-    localStorage.removeItem("accExp")
-    navigate("/")
+    localStorage.removeItem("accToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("accExp");
+    navigate("/");
     openNav();
-  }
+  };
 
   const openNav = () => {
     setNav(!nav);
@@ -146,16 +146,32 @@ function Navbar() {
 
           {/* mobile */}
           {!user ? (
-            <div className="mobile-hamb" onClick={openNav}>
-              <i className="fa-solid fa-bars"></i>
+            <div style={{
+              display: "flex",
+              gap: "30px",
+               justifyContent: "center", 
+               alignItems: "center", 
+               
+            }}>
+              {!user && (
+                <li style={{listStyle: "none", textDecoration: "none"}}>
+                  <NavLink
+                    onClick={openNav}
+                    className="navbar__buttons__sign-in"
+                    to="/signin"
+                  >
+                    Sign In
+                  </NavLink>
+                </li>
+              )}
+              <div className="mobile-hamb" onClick={openNav}>
+                <i className="fa-solid fa-bars"></i>
+              </div>
             </div>
           ) : (
             <div className="all-testimonials__box__name" onClick={openNav}>
               <div className="all-testimonials__box__name__profile">
-                <img
-                  src={Img2}
-                  alt="user_img"
-                />
+                <img src={Img2} alt="user_img" />
                 <span>
                   <h4>
                     {user.given_name} {user.family_name}
