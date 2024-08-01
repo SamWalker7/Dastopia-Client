@@ -84,10 +84,11 @@ function SignIn() {
           alignItems: "center",
           marginTop: 8,
           backgroundColor: "white",
-          boxShadow: "10px 10px 10px rgba(0, 0, 0, 0.1)",
+          boxShadow: "0",
           borderRadius: "5px",
           py: 3,
-          px: 1,
+          px: 3,
+          border: "1px solid gray"
         }}
       >
         <Typography component="h1" variant="h3">

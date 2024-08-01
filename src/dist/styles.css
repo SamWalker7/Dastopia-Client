@@ -59,6 +59,14 @@ body {
   background-color: #ff2525;
 }
 
+.register_button {
+  color: white;
+  background-color: #2a43cf;
+  padding: "6px 20px 6px 20px";
+
+  border-radius: 5px;
+}
+
 .navbar {
   /* max-width: 133rem; */
   width: 100%;
@@ -75,7 +83,6 @@ body {
   z-index: 99999;
   margin: 0 auto;
   /* box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3); */
-
 }
 .navbar__img {
   width: 14.5rem;
@@ -119,24 +126,24 @@ body {
     display: none;
   }
 }
-.navbar__buttons__sign-in {
-  color: #010103;
+.navbar__buttons__sign-in p{
   cursor: pointer;
   transition: all 0.3s;
   text-decoration: none;
   font-size: large;
   background-color: #2a43cf;
-  padding: 6px 20px 6px 20px;
+  padding: 1.5rem 3rem;
+  box-shadow: 0 10px 15px 0 rgba(118, 134, 202, 0.35);
+  transition: all 0.3s;
   color: white;
-  border-radius: 5px;
+
 }
-.navbar__buttons__sign-in:hover {
-  color: #2a43cf;
-}
-.navbar__buttons__register {
+
+.navbar__buttons__register p {
   background-color: #2a43cf;
   color: white;
   padding: 1.5rem 3rem;
+
   border-radius: 3px;
   box-shadow: 0 10px 15px 0 rgba(118, 134, 202, 0.35);
   transition: all 0.3s;
@@ -1282,14 +1289,12 @@ body {
   align-items: center;
   margin-top: 3rem;
   cursor: pointer;
-  
 }
 .all-testimonials__box__name__profile img {
   border: "1px solid black";
   width: 7rem;
   height: 7rem;
   border-radius: 50%;
-  
 }
 .all-testimonials__box__name__profile h4 {
   font-size: 1.8rem;

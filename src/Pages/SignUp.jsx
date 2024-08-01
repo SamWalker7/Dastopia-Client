@@ -82,8 +82,9 @@ const SignUp = () => {
           alignItems: "center",
           marginTop: 8,
           backgroundColor: "white",
-          boxShadow: "10px 10px 10px rgba(0, 0, 0, 0.1)",
+          boxShadow: "0px",
           borderRadius: "5px",
+          border: "1px solid gray",
           py: 3,
           px: 1,
         }}
