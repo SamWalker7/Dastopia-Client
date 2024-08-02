@@ -165,7 +165,7 @@ function Navbar() {
               {!user && (
                 <li style={{ listStyle: "none", textDecoration: "none" }}>
                   <NavLink
-                    onClick={openNav}
+                    
                     className="navbar__buttons__sign-in"
                     to="/signin"
                   >
