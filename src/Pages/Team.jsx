@@ -65,7 +65,7 @@ function Team() {
           </div>
           <p
             style={{
-              fontSize: "2rem",
+              fontSize: "4rem",
               fontWeight: "bold",
               marginBottom: "1rem",
               textAlign: "center",
