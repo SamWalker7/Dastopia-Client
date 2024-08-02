@@ -121,12 +121,12 @@ function Navbar() {
               {!user && (
                 <li style={{ listStyle: "none", textDecoration: "none" }} className="outer_signin">
                   <NavLink
-                    
+                   
                     className="navbar__buttons__sign-in"
                     to="/signin"
                   >
                     <p>
-                    Sign In
+                    Sign In/ Signup
                     </p>
                   </NavLink>
                 </li>

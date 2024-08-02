@@ -151,6 +151,20 @@ function SignIn() {
           >
             Sign In
           </Button>
+
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center", 
+            alignItems:"center"
+          }}>
+            <p style={{fontSize: "15px"}}> Dont have an account yet </p>
+            <a href="/signup" style={{
+              textDecoration: "none",
+              color: "#2a43cf",
+              fontSize: "13px"
+            }}>Register here</a>
+          </div>
         </Box>
       </Box>
     </Container>
