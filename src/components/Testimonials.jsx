@@ -39,7 +39,7 @@ function Testimonials() {
                 </div>
               </div>
 
-              <div className="all-testimonials__box box-2">
+              <div className="all-testimonials__box">
                 <span className="quotes-icon">
                   <i className="fa-solid fa-quote-right"></i>
                 </span>

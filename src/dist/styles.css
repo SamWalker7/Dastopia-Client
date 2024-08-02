@@ -1275,10 +1275,12 @@ body {
   width: 100%;
   justify-content: center;
   padding: 3rem;
+  flex-wrap: wrap;
 }
 @media (max-width: 1000px) {
   .all-testimonials {
     padding: 0;
+    /* flex-direction: column; */
   }
 }
 .all-testimonials__box {
