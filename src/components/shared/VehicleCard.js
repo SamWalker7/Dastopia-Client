@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import CardMedia from "@mui/material/CardMedia";
 import VehicleImageSlider from "./VehcileImageSlider";
 import { useInView } from 'react-intersection-observer';
@@ -6,6 +6,13 @@ import { Link } from "react-router-dom";
 
 const VehicleCard = ({ vehicle, index, handleClick, handleClose, toggleListing, anchorEl, selectedIndex, setAnchorEl }) => {
     const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+      }, []);
 
     return (
         <div className="models-div__box" ref={ref} data-id={vehicle?.id}>
@@ -20,7 +27,8 @@ const VehicleCard = ({ vehicle, index, handleClick, handleClose, toggleListing, 
                             loading="lazy"
                             sx={
                                {
-                                border: 0
+                                border: 0,
+                               
                                }
                             }
                         />
@@ -36,7 +44,8 @@ const VehicleCard = ({ vehicle, index, handleClick, handleClose, toggleListing, 
                                 loading="lazy"
                                 sx={
                                     {
-                                     border: 0
+                                     border: 0,
+                                    
                                     }
                                  }
                             />
