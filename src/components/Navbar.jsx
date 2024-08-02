@@ -68,7 +68,7 @@ function Navbar() {
             </li>
 
             {!user && (
-              <li>
+              <li className="inner_signin">
                 <NavLink
                   onClick={openNav}
                   className="navbar__buttons__sign-in"
