@@ -37,6 +37,12 @@ function Team() {
     <>
       <section className="team-page" style={{ paddingTop: "100px" }}>
         <div className="container">
+
+        <div className="testimonials-content__title">
+              <h4>Meet Our Teams</h4>
+              <h2>Our teams</h2>
+             
+            </div>
           <div className="team-container">
             {teamPpl.map((ppl, id) => (
               <div key={id} className="team-container__box">
@@ -44,7 +50,10 @@ function Team() {
                   {ppl.img === PersonIcon ? (
                     <PersonIcon sx={{ fontSize: 100 }} />
                   ) : (
-                    <img src={ppl.img} alt="team member" height={350} />
+                    <img style={{
+                      width: "100%",
+                      height: "auto"
+                    }} src={ppl.img} alt="team member" height={350} />
                   )}
                 </div>
                 <div className="team-container__box__descr">
@@ -56,7 +65,7 @@ function Team() {
           </div>
           <p
             style={{
-              fontSize: "2rem",
+              fontSize: "4rem",
               fontWeight: "bold",
               marginBottom: "1rem",
               textAlign: "center",
