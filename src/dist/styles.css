@@ -139,6 +139,16 @@ body {
 
 }
 
+.outer_signin p{
+  display: flex !important;
+}
+
+@media screen and (max-width: 600px) {
+  .outer_signin p{
+    display: none !important;
+  }
+}
+
 .navbar__buttons__register p {
   background-color: #2a43cf;
   color: white;
