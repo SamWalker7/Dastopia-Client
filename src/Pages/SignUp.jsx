@@ -4,10 +4,11 @@ import { useDispatch } from "react-redux";
 
 import { signup } from "../api/auth";
 import { useNavigate } from "react-router-dom";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 const SignUp = () => {
-
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -16,6 +17,8 @@ const SignUp = () => {
     password: "",
     confirmPassword: "",
   });
+
+  const [phone, setPhone] = useState("");
 
   const [errors, setErrors] = useState({});
 
@@ -33,33 +36,77 @@ const SignUp = () => {
     if (!formData.lastName) newErrors.lastName = "Last Name is required";
     if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = "Valid Email is required";
-    if (!formData.phoneNumber || !/^\d+$/.test(formData.phoneNumber))
-      newErrors.phoneNumber = "Valid Phone Number is required";
     if (!formData.password) newErrors.password = "Password is required";
     if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = "Passwords must match";
     return newErrors;
   };
 
+
+  const validatePasswordInput = (password) => {
+    console.log("password", password)
+    const errors = [];
+    
+    if (!/(?=.*[0-9])/.test(password)) {
+      errors.push('Should contain at least 1 number');
+    }
+    if (!/(?=.*[!@#$%^&*])/.test(password)) {
+      errors.push('Should contain at least 1 special character');
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      errors.push('Should contain at least 1 uppercase letter');
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      errors.push('Should contain at least 1 lowercase letter');
+    }
+    if (password.length < 8) {
+      errors.push('Password minimum length: 8 characters');
+    }
+
+    if(password !== formData.confirmPassword){
+      errors.push("passwords must match")
+    }
+
+    console.log("inside validation", errors)
+    return errors;
+  };
+
+  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
+    const err = validatePasswordInput(formData.password)
+    
     if (Object.keys(validationErrors).length > 0) {
+      console.log(validationErrors, "validation errors")
       setErrors(validationErrors);
       return;
+    }else if(err.length > 0){
+      const passerr = {
+        password : err[0]
+      }
+      setErrors(passerr);
+      return;
     }
-  
+
     console.log("Form submitted successfully", formData);
 
-    try{
-      const d = await signup(formData.email, formData.firstName, formData.lastName, formData.phoneNumber, formData.password);
+    try {
+      const d = await signup(
+        formData.email,
+        formData.firstName,
+        formData.lastName,
+        phone,
+        formData.password
+      );
       console.log("resolved data", d);
-    }catch(e){
+    } catch (e) {
       console.log(e, "returned error");
     }
 
     const email = formData.email;
-    
+
     setFormData({
       firstName: "",
       lastName: "",
@@ -68,9 +115,10 @@ const SignUp = () => {
       password: "",
       confirmPassword: "",
     });
-    setErrors({});
-    navigate(`/confirmaccount/${email}`)
 
+    setPhone("")
+    setErrors({});
+    navigate(`/confirmaccount/${email}`);
   };
 
   return (
@@ -163,29 +211,21 @@ const SignUp = () => {
             error={!!errors.email}
             helperText={errors.email}
           />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="phoneNumber"
-            label="Phone Number"
-            name="phoneNumber"
-            autoComplete="tel"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            InputProps={{
-              sx: {
-                fontSize: "1.5rem",
-              },
-            }}
-            InputLabelProps={{
-              sx: {
-                fontSize: "1.5rem",
-              },
-            }}
-            error={!!errors.phoneNumber}
-            helperText={errors.phoneNumber}
+          
+
+          <PhoneInput
+            country={"et"}
+            value={phone}
+            onChange={setPhone}
+            placeholder="+251965667890"
+            inputStyle={
+              {
+                width: "100%",
+                height: "60px"
+              }
+            }
           />
+
           <TextField
             margin="normal"
             required

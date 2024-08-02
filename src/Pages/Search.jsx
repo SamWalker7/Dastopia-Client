@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { CircularProgress } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+} from "@mui/material";
 import ResultsGrid from "../components/Search/ResultsGrid";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchVehicles, fetchImages } from "../store/slices/vehicleSlice";
 import makesData from "../api/makes.json";
 import modelData from "../api/models.json";
 import MapComponent from "../components/GoogleMaps";
+import zIndex from "@mui/material/styles/zIndex";
 
 const Search = () => {
   const dispatch = useDispatch();
@@ -192,6 +200,7 @@ const Search = () => {
       marginTop: "0.5rem",
       marginBottom: "2rem",
       height: "3vh",
+      zIndex: 100
     },
     formControl: {
       minWidth: "20%",
@@ -212,6 +221,8 @@ const Search = () => {
       border: "1px solid #ccc",
       width: "100%",
       height: "4vh",
+      zIndex: 100,
+      
     },
     resultInfo: {
       color: "#6b7280",
@@ -251,21 +262,28 @@ const Search = () => {
           )}
           <div style={styles.filterContainer}>
             <div style={styles.topFormControl}>
-              <label>
-                <i className="fa-solid fa-location-dot"></i> &nbsp; Pick-up
-                Location <b>*</b>
-              </label>
-              <select
-                style={styles.select}
-                value={selectedCity}
+              <FormControl fullWidth>
+                <label
+                  id="picku"
+                  style={{ fontSize: "15px", fontWeight: "600" }}
+                >
+                Pick-up Location
+                </label>
+                <Select
+                  style={{ ...styles.select, maxWidth: "400px" }}
+                  labelId="picku"
+                  id="demo-simple-select"
+                  value={selectedCity}
                 onChange={handleCityChange}
-              >
-                {ethiopianCities.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
+                  label="Pick-upLocation"
+                  
+                >
+                  <MenuItem value="any">Any</MenuItem>
+                  {ethiopianCities.map((m) => {
+                    return <MenuItem value={m}>{m}</MenuItem>;
+                  })}
+                </Select>
+              </FormControl>
             </div>
 
             <div style={styles.topFormControl}>
@@ -296,61 +314,107 @@ const Search = () => {
             </div>
           </div>
           <div style={styles.filterContainer}>
+
+
+
+
             <div style={styles.topFormControl}>
-              <label style={styles.label}>Make</label>
-              <select
-                style={styles.select}
-                value={make}
+              <FormControl fullWidth>
+                <label
+                  id="make"
+                  style={{ fontSize: "15px", fontWeight: "600" }}
+                >
+                Make
+                </label>
+                <Select
+                  style={{ ...styles.select, maxWidth: "400px",zIndex:100 }}
+                  labelId="make"
+                  id="make"
+                  value={make}
                 onChange={handleMakeChange}
-              >
-                <option value="any">Any</option>
-                {makesData.Makes.map((make) => (
-                  <option key={make.make_id} value={make.make_display}>
-                    {make.make_display}
-                  </option>
-                ))}
-              </select>
+                  label="Make"
+
+                  
+                >
+                  <MenuItem value="any">Any</MenuItem>
+                  {makesData.Makes.map((m) => {
+                    return <MenuItem value={m.make_display}>{m.make_display}</MenuItem>;
+                  })}
+                </Select>
+              </FormControl>
+            </div>
+
+
+
+            <div style={styles.topFormControl}>
+              <FormControl fullWidth>
+                <label
+                  id="demo-simple-select-label"
+                  style={{ fontSize: "15px", fontWeight: "600" }}
+                >
+                  Model
+                </label>
+                <Select
+                  style={{ ...styles.select, maxWidth: "400px" }}
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  value={selectedModel}
+                  label="Age"
+                  onChange={handleModelChange}
+                >
+                  <MenuItem value="any">Any</MenuItem>
+                  {model.map((m) => {
+                    return <MenuItem value={m}>{m}</MenuItem>;
+                  })}
+                </Select>
+              </FormControl>
             </div>
             <div style={styles.topFormControl}>
-              <label style={styles.label}>Model</label>
-              <select
-                style={styles.select}
-                value={selectedModel}
-                onChange={handleModelChange}
-                disabled={make === "any" || model.length === 0}
-              >
-                <option value="any">Any</option>
-                {model.map((model) => (
-                  <option key={model} value={model}>
-                    {model}
-                  </option>
-                ))}
-              </select>
+              <FormControl fullWidth>
+                <label
+                  id="demo-simple-select-label"
+                  style={{ fontSize: "15px", fontWeight: "600" }}
+                >
+                  Transmission
+                </label>
+                <Select
+                  style={{ ...styles.select, maxWidth: "400px" }}
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  value={transmission}
+                  onChange={handleTransmissionChange}
+                 
+                >
+                  <MenuItem value="any">Any</MenuItem>
+                  <MenuItem value="Automatic">Automatic</MenuItem>
+                  <MenuItem value="Manual">Manual</MenuItem>
+                </Select>
+              </FormControl>
             </div>
+
+        
             <div style={styles.topFormControl}>
-              <label style={styles.label}>Transmission</label>
-              <select
-                style={styles.select}
-                value={transmission}
-                onChange={handleTransmissionChange}
-              >
-                <option value="any">Any</option>
-                <option value="Automatic">Automatic</option>
-                <option value="Manual">Manual</option>
-              </select>
-            </div>
-            <div style={styles.topFormControl}>
-              <label style={styles.label}>Category</label>
-              <select
-                style={styles.select}
-                value={category}
+              <FormControl fullWidth>
+                <label
+                  id="demo-simple-select-label"
+                  style={{ fontSize: "15px", fontWeight: "600" }}
+                >
+                  Category
+                </label>
+                <Select
+                  style={{ ...styles.select, maxWidth: "400px" }}
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  value={category}
                 onChange={handleCategoryChange}
-              >
-                <option value="any">Any</option>
-                <option value="Sedan">Sedan</option>
-                <option value="Suv">SUV</option>
-                <option value="Convertible">Convertible</option>
-              </select>
+                 
+                >
+                  <MenuItem value="any">Any</MenuItem>
+                  <MenuItem value="Sedan">Sedan</MenuItem>
+                  <MenuItem value="Convertible">Convertible</MenuItem>
+                  <MenuItem value="Suv">SUV</MenuItem>
+                </Select>
+              </FormControl>
             </div>
           </div>
         </div>

@@ -61,7 +61,16 @@ function Models() {
           </div>
         ) : (
           <div className="container">
+            <div className="testimonials-content__title">
+              <h4>Our car lists</h4>
+              <h2>Book a car with us</h2>
+              <p>
+              Enjoy a hassle-free car rental experience with our wide selection of vehicles. Whether it's a compact car, SUV, or luxury model, 
+              we offer competitive rates and easy booking options. Book with us today and drive with confidence!
+              </p>
+            </div>
             <div className="models-div">
+            
               {vehicles.map((vehicle, index) => (
                 <VehicleCard vehicle={vehicle} key={vehicle.id} index={index} />
                 // <div className="models-div__box">

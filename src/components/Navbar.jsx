@@ -68,7 +68,7 @@ function Navbar() {
             </li>
 
             {!user && (
-              <li>
+              <li className="inner_signin">
                 <NavLink
                   onClick={openNav}
                   className="navbar__buttons__sign-in"
@@ -98,7 +98,7 @@ function Navbar() {
           </ul>
         </div>
 
-        {/* desktop */}
+      
 
         <div className="navbar">
           <div className="navbar__img">
@@ -106,6 +106,8 @@ function Navbar() {
               <img src={Logo} alt="logo-img" />
             </Link>
           </div>
+          
+
          
           {!user ? (
             <div
@@ -117,7 +119,7 @@ function Navbar() {
               }}
             >
               {!user && (
-                <li style={{ listStyle: "none", textDecoration: "none" }}>
+                <li style={{ listStyle: "none", textDecoration: "none" }} className="outer_signin">
                   <NavLink
                    
                     className="navbar__buttons__sign-in"
