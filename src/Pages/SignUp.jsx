@@ -4,10 +4,11 @@ import { useDispatch } from "react-redux";
 
 import { signup } from "../api/auth";
 import { useNavigate } from "react-router-dom";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 const SignUp = () => {
-
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -16,6 +17,8 @@ const SignUp = () => {
     password: "",
     confirmPassword: "",
   });
+
+  const [phone, setPhone] = useState("");
 
   const [errors, setErrors] = useState({});
 
@@ -48,18 +51,24 @@ const SignUp = () => {
       setErrors(validationErrors);
       return;
     }
-  
+
     console.log("Form submitted successfully", formData);
 
-    try{
-      const d = await signup(formData.email, formData.firstName, formData.lastName, formData.phoneNumber, formData.password);
+    try {
+      const d = await signup(
+        formData.email,
+        formData.firstName,
+        formData.lastName,
+        phone,
+        formData.password
+      );
       console.log("resolved data", d);
-    }catch(e){
+    } catch (e) {
       console.log(e, "returned error");
     }
 
     const email = formData.email;
-    
+
     setFormData({
       firstName: "",
       lastName: "",
@@ -68,9 +77,10 @@ const SignUp = () => {
       password: "",
       confirmPassword: "",
     });
-    setErrors({});
-    navigate(`/confirmaccount/${email}`)
 
+    setPhone("")
+    setErrors({});
+    navigate(`/confirmaccount/${email}`);
   };
 
   return (
@@ -163,29 +173,21 @@ const SignUp = () => {
             error={!!errors.email}
             helperText={errors.email}
           />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="phoneNumber"
-            label="Phone Number"
-            name="phoneNumber"
-            autoComplete="tel"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            InputProps={{
-              sx: {
-                fontSize: "1.5rem",
-              },
-            }}
-            InputLabelProps={{
-              sx: {
-                fontSize: "1.5rem",
-              },
-            }}
-            error={!!errors.phoneNumber}
-            helperText={errors.phoneNumber}
+          
+
+          <PhoneInput
+            country={"et"}
+            value={phone}
+            onChange={setPhone}
+            placeholder="+251965667890"
+            inputStyle={
+              {
+                width: "100%",
+                height: "60px"
+              }
+            }
           />
+
           <TextField
             margin="normal"
             required
