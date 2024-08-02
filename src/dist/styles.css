@@ -139,6 +139,23 @@ body {
 
 }
 
+.inner_signin{
+  display: none !important;
+}
+
+.outer_signin p{
+  display: flex !important;
+}
+
+@media screen and (max-width: 600px) {
+  .outer_signin p{
+    display: none !important;
+  }
+  .inner_signin{
+    display: flex !important;
+  }
+}
+
 .navbar__buttons__register p {
   background-color: #2a43cf;
   color: white;

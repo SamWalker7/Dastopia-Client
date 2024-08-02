@@ -68,7 +68,7 @@ function Navbar() {
             </li>
 
             {!user && (
-              <li>
+              <li className="inner_signin">
                 <NavLink
                   onClick={openNav}
                   className="navbar__buttons__sign-in"
@@ -98,7 +98,7 @@ function Navbar() {
           </ul>
         </div>
 
-        {/* desktop */}
+      
 
         <div className="navbar">
           <div className="navbar__img">
@@ -106,53 +106,9 @@ function Navbar() {
               <img src={Logo} alt="logo-img" />
             </Link>
           </div>
-          {/* <ul className="navbar__links">
-            <li>
-              <Link className="home-link" to="/">
-                Home
-              </Link>
-            </li>
-            <li>
-              {" "}
-              <Link className="about-link" to="/about">
-                About
-              </Link>
-            </li>
-            <li>
-              {" "}
-              <Link className="models-link" to="/models">
-                Vehicles
-              </Link>
-            </li>
-            <li>
-              {" "}
-              <Link className="testi-link" to="/testimonials">
-                Testimonials
-              </Link>
-            </li>
-            <li>
-              {" "}
-              <Link className="team-link" to="/team">
-                Our Team
-              </Link>
-            </li>
-            <li>
-              {" "}
-              <Link className="contact-link" to="/contact">
-                Contact
-              </Link>
-            </li>
-          </ul> */}
-          {/* <div className="navbar__buttons">
-            <Link className="navbar__buttons__sign-in" to="/signin">
-              Sign In
-            </Link>
-            <Link className="navbar__buttons__register" to="/signup">
-              Register
-            </Link>
-          </div> */}
+          
 
-          {/* mobile */}
+         
           {!user ? (
             <div
               style={{
@@ -163,7 +119,7 @@ function Navbar() {
               }}
             >
               {!user && (
-                <li style={{ listStyle: "none", textDecoration: "none" }}>
+                <li style={{ listStyle: "none", textDecoration: "none" }} className="outer_signin">
                   <NavLink
                     onClick={openNav}
                     className="navbar__buttons__sign-in"
