@@ -12,8 +12,8 @@ import Footer from "../components/Footer";
 function Home() {
   return (
     <>
-      <Hero />
       <BookCar />
+      <Hero />
       <PlanTrip />
       <PickCar />
       <Banner />
