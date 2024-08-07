@@ -152,42 +152,94 @@ const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
                           marginBottom: "8px",
                         }}
                       >
-                        <strong>Make: </strong>
-                        {vehicle.make ? vehicle.make : "Unknown"}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "2px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <strong style={{ fontSize: "15px" }}>Make: </strong>
+                          <p style={{ fontSize: "15px" }}>
+                            {vehicle.make ? vehicle.make : "Unknown"}
+                          </p>
+                        </div>
                       </Typography>
                       <Typography
                         variant="body2"
                         color="textSecondary"
                         sx={{ marginBottom: "8px" }}
                       >
-                        <strong>Transmission:</strong>{" "}
-                        {vehicle.transmission
-                          ? vehicle.transmission
-                          : "Unknown"}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "2px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <strong style={{ fontSize: "13px" }}>
+                            Transmission:
+                          </strong>{" "}
+                          <p style={{ fontSize: "13px" }}>
+                            {vehicle.transmission
+                              ? vehicle.transmission
+                              : "Unknown"}
+                          </p>
+                        </div>
                       </Typography>
                       <Typography
                         variant="body2"
                         color="textSecondary"
                         sx={{ marginBottom: "8px" }}
                       >
-                        <strong>Color:</strong>{" "}
-                        {vehicle.color ? vehicle.color : "Unknown"}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "2px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <strong style={{ fontSize: "13px" }}>Color:</strong>{" "}
+                          <p style={{ fontSize: "13px" }}>
+                            {vehicle.color ? vehicle.color : "Unknown"}
+                          </p>
+                        </div>
                       </Typography>
                       <Typography
                         variant="body2"
                         color="textSecondary"
                         sx={{ marginBottom: "8px" }}
                       >
-                        <strong>Seats:</strong>{" "}
-                        {vehicle.seats ? vehicle.seats : "Unknown"}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "2px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <strong style={{ fontSize: "13px" }}>Seats:</strong>{" "}
+                          <p style={{ fontSize: "13px" }}>
+                            {vehicle.seats ? vehicle.seats : "Unknown"}
+                          </p>
+                        </div>
                       </Typography>
                       <Typography
                         variant="body2"
                         color="textSecondary"
                         sx={{ marginBottom: "8px" }}
                       >
-                        <strong>Doors:</strong>{" "}
-                        {vehicle.doors ? vehicle.doors : "Unknown"}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "2px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <strong style={{ fontSize: "13px" }}>Doors:</strong>{" "}
+                          <p style={{ fontSize: "13px" }}>
+                            {vehicle.doors ? vehicle.doors : "Unknown"}
+                          </p>
+                        </div>
                       </Typography>
                     </div>
                   </CardContent>
@@ -212,8 +264,18 @@ const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
                           marginBottom: "8px",
                         }}
                       >
-                        <strong>Model: </strong>
-                        {vehicle.model ? vehicle.model : "Unknown"}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "2px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <strong style={{ fontSize: "15px" }}>Model: </strong>
+                          <p style={{ fontSize: "15px" }}>
+                            {vehicle.model ? vehicle.model : "Unknown"}
+                          </p>
+                        </div>
                       </Typography>
                       <Typography
                         variant="body2"
@@ -221,34 +283,81 @@ const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
                         gutterBottom
                         sx={{ marginBottom: "8px" }}
                       >
-                        <strong>Category: </strong>
-                        {vehicle.category ? vehicle.category : "Unknown"}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "2px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <strong style={{ fontSize: "13px" }}>
+                            Category:{" "}
+                          </strong>
+                          <p style={{ fontSize: "13px" }}>
+                            {" "}
+                            {vehicle.category ? vehicle.category : "Unknown"}
+                          </p>
+                        </div>
                       </Typography>
                       <Typography
                         variant="body2"
                         color="textSecondary"
                         sx={{ marginBottom: "8px" }}
                       >
-                        <strong>City:</strong>{" "}
-                        {vehicle.city ? vehicle.city : "Unknown"}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "2px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <strong style={{ fontSize: "13px" }}>City:</strong>{" "}
+                          <p style={{ fontSize: "13px" }}>
+                            {vehicle.city ? vehicle.city : "Unknown"}
+                          </p>
+                        </div>
                       </Typography>
                       <Typography
                         variant="body2"
                         color="textSecondary"
                         sx={{ marginBottom: "8px" }}
                       >
-                        <strong>Model Specification:</strong>{" "}
-                        {vehicle.modelSpecification
-                          ? vehicle.modelSpecification
-                          : "Unknown"}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "2px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <strong style={{ fontSize: "13px" }}>
+                            Model Specification:
+                          </strong>{" "}
+                          <p style={{ fontSize: "13px" }}>
+                            {vehicle.modelSpecification
+                              ? vehicle.modelSpecification
+                              : "Unknown"}
+                          </p>
+                        </div>
                       </Typography>
                       <Typography
                         variant="body2"
                         color="textSecondary"
                         sx={{ marginBottom: "8px" }}
                       >
-                        <strong>Created Time:</strong>{" "}
-                        {vehicle.createdAt ? vehicle.createdAt : "Unknown"}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "2px",
+                            alignItems: "center",
+                          }}
+                        >
+                          <strong style={{ fontSize: "13px" }}>
+                            Created Time:
+                          </strong>{" "}
+                          <p style={{ fontSize: "13px" }}>
+                            {vehicle.createdAt ? vehicle.createdAt : "Unknown"}
+                          </p>
+                        </div>
                       </Typography>
                       <Button
                         variant="contained"
@@ -258,7 +367,7 @@ const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
                           window.location.href = `/Details/${vehicle.id}?pickUpTime=${pickUpTime}&dropOffTime=${DropOffTime}`;
                         }}
                       >
-                        View Details
+                       <p style={{ fontSize: "13px" }}> View Details</p>
                       </Button>
                     </div>
                   </CardContent>

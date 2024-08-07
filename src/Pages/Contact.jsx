@@ -63,7 +63,7 @@ function Contact() {
               </a>
               <a href="/">
                 <i className="fa-solid fa-location-dot"></i>&nbsp; Ethiopia,
-                Addis Abab, Bole Dani Plaza
+                Addis Ababa, Bole Dani Plaza
               </a>
             </div>
             <div className="contact-div__form">
