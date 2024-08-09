@@ -5,13 +5,15 @@ import {
 } from "amazon-cognito-identity-js";
 
 import { cognitoConfig } from "../cognitoConfig";
+import { url } from ".";
+import axios from "axios";
 
 const userPool = new CognitoUserPool({
   UserPoolId: cognitoConfig.UserPoolId,
   ClientId: cognitoConfig.ClientId,
 });
 
-export function signup(email, firstName, lastName, phoneNumber, password) {
+export function signup( email, firstName, lastName, phoneNumber, password) {
   return new Promise((resolve, reject) => {
     userPool.signUp(
       email,
@@ -20,7 +22,7 @@ export function signup(email, firstName, lastName, phoneNumber, password) {
         { Name: "email", Value: email },
         { Name: "given_name", Value: firstName },
         { Name: "family_name", Value: lastName },
-        { Name: "phone_number", Value: `+251${phoneNumber}` },
+        { Name: "phone_number", Value: `+${phoneNumber}` },
       ],
       null,
       (err, result) => {
@@ -29,8 +31,6 @@ export function signup(email, firstName, lastName, phoneNumber, password) {
           reject(err);
           return;
         }
-
-        console.log("sucess", result);
         resolve(result.user);
       }
     );

@@ -99,7 +99,7 @@ const SignUp = () => {
 
     try {
       const id = generateUUID();
-      // console.log("resolved data", id);
+      console.log("resolved data", id);
       const d = await signup(
         // id,
         formData.email,
@@ -109,7 +109,9 @@ const SignUp = () => {
         formData.password
       );
 
-      
+      console.log("signup data", d)
+
+      const phone_number = formData.email;
 
       setFormData({
         firstName: "",
@@ -122,13 +124,14 @@ const SignUp = () => {
 
       setPhone("");
       setErrors({});
-      navigate(`/confirmaccount/${email}`);
+      setPhone("");
+      navigate(`/confirmaccount/${phone_number}`);
       
     } catch (e) {
       console.log(e, "returned error");
     }
 
-    const email = formData.email;
+   
   };
 
   return (

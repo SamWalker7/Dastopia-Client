@@ -178,7 +178,7 @@ export default function OTPInput() {
   const handleSubmit = async () => {
     setError(null);
     try {
-      await confirmSignup(email, otp);
+      const response = await confirmSignup(email, otp);
       setSuccess(true);
     } catch (e) {
       setError(e.message);
@@ -247,11 +247,26 @@ export default function OTPInput() {
             alignItems: "center",
           }}
         >
-          <h1 style={{fontSize:"35px"}}>Your Account verified Successfully</h1>
-          <p style={{fontSize:"15px", fontWeight: "lighter"}}>Please return to login page and sign in </p>
-          <a href="/signin" style={{marginTop: "16px", fontSize: "15px", padding: "6px 25px 6px 25px", background: "#2a43cf", color: "white", borderRadius: "5px", textDecoration: "none"}}>
+          <h1 style={{ fontSize: "35px" }}>
+            Your Account verified Successfully
+          </h1>
+          <p style={{ fontSize: "15px", fontWeight: "lighter" }}>
+            Please return to login page and sign in{" "}
+          </p>
+          <a
+            href="/signin"
+            style={{
+              marginTop: "16px",
+              fontSize: "15px",
+              padding: "6px 25px 6px 25px",
+              background: "#2a43cf",
+              color: "white",
+              borderRadius: "5px",
+              textDecoration: "none",
+            }}
+          >
             Signin
-            </a>
+          </a>
         </div>
       )}
     </>

@@ -62,6 +62,7 @@ function SignIn() {
     const formErrors = validate();
     if (Object.keys(formErrors).length === 0) {
       try {
+        console.log(formData)
         const response = await signin(formData.email, formData.password);
         const responseData = {
           email_verified: response.idToken.payload.email_verified,
@@ -136,42 +137,7 @@ function SignIn() {
             helperText={errors.email}
             error={!!errors.email}
           />
-          {/* <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            value={formData.password}
-            onChange={handleChange}
-            InputProps={{
-              sx: {
-                fontSize: "1.5rem",
-              },
-            }}
-            InputLabelProps={{
-              sx: {
-                fontSize: "1.5rem",
-              },
-            }}
-            helperText={errors.password}
-            error={!!errors.password}
-            endAdornment={
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="toggle password visibility"
-                  onClick={handleClickShowPassword}
-                  onMouseDown={handleMouseDownPassword}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            }
-          /> */}
+          
          
           <OutlinedInput
             margin="normal"
@@ -184,6 +150,11 @@ function SignIn() {
             onChange={handleChange}
             type={showPassword ? "text" : "password"}
             InputProps={{
+              sx: {
+                fontSize: "1.5rem",
+              },
+            }}
+            InputLabelProps={{
               sx: {
                 fontSize: "1.5rem",
               },
