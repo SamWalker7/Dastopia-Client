@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button, TextField, Typography, Container, Box } from "@mui/material";
 import { useDispatch } from "react-redux";
+import { v4 as uuidv4 } from "uuid";
 
 import { signup } from "../api/auth";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +18,13 @@ const SignUp = () => {
     password: "",
     confirmPassword: "",
   });
+
+  const [uuid, setUuid] = useState("");
+
+  const generateUUID = () => {
+    const newUUID = uuidv4();
+    return newUUID;
+  };
 
   const [phone, setPhone] = useState("");
 
@@ -42,50 +50,47 @@ const SignUp = () => {
     return newErrors;
   };
 
-
   const validatePasswordInput = (password) => {
-    console.log("password", password)
+    console.log("password", password);
     const errors = [];
-    
+
     if (!/(?=.*[0-9])/.test(password)) {
-      errors.push('Should contain at least 1 number');
+      errors.push("Should contain at least 1 number");
     }
     if (!/(?=.*[!@#$%^&*])/.test(password)) {
-      errors.push('Should contain at least 1 special character');
+      errors.push("Should contain at least 1 special character");
     }
     if (!/(?=.*[A-Z])/.test(password)) {
-      errors.push('Should contain at least 1 uppercase letter');
+      errors.push("Should contain at least 1 uppercase letter");
     }
     if (!/(?=.*[a-z])/.test(password)) {
-      errors.push('Should contain at least 1 lowercase letter');
+      errors.push("Should contain at least 1 lowercase letter");
     }
     if (password.length < 8) {
-      errors.push('Password minimum length: 8 characters');
+      errors.push("Password minimum length: 8 characters");
     }
 
-    if(password !== formData.confirmPassword){
-      errors.push("passwords must match")
+    if (password !== formData.confirmPassword) {
+      errors.push("passwords must match");
     }
 
-    console.log("inside validation", errors)
+    console.log("inside validation", errors);
     return errors;
   };
-
-  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
-    const err = validatePasswordInput(formData.password)
-    
+    const err = validatePasswordInput(formData.password);
+
     if (Object.keys(validationErrors).length > 0) {
-      console.log(validationErrors, "validation errors")
+      console.log(validationErrors, "validation errors");
       setErrors(validationErrors);
       return;
-    }else if(err.length > 0){
+    } else if (err.length > 0) {
       const passerr = {
-        password : err[0]
-      }
+        password: err[0],
+      };
       setErrors(passerr);
       return;
     }
@@ -93,32 +98,37 @@ const SignUp = () => {
     console.log("Form submitted successfully", formData);
 
     try {
+      const id = generateUUID();
+      // console.log("resolved data", id);
       const d = await signup(
+        // id,
         formData.email,
         formData.firstName,
         formData.lastName,
         phone,
         formData.password
       );
-      console.log("resolved data", d);
+
+      
+
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phoneNumber: "",
+        password: "",
+        confirmPassword: "",
+      });
+
+      setPhone("");
+      setErrors({});
+      navigate(`/confirmaccount/${email}`);
+      
     } catch (e) {
       console.log(e, "returned error");
     }
 
     const email = formData.email;
-
-    setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phoneNumber: "",
-      password: "",
-      confirmPassword: "",
-    });
-
-    setPhone("")
-    setErrors({});
-    navigate(`/confirmaccount/${email}`);
   };
 
   return (
@@ -211,19 +221,16 @@ const SignUp = () => {
             error={!!errors.email}
             helperText={errors.email}
           />
-          
 
           <PhoneInput
             country={"et"}
             value={phone}
             onChange={setPhone}
             placeholder="+251965667890"
-            inputStyle={
-              {
-                width: "100%",
-                height: "60px"
-              }
-            }
+            inputStyle={{
+              width: "100%",
+              height: "60px",
+            }}
           />
 
           <TextField
