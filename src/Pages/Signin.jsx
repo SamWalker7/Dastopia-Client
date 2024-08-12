@@ -145,7 +145,7 @@ function SignIn() {
             fullWidth
             id="outlined-adornment-password"
             name="password" 
-            autoComplete="Pawssword"
+            autoComplete="Password"
             value={formData.password}
             onChange={handleChange}
             type={showPassword ? "text" : "password"}
