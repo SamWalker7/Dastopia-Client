@@ -149,9 +149,12 @@ function SignIn() {
             value={formData.password}
             onChange={handleChange}
             type={showPassword ? "text" : "password"}
+            sx={{
+              fontSize: "15px"
+            }}
             InputProps={{
               sx: {
-                fontSize: "1.5rem",
+                fontSize: "20",
               },
             }}
             InputLabelProps={{
