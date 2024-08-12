@@ -74,7 +74,7 @@ function Navbar() {
                   className="navbar__buttons__sign-in"
                   to="/signin"
                 >
-                  <p>Sign In</p>
+                  <p>Sign In/ Signup</p>
                 </NavLink>
               </li>
             )}

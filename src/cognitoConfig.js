@@ -1,4 +1,4 @@
 export const cognitoConfig = {
-    UserPoolId: "us-east-1_v77XPir2V",
-    ClientId: "2vq35c21uvo7oq3jllgnb1cd4p",
+    UserPoolId: "us-east-1_TfjfDvjWz",
+    ClientId: "2vda7vg7ocfp0q58k3d5g8aj9h",
 }

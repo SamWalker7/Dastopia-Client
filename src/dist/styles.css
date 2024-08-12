@@ -139,6 +139,10 @@ body {
 
 }
 
+.navbar__buttons__sign-in{
+  text-decoration: none;
+}
+
 .inner_signin{
   display: none !important;
 }

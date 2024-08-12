@@ -55,16 +55,16 @@ function Contact() {
                 process. Our team is dedicated to ensuring a smooth and
                 enjoyable rental experience. Reach out today!
               </p>
-              <a href="/">
+              <a href={`tel:+251966748642`}>
                 <i className="fa-solid fa-phone"></i>&nbsp; (251) 946-888444
               </a>
-              <a href="/">
-                <i className="fa-solid fa-envelope"></i>&nbsp; contact@dastopia.com
+              <a href="mailto:contact@dastechnologies.org">
+                <i className="fa-solid fa-envelope"></i>&nbsp; contact@dastechnologies.org
               </a>
-              <a href="/">
+              <p>
                 <i className="fa-solid fa-location-dot"></i>&nbsp; Ethiopia,
                 Addis Ababa, Bole Dani Plaza
-              </a>
+              </p>
             </div>
             <div className="contact-div__form">
               {error && (
