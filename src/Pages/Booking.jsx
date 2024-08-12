@@ -10,7 +10,7 @@ import {
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchVehicles } from "../store/slices/vehicleSlice";
-import { initializePayment } from "../api";
+import { getDownloadUrl, getOneVehicle, initializePayment } from "../api";
 
 const Booking = () => {
   const { id } = useParams();
@@ -38,32 +38,40 @@ const Booking = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const loadData = async () => {
-      const response = await dispatch(fetchVehicles());
-      if (fetchVehicles.fulfilled.match(response)) {
-        const vehicles = response.payload;
-      }
-    };
-    if (vehicles.length < 1) {
-      loadData();
+  const fetchData = async () => {
+    const response = await getOneVehicle(id);
+    const data = response.body;
+    let urls = [];
+    setSelected({
+      ...data,
+      imageLoading: true,
+      images: [],
+    });
+
+    for (const image of data.vehicleImageKeys) {
+      const path = await getDownloadUrl(image.key);
+      urls.push(path.body || "https://via.placeholder.com/300");
     }
-  }, [dispatch, vehicles.length]);
+
+    setSelected({
+      ...data,
+      imageLoading: false,
+      images: urls,
+    });
+    setFormData({
+      ...formData,
+      carMake: data.make,
+      carModel: data.model,
+      transmission: data.transmission,
+      year: data.year,
+    });
+  };
 
   useEffect(() => {
-    vehicles.forEach((v) => {
-      if (v.id === id) {
-        setSelected(v);
-        setFormData({
-          ...formData,
-          carMake: v.make,
-          carModel: v.model,
-          transmission: v.transmission,
-          year: v.year,
-        });
-      }
-    });
-  }, [vehicles, id]);
+    fetchData();
+  }, [id]);
+
+
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);

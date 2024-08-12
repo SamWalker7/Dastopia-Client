@@ -23,6 +23,7 @@ import {
 import MapComponent from "../components/GoogleMaps";
 import { useParams } from "react-router-dom";
 import Skeleton from "@mui/material/Skeleton";
+import { getDownloadUrl, getOneVehicle } from "../api";
 
 export default function Details(props) {
   const { id } = useParams();
@@ -70,32 +71,34 @@ export default function Details(props) {
     }
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      const response = await dispatch(fetchVehicles());
-      if (fetchVehicles.fulfilled.match(response)) {
-        const vehicles = response.payload;
-        vehicles.map(async (vehicle) => {
-          await dispatch(fetchImages(vehicle));
-        });
-      }
-    };
-    if (vehicles.length < 1) {
-      loadData();
+  console.log(selected, "selected");
+
+  const fetchData = async () => {
+    const response = await getOneVehicle(id);
+    const data = response.body;
+    let urls = [];
+    setSelected({
+      ...data,
+      imageLoading: true,
+      images: [],
+    });
+
+    for (const image of data.vehicleImageKeys) {
+      const path = await getDownloadUrl(image.key);
+      urls.push(path.body || "https://via.placeholder.com/300");
     }
-  }, []);
+
+    setSelected({
+      ...data,
+      imageLoading: false,
+      images: urls,
+    });
+    setImageLoading(false)
+  };
 
   useEffect(() => {
-    vehicles.map((v) => {
-      if (v.id === id) {
-        setSelected(v);
-        if (!v.imageLoading) {
-          console.log(imageLoading, "image loading");
-          setImageLoading(false);
-        }
-      }
-    });
-  }, [vehicles]);
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -470,9 +473,12 @@ export default function Details(props) {
                 Description:{" "}
               </p>
               <p style={{ fontSize: "13px", width: "50%" }}>
-              The {selected.make} {selected.model} is a versatile and reliable vehicle designed to cater to a wide range of driving needs. 
-              With its sleek exterior and modern design, this car stands out on the road, offering a blend of style and functionality.
-               Under the hood, it boasts a powerful yet efficient engine, delivering a smooth and responsive driving experience
+                The {selected.make} {selected.model} is a versatile and reliable
+                vehicle designed to cater to a wide range of driving needs. With
+                its sleek exterior and modern design, this car stands out on the
+                road, offering a blend of style and functionality. Under the
+                hood, it boasts a powerful yet efficient engine, delivering a
+                smooth and responsive driving experience
               </p>
             </div>
           </div>

@@ -109,7 +109,7 @@ const SignUp = () => {
         formData.password
       );
 
-      console.log("signup data", d)
+      console.log("signup data", d);
 
       const phone_number = formData.email;
 
@@ -126,12 +126,9 @@ const SignUp = () => {
       setErrors({});
       setPhone("");
       navigate(`/confirmaccount/${phone_number}`);
-      
     } catch (e) {
       console.log(e, "returned error");
     }
-
-   
   };
 
   return (
@@ -293,6 +290,27 @@ const SignUp = () => {
             Sign Up
           </Button>
         </Box>
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <p style={{ fontSize: "15px" }}> Already have an account ? </p>
+          <a
+            href="/signin"
+            style={{
+              textDecoration: "none",
+              color: "#2a43cf",
+              fontSize: "13px",
+            }}
+          >
+            Signin here
+          </a>
+        </div>
       </Box>
     </Container>
   );

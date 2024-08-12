@@ -26,6 +26,19 @@ export const getAllVehicles = async () => {
     }
 }
 
+export const getOneVehicle = async(id) => {
+    try{
+        const response = await axios.post(url('add_vehicle'), {
+            "operation": "getVehicleById",
+            id: id
+        })
+
+        return response.data
+    }catch(err){
+        console.error(err)
+    }
+}
+
 export const initializePayment = async (data) => {
     try{
         const response = await axios.post(url('add_vehicle'), {
