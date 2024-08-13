@@ -13,18 +13,17 @@ function Footer() {
                 have the perfect car to meet your needs.
               </li>
               <li>
-                <a href="tel:123456789">
+                <a href="tel:+251946888444">
                   <i className="fa-solid fa-phone"></i> &nbsp; (251) 946-888444
                 </a>
               </li>
 
               <li>
                 <a
-                  href="mailto: 
-                contqct@dastopia.com"
+                  href="mailto:contact@dastopia.org"
                 >
                   <i className="fa-solid fa-envelope"></i>
-                  &nbsp; contact@dastopia.com
+                  &nbsp; contact@dastopia.org
                 </a>
               </li>
               <li>

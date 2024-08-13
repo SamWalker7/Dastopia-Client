@@ -15,14 +15,19 @@ function Contact() {
     const message = event.target.elements.message.value;
 
     const subject = `Inquiry from ${firstName} ${lastName}`;
-    const body = `Name: ${firstName} ${lastName}%0D%0A
-                  Phone Number: ${phoneNumber}%0D%0A
-                  Company Name: ${companyName}%0D%0A
-                  Job Role: ${jobRole}%0D%0A
-                  Email: ${email}%0D%0A
+    const body = `Name: ${firstName} ${lastName}
+
+                  Phone Number: ${phoneNumber}
+
+                  Company Name: ${companyName}
+
+                  Job Role: ${jobRole}
+
+                  Email: ${email}
+
                   Message: ${message}`;
 
-    const emailLink = `mailto:contact@dastopia.com?subject=${encodeURIComponent(
+    const emailLink = `mailto:contact@dastopia.org?subject=${encodeURIComponent(
       subject
     )}&body=${encodeURIComponent(body)}`;
 
@@ -55,7 +60,7 @@ function Contact() {
                 process. Our team is dedicated to ensuring a smooth and
                 enjoyable rental experience. Reach out today!
               </p>
-              <a href={`tel:+251966748642`}>
+              <a href={`tel:+251946888444`}>
                 <i className="fa-solid fa-phone"></i>&nbsp; (251) 946-888444
               </a>
               <a href="mailto:contact@dastechnologies.org">
