@@ -260,7 +260,7 @@ const Booking = () => {
                   label="Pickup Date"
                   name="pickupDate"
                   type="date"
-                  InputLabelProps={{ shrink: true }}
+                  InputLabelProps={}
                   inputProps={{ min: today }}
                   value={formData.pickupDate}
                   onChange={handleChange}
@@ -271,6 +271,7 @@ const Booking = () => {
                     sx: {
                       fontSize: "1.5rem",
                     },
+                    
                   }}
                   required
                   autoFocus
