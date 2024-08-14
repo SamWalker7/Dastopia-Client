@@ -80,7 +80,7 @@ body {
   left: 0;
   right: 0;
   background-color: transparent;
-  z-index: 99999;
+  z-index: 10;
   margin: 0 auto;
   /* box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3); */
 }

@@ -193,6 +193,7 @@ const Search = () => {
       borderRadius: "4px",
       display: "flex",
       flexWrap: "wrap",
+      marginBottom: "10px"
     },
     topFormControl: {
       minWidth: "20%",
@@ -200,7 +201,8 @@ const Search = () => {
       marginTop: "0.5rem",
       marginBottom: "2rem",
       height: "3vh",
-      zIndex: 100
+      zIndex: 100,
+      fontSize: "16px"
     },
     formControl: {
       minWidth: "20%",
@@ -222,7 +224,6 @@ const Search = () => {
       width: "100%",
       height: "4vh",
       zIndex: 100,
-      
     },
     resultInfo: {
       color: "#6b7280",
@@ -265,18 +266,20 @@ const Search = () => {
               <FormControl fullWidth>
                 <label
                   id="picku"
-                  style={{ fontSize: "15px", fontWeight: "600" }}
+                  style={{ fontSize: "16px", fontWeight: "600" }}
                 >
-                Pick-up Location
+                  Pick-up Location
                 </label>
                 <Select
                   style={{ ...styles.select, maxWidth: "400px" }}
+                  sx={{
+                    fontSize: "16px",
+                  }}
                   labelId="picku"
                   id="demo-simple-select"
                   value={selectedCity}
-                onChange={handleCityChange}
+                  onChange={handleCityChange}
                   label="Pick-upLocation"
-                  
                 >
                   <MenuItem value="any">Any</MenuItem>
                   {ethiopianCities.map((m) => {
@@ -288,7 +291,7 @@ const Search = () => {
 
             <div style={styles.topFormControl}>
               <label htmlFor="picktime">
-                <i className="fa-regular fa-calendar-days "></i> &nbsp; Pick-up{" "}
+                <i className="fa-regular fa-calendar-days"></i> &nbsp; Pick-up{" "}
                 <b>*</b>
               </label>
               <input
@@ -314,37 +317,54 @@ const Search = () => {
             </div>
           </div>
           <div style={styles.filterContainer}>
-
-
-
-
             <div style={styles.topFormControl}>
               <FormControl fullWidth>
                 <label
                   id="make"
                   style={{ fontSize: "15px", fontWeight: "600" }}
                 >
-                Make
+                  Make
                 </label>
                 <Select
-                  style={{ ...styles.select, maxWidth: "400px",zIndex:100 }}
+                  style={{ ...styles.select, maxWidth: "400px", zIndex: 100, fontSize: "16px" }}
                   labelId="make"
                   id="make"
                   value={make}
-                onChange={handleMakeChange}
+                  onChange={handleMakeChange}
                   label="Make"
-
-                  
+                  sx={{
+                    fontSize: "16px"
+                  }}
+                  MenuProps={{
+                    anchorOrigin: {
+                      vertical: "bottom",
+                      horizontal: "left",
+                    },
+                    transformOrigin: {
+                      vertical: "top",
+                      horizontal: "left",
+                    },
+                    getContentAnchorEl: null,
+                  }}
                 >
-                  <MenuItem value="any">Any</MenuItem>
+                  <MenuItem sx={{ fontSize: "16px" }} value="any">
+                    Any
+                  </MenuItem>
                   {makesData.Makes.map((m) => {
-                    return <MenuItem value={m.make_display}>{m.make_display}</MenuItem>;
+                    return (
+                      <MenuItem
+                        sx={{
+                          fontSize: "16px",
+                        }}
+                        value={m.make_display}
+                      >
+                        {m.make_display}
+                      </MenuItem>
+                    );
                   })}
                 </Select>
               </FormControl>
             </div>
-
-
 
             <div style={styles.topFormControl}>
               <FormControl fullWidth>
@@ -356,15 +376,16 @@ const Search = () => {
                 </label>
                 <Select
                   style={{ ...styles.select, maxWidth: "400px" }}
+                  sx={{fontSize: "16px"}} 
                   labelId="demo-simple-select-label"
                   id="demo-simple-select"
                   value={selectedModel}
                   label="Age"
                   onChange={handleModelChange}
                 >
-                  <MenuItem value="any">Any</MenuItem>
+                  <MenuItem sx={{fontSize: "16px"}} value="any">Any</MenuItem>
                   {model.map((m) => {
-                    return <MenuItem value={m}>{m}</MenuItem>;
+                    return <MenuItem sx={{fontSize: "16px"}}  value={m}>{m}</MenuItem>;
                   })}
                 </Select>
               </FormControl>
@@ -383,16 +404,15 @@ const Search = () => {
                   id="demo-simple-select"
                   value={transmission}
                   onChange={handleTransmissionChange}
-                 
+                  sx={{fontSize: "16px"}} 
                 >
-                  <MenuItem value="any">Any</MenuItem>
-                  <MenuItem value="Automatic">Automatic</MenuItem>
-                  <MenuItem value="Manual">Manual</MenuItem>
+                  <MenuItem sx={{fontSize: "16px"}}  value="any">Any</MenuItem>
+                  <MenuItem sx={{fontSize: "16px"}}  value="Automatic">Automatic</MenuItem>
+                  <MenuItem sx={{fontSize: "16px"}}  value="Manual">Manual</MenuItem>
                 </Select>
               </FormControl>
             </div>
 
-        
             <div style={styles.topFormControl}>
               <FormControl fullWidth>
                 <label
@@ -406,13 +426,13 @@ const Search = () => {
                   labelId="demo-simple-select-label"
                   id="demo-simple-select"
                   value={category}
-                onChange={handleCategoryChange}
-                 
+                  onChange={handleCategoryChange}
+                  sx={{fontSize: "16px"}} 
                 >
-                  <MenuItem value="any">Any</MenuItem>
-                  <MenuItem value="Sedan">Sedan</MenuItem>
-                  <MenuItem value="Convertible">Convertible</MenuItem>
-                  <MenuItem value="Suv">SUV</MenuItem>
+                  <MenuItem sx={{fontSize: "16px"}}  value="any">Any</MenuItem>
+                  <MenuItem sx={{fontSize: "16px"}}  value="Sedan">Sedan</MenuItem>
+                  <MenuItem sx={{fontSize: "16px"}}  value="Convertible">Convertible</MenuItem>
+                  <MenuItem sx={{fontSize: "16px"}}  value="Suv">SUV</MenuItem>
                 </Select>
               </FormControl>
             </div>

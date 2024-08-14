@@ -206,7 +206,7 @@ function SignIn() {
                 fontSize: "13px",
               }}
             >
-              Register here
+              Signup here
             </a>
           </div>
         </Box>
