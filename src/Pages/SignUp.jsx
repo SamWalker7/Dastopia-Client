@@ -109,7 +109,7 @@ const SignUp = () => {
         formData.password
       );
 
-      console.log("signup data", d);
+      
 
       const phone_number = formData.email;
 
