@@ -255,7 +255,6 @@ const SignUp = () => {
             }}
           />
 
-<<<<<<< HEAD
           <div>
             <TextField
               margin="normal"
@@ -301,37 +300,6 @@ const SignUp = () => {
               </FormHelperText>
             </div>
           </div>
-=======
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="new-password"
-            value={formData.password}
-            onChange={handleChange}
-            InputProps={{
-              sx: {
-                fontSize: "1.5rem",
-              },
-            }}
-            InputLabelProps={{
-              sx: {
-                fontSize: "1.5rem",
-              },
-            }}
-            error={!!errors.password}
-            helperText={errors.password}
-            FormHelperTextProps={{
-              sx:{
-                fontSize: "1.5rem"
-              }
-            }}
-          />
->>>>>>> origin/dev
           <TextField
             margin="normal"
             required

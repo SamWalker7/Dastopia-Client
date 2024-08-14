@@ -177,9 +177,10 @@ export default function Details(props) {
                 navButtonsProps={{
                   style: {
                     backgroundColor: "#000000",
+                    
                   },
                 }}
-                navButtonsAlwaysInvisible={true}
+               
               >
                 {selected.images.map((item) => (
                   <Item item={item} imageLoading={imageLoading} />
