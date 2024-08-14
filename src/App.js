@@ -17,6 +17,7 @@ import SignIn from "./Pages/Signin";
 import SignUp from "./Pages/SignUp";
 import AWS from 'aws-sdk';
 import OTPInput from "./Pages/OTP";
+import NotFound from "./components/404";
 
 AWS.config.region = 'us-east-1';
 
@@ -38,6 +39,7 @@ function App() {
         <Route path="signin" element={<SignIn />} />
         <Route path="signup" element={<SignUp />} />
         <Route path="/confirmaccount/:email" element={<OTPInput />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
