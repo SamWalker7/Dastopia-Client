@@ -8,8 +8,6 @@ import { cognitoConfig } from "../cognitoConfig";
 import { url } from ".";
 import axios from "axios";
 
-import { v4 as uuidv4 } from "uuid";
-
 const userPool = new CognitoUserPool({
   UserPoolId: cognitoConfig.UserPoolId,
   ClientId: cognitoConfig.ClientId,
@@ -18,9 +16,10 @@ const userPool = new CognitoUserPool({
 export function signup( email, firstName, lastName, phoneNumber, password) {
   return new Promise((resolve, reject) => {
     userPool.signUp(
-      email,
+      `+${phoneNumber}`,
       password,
       [
+        { Name: "email", Value: email },
         { Name: "given_name", Value: firstName },
         { Name: "family_name", Value: lastName },
         { Name: "phone_number", Value: `+${phoneNumber}` },
@@ -39,15 +38,15 @@ export function signup( email, firstName, lastName, phoneNumber, password) {
 }
 
 export function signin(signinOption, password) {
- 
+  console.log(signinOption, password)
   return new Promise((resolve, reject) => {
     const authenticationDetails = new AuthenticationDetails({
-      Username: signinOption,
+      Username: `+${signinOption}`,
       Password: password,
     });
 
     const cognitoUser = new CognitoUser({
-      Username: signinOption,
+      Username: `+${signinOption}`,
       Pool: userPool,
     });
 
@@ -64,11 +63,10 @@ export function signin(signinOption, password) {
   });
 }
 
-export function confirmSignup(email, code) {
- 
+export function confirmSignup(phone, code) {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({
-      Username: email,
+      Username: `+${phone}`,
       Pool: userPool,
     });
 

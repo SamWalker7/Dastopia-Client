@@ -111,7 +111,7 @@ const SignUp = () => {
 
       
 
-      const phone_number = formData.email;
+      const phone_number = phone;
 
       setFormData({
         firstName: "",

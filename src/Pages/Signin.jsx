@@ -57,21 +57,21 @@ function SignIn() {
 
   const validate = () => {
     const errors = {};
-    if (value == 0 && !formData.email) {
-      errors.email = "Email is required";
-      // emailRef.current.focus();
-    } else if (value == 0 && !/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = "Email address is invalid";
-      // emailRef.current.focus();
-    }
-    if (value == 0 && !formData.password) {
+    // if (value == 0 && !formData.email) {
+    //   errors.email = "Email is required";
+    //   // emailRef.current.focus();
+    // } else if (value == 0 && !/\S+@\S+\.\S+/.test(formData.email)) {
+    //   errors.email = "Email address is invalid";
+    //   // emailRef.current.focus();
+    // }
+    if (!formData.password) {
       errors.password = "Password is required";
       console.log("password error")
     }
 
-    if(value == 1 && !pwd){
-      setPwdError("Password is Required")
-    }
+    // if(value == 1 && !pwd){
+    //   setPwdError("Password is Required")
+    // }
 
 
     return errors;
@@ -79,12 +79,14 @@ function SignIn() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     const formErrors = validate();
     if (Object.keys(formErrors).length === 0) {
       try {
-        const signinOption = value === 0 ? formData.email : `+${phone}`;
-        const signinPassword = value == 0 ? formData.password : pwd
-        console.log(signinOption, signinPassword)
+
+        const signinOption = phone;
+        const signinPassword = formData.password
+        
         const response = await signin(signinOption, signinPassword);
         const responseData = {
           email_verified: response.idToken.payload.email_verified,
@@ -130,7 +132,7 @@ function SignIn() {
         alignItems: "center",
       }}
     >
-      <Box sx={{ borderBottom: 1, borderColor: "divider", maxWidth: "500px" }}>
+      {/* <Box sx={{ borderBottom: 1, borderColor: "divider", maxWidth: "500px" }}>
         <Tabs
           value={value}
           onChange={handleChangeTab}
@@ -149,7 +151,7 @@ function SignIn() {
             aria-controls="simple-tabpanel-1"
           />
         </Tabs>
-      </Box>
+      </Box> */}
       <Container component="main" maxWidth="xs">
         {error && (
           <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>
@@ -172,9 +174,9 @@ function SignIn() {
             Sign In
           </Typography>
           <Box component="form" sx={{ mt: 1 }} onSubmit={handleSubmit}>
-            {value === 0 ? (
-              <>
-                <TextField
+            {/* {value === 0 ? ( */}
+              
+                {/* <TextField
                   margin="normal"
                   required
                   fullWidth
@@ -197,9 +199,9 @@ function SignIn() {
                   }}
                   helperText={errors.email}
                   error={!!errors.email}
-                />
+                /> */}
 
-                <OutlinedInput
+                {/* <OutlinedInput
                   margin="normal"
                   required
                   fullWidth
@@ -238,10 +240,10 @@ function SignIn() {
                     </InputAdornment>
                   }
                   label="Password"
-                />
-              </>
-            ) : (
-              <>
+                /> */}
+              
+            {/* ) : ( */}
+              
                 <PhoneInput
                   country={"et"}
                   value={phone}
@@ -261,8 +263,8 @@ function SignIn() {
                   id="outlined-adornment-password"
                   name="password"
                   autoComplete="Password"
-                  value={pwd}
-                  onChange={handlePwdChange}
+                  value={formData.password}
+                  onChange={handleChange}
                   type={showPassword ? "text" : "password"}
                   sx={{
                     fontSize: "15px",
@@ -278,8 +280,8 @@ function SignIn() {
                       fontSize: "1.5rem",
                     },
                   }}
-                  helperText={pwdError}
-                  error={!!pwdError}
+                  helperText={errors.password}
+                  error={!!errors.password}
                   endAdornment={
                     <InputAdornment position="end">
                       <IconButton
@@ -294,8 +296,8 @@ function SignIn() {
                   }
                   label="Password"
                 />
-              </>
-            )}
+              
+            {/* )} */}
 
             <Button
               type="submit"
