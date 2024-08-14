@@ -11,6 +11,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchVehicles } from "../store/slices/vehicleSlice";
 import { getDownloadUrl, getOneVehicle, initializePayment } from "../api";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 const Booking = () => {
   const { id } = useParams();
@@ -19,7 +21,7 @@ const Booking = () => {
     firstName: "",
     lastName: "",
     email: "",
-    phoneNumber: "",
+ 
     pickupDate: "",
     dropOffDate: "",
     carMake: "",
@@ -27,6 +29,8 @@ const Booking = () => {
     transmission: "",
     year: "",
   });
+
+  const [phone, setPhone] = useState("")
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -39,7 +43,7 @@ const Booking = () => {
         phoneNumber: user.phoneNumber || "",
       }));
     }
-  }, []);
+  }, [localStorage]);
   const [errors, setErrors] = useState({});
   const location = useLocation();
   const [selected, setSelected] = useState({});
@@ -87,6 +91,8 @@ const Booking = () => {
     const pickupTime = queryParams.get("pickUpTime");
     const dropOffTime = queryParams.get("dropOffTime");
 
+    console.log(pickupTime, dropOffTime, 'time')
+
     if (pickupTime) {
       setFormData((prevData) => ({ ...prevData, pickupDate: pickupTime }));
     }
@@ -111,10 +117,7 @@ const Booking = () => {
       tempErrors.email = "Valid email is required";
       isValid = false;
     }
-    if (!formData.phoneNumber || !/^\d{10}$/.test(formData.phoneNumber)) {
-      tempErrors.phoneNumber = "Valid phone number is required";
-      isValid = false;
-    }
+    
     if (!formData.pickupDate) {
       tempErrors.pickupDate = "Pickup date is required";
       isValid = false;
@@ -145,15 +148,18 @@ const Booking = () => {
   };
 
   const handleChange = (e) => {
+   
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
+
+
     e.preventDefault();
 
     if (validate()) {
       try {
-        const response = await initializePayment(formData);
+        const response = await initializePayment({...formData, phoneNumber: phone});
 
         sessionStorage.setItem("pickup_time", formData.pickupDate);
         sessionStorage.setItem("dropoff_time", formData.dropOffDate);
@@ -268,30 +274,16 @@ const Booking = () => {
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField
-                  sx={{ fontSize: "1.5rem" }}
-                  InputProps={{
-                    sx: {
-                      fontSize: "1.5rem",
-                    },
-                  }}
-                  fullWidth
-                  label="Phone Number"
-                  name="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  error={!!errors.phoneNumber}
-                  helperText={errors.phoneNumber}
-                  style={{ marginBottom: 16 }}
-                  InputLabelProps={{
-                    sx: {
-                      fontSize: "1.5rem",
-                    },
-                  }}
-                  required
-                  autoFocus
-                />
+              <PhoneInput
+            country={"et"}
+            value={phone}
+            onChange={setPhone}
+            placeholder="+251965667890"
+            inputStyle={{
+              width: "100%",
+              height: "60px",
+            }}
+          />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
