@@ -180,6 +180,11 @@ const Booking = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   sx={{ fontSize: "1.5rem" }}
+                  InputProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   fullWidth
                   label="First Name"
                   name="firstName"
@@ -200,6 +205,11 @@ const Booking = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   sx={{ fontSize: "1.5rem" }}
+                  InputProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   fullWidth
                   label="Last Name"
                   name="lastName"
@@ -220,6 +230,11 @@ const Booking = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   sx={{ fontSize: "1.5rem" }}
+                  InputProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   fullWidth
                   label="Email"
                   name="email"
@@ -241,6 +256,11 @@ const Booking = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   sx={{ fontSize: "1.5rem" }}
+                  InputProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   fullWidth
                   label="Phone Number"
                   name="phoneNumber"
@@ -262,6 +282,11 @@ const Booking = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   sx={{ fontSize: "1.5rem" }}
+                  InputProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   fullWidth
                   label="Pickup Date"
                   name="pickupDate"
@@ -273,9 +298,10 @@ const Booking = () => {
                   helperText={errors.pickupDate}
                   style={{ marginBottom: 16 }}
                   InputLabelProps={{
+                    shrink: true,
                     sx: {
-                      fontSize: "1.5rem",
-                    },
+                      fontSize: "14px"
+                    }
                   }}
                   required
                   autoFocus
@@ -284,6 +310,11 @@ const Booking = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   sx={{ fontSize: "1.5rem" }}
+                  InputProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   fullWidth
                   label="Drop Off Date"
                   name="dropOffDate"
@@ -295,11 +326,12 @@ const Booking = () => {
                   helperText={errors.dropOffDate}
                   style={{ marginBottom: 16 }}
                   InputLabelProps={{
+                    shrink: true,
                     sx: {
-                      fontSize: "1.5rem",
-                      shrink: true,
-                    },
-                  }}
+                      fontSize: "14px"
+                    }
+                  }
+               }
                   required
                   autoFocus
                 />
@@ -307,6 +339,11 @@ const Booking = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   sx={{ fontSize: "1.5rem" }}
+                  InputProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   fullWidth
                   label="Car Make"
                   name="carMake"
@@ -327,6 +364,11 @@ const Booking = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   sx={{ fontSize: "1.5rem" }}
+                  InputProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   fullWidth
                   label="Car Model"
                   name="carModel"
@@ -348,6 +390,11 @@ const Booking = () => {
                 <FormControl fullWidth style={{ marginBottom: 16 }}>
                   <TextField
                     sx={{ fontSize: "1.5rem" }}
+                    InputProps={{
+                      sx: {
+                        fontSize: "1.5rem",
+                      },
+                    }}
                     label="Transmission"
                     name="transmission"
                     value={formData.transmission}
@@ -371,6 +418,11 @@ const Booking = () => {
                 <FormControl fullWidth style={{ marginBottom: 16 }}>
                   <TextField
                     sx={{ fontSize: "1.5rem" }}
+                    InputProps={{
+                      sx: {
+                        fontSize: "1.5rem",
+                      },
+                    }}
                     label="Year of Manufacturing"
                     name="year"
                     value={formData.year}
@@ -395,7 +447,8 @@ const Booking = () => {
                   variant="contained"
                   color="primary"
                   type="submit"
-                  sx={{ py: 1, px: 5, fontSize: 12 }}
+                  
+                  sx={{ py: 1, px: 5, fontSize: 12, backgroundColor: "#2a43cf" }}
                   onClick={handleSubmit}
                 >
                   Book Now
