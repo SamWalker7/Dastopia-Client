@@ -34,7 +34,9 @@ function Hero({ isHome = false }) {
     <>
       <section id="home" className="hero-section">
         <div className="container">
-          {<img className="bg-shape" src={BgShape} alt="bg-shape" />}
+          {<img className="bg-shape" src={BgShape} alt="bg-shape" style={{
+            width:"20px"
+          }} />}
           <div className="hero-content">
             <div className="hero-content__text">
               <h4>Plan your trip now</h4>

@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Button, TextField, Typography, Container, Box } from "@mui/material";
+import {
+  Button,
+  TextField,
+  Typography,
+  Container,
+  Box,
+  FormHelperText,
+} from "@mui/material";
 import { useDispatch } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 
@@ -42,8 +49,8 @@ const SignUp = () => {
     const newErrors = {};
     if (!formData.firstName) newErrors.firstName = "First Name is required";
     if (!formData.lastName) newErrors.lastName = "Last Name is required";
-    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email))
-      newErrors.email = "Valid Email is required";
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = "Enter a valid email";
     if (!formData.password) newErrors.password = "Password is required";
     if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = "Passwords must match";
@@ -109,9 +116,9 @@ const SignUp = () => {
         formData.password
       );
 
-      console.log("signup data", d);
+      
 
-      const phone_number = formData.email;
+      const phone_number = phone;
 
       setFormData({
         firstName: "",
@@ -174,6 +181,11 @@ const SignUp = () => {
             }}
             error={!!errors.firstName}
             helperText={errors.firstName}
+            FormHelperTextProps={{
+              sx:{
+                fontSize: "1.5rem"
+              }
+            }}
           />
           <TextField
             margin="normal"
@@ -197,10 +209,15 @@ const SignUp = () => {
             }}
             error={!!errors.lastName}
             helperText={errors.lastName}
+            FormHelperTextProps={{
+              sx:{
+                fontSize: "1.5rem"
+              }
+            }}
           />
           <TextField
             margin="normal"
-            required
+           
             fullWidth
             id="email"
             label="Email Address"
@@ -220,6 +237,11 @@ const SignUp = () => {
             }}
             error={!!errors.email}
             helperText={errors.email}
+            FormHelperTextProps={{
+              sx:{
+                fontSize: "1.5rem"
+              }
+            }}
           />
 
           <PhoneInput
@@ -233,30 +255,51 @@ const SignUp = () => {
             }}
           />
 
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="new-password"
-            value={formData.password}
-            onChange={handleChange}
-            InputProps={{
-              sx: {
-                fontSize: "1.5rem",
-              },
-            }}
-            InputLabelProps={{
-              sx: {
-                fontSize: "1.5rem",
-              },
-            }}
-            error={!!errors.password}
-            helperText={errors.password}
-          />
+          <div>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="new-password"
+              value={formData.password}
+              onChange={handleChange}
+              InputProps={{
+                sx: {
+                  fontSize: "1.5rem",
+                },
+              }}
+              InputLabelProps={{
+                sx: {
+                  fontSize: "1.5rem",
+                },
+              }}
+              error={!!errors.password}
+              helperText={errors.password}
+            />
+            <div style={{
+              display:"flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+              alignItems:"flex-end"
+            }}>
+              <FormHelperText sx={{ fontSize: "10px", color:"black" }}>
+                Contains at least 1 number
+              </FormHelperText>
+              <FormHelperText sx={{ fontSize: "10px", color:"black"  }}>
+                Contains at least 1 special character
+              </FormHelperText>
+              <FormHelperText sx={{ fontSize: "10px", color:"black"  }}>
+                Contains at least 1 uppercase letter
+              </FormHelperText>
+              <FormHelperText sx={{ fontSize: "10px", color:"black" }}>
+                Contains at least 1 lowercase letter
+              </FormHelperText>
+            </div>
+          </div>
           <TextField
             margin="normal"
             required
@@ -280,6 +323,11 @@ const SignUp = () => {
             }}
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword}
+            FormHelperTextProps={{
+              sx:{
+                fontSize: "1.5rem"
+              }
+            }}
           />
           <Button
             type="submit"

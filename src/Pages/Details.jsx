@@ -176,9 +176,11 @@ export default function Details(props) {
                 PrevIcon={<ChevronLeft />}
                 navButtonsProps={{
                   style: {
-                    backgroundColor: "#1732c6e9",
+                    backgroundColor: "#000000",
+                    
                   },
                 }}
+               
               >
                 {selected.images.map((item) => (
                   <Item item={item} imageLoading={imageLoading} />
@@ -620,8 +622,8 @@ function Item(props) {
     <Paper style={{ boxShadow: "none" }}>
       <div
         style={{
-          height: "auto",
-          width: windowWidth > 1020 ? "50vw" : "100%",
+          height: "30vh",
+          width: "auto" ,
           position: "relative",
         }}
       >
