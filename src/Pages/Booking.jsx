@@ -260,7 +260,7 @@ const Booking = () => {
                   label="Pickup Date"
                   name="pickupDate"
                   type="date"
-                  InputLabelProps={}
+                 
                   inputProps={{ min: today }}
                   value={formData.pickupDate}
                   onChange={handleChange}
@@ -284,7 +284,7 @@ const Booking = () => {
                   label="Drop Off Date"
                   name="dropOffDate"
                   type="date"
-                  InputLabelProps={{ shrink: true }}
+                  
                   inputProps={{ min: pickupDate }}
                   value={formData.dropOffDate}
                   onChange={handleChange}
