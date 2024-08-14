@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Button, TextField, Typography, Container, Box } from "@mui/material";
+import {
+  Button,
+  TextField,
+  Typography,
+  Container,
+  Box,
+  FormHelperText,
+} from "@mui/material";
 import { useDispatch } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 
@@ -248,35 +255,51 @@ const SignUp = () => {
             }}
           />
 
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="new-password"
-            value={formData.password}
-            onChange={handleChange}
-            InputProps={{
-              sx: {
-                fontSize: "1.5rem",
-              },
-            }}
-            InputLabelProps={{
-              sx: {
-                fontSize: "1.5rem",
-              },
-            }}
-            error={!!errors.password}
-            helperText={errors.password}
-            FormHelperTextProps={{
-              sx:{
-                fontSize: "1.5rem"
-              }
-            }}
-          />
+          <div>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="new-password"
+              value={formData.password}
+              onChange={handleChange}
+              InputProps={{
+                sx: {
+                  fontSize: "1.5rem",
+                },
+              }}
+              InputLabelProps={{
+                sx: {
+                  fontSize: "1.5rem",
+                },
+              }}
+              error={!!errors.password}
+              helperText={errors.password}
+            />
+            <div style={{
+              display:"flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+              alignItems:"flex-end"
+            }}>
+              <FormHelperText sx={{ fontSize: "10px", color:"black" }}>
+                Contains at least 1 number
+              </FormHelperText>
+              <FormHelperText sx={{ fontSize: "10px", color:"black"  }}>
+                Contains at least 1 special character
+              </FormHelperText>
+              <FormHelperText sx={{ fontSize: "10px", color:"black"  }}>
+                Contains at least 1 uppercase letter
+              </FormHelperText>
+              <FormHelperText sx={{ fontSize: "10px", color:"black" }}>
+                Contains at least 1 lowercase letter
+              </FormHelperText>
+            </div>
+          </div>
           <TextField
             margin="normal"
             required

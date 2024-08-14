@@ -20,6 +20,7 @@ const Search = () => {
 
   const vehicles = useSelector((state) => state?.vehicle.vehicles);
   const isLoading = useSelector((state) => state?.vehicle.loading);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   const ethiopianCities = [
     "Addis Ababa",
@@ -47,7 +48,11 @@ const Search = () => {
     }
   }, [dispatch, vehicles.length]);
 
-  console.log("vehicles", vehicles);
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const [make, setMake] = useState("any");
   const [model, setModel] = useState([]);
@@ -161,6 +166,7 @@ const Search = () => {
     borderRadius: "5px",
     padding: "10px",
     justifyContent: "center",
+    gap: "0px",
   };
 
   const colSpanStyle = {
@@ -193,16 +199,16 @@ const Search = () => {
       borderRadius: "4px",
       display: "flex",
       flexWrap: "wrap",
-      marginBottom: "10px"
+      marginBottom: "10px",
     },
     topFormControl: {
       minWidth: "20%",
       marginRight: "16px",
-      marginTop: "0.5rem",
+      marginTop: windowWidth < 500 ? "1.5rem" : "0.5rem",
       marginBottom: "2rem",
       height: "3vh",
       zIndex: 100,
-      fontSize: "16px"
+      fontSize: "16px",
     },
     formControl: {
       minWidth: "20%",
@@ -233,8 +239,9 @@ const Search = () => {
     },
   };
 
-  if (typeof window !== "undefined" && window.innerWidth < 768) {
+  if (windowWidth < 768) {
     gridContainerStyle.flexDirection = "column";
+
     colSpanStyle.width = "100%";
     mapContainerStyle.display = "none";
 
@@ -265,17 +272,17 @@ const Search = () => {
             <div style={styles.topFormControl}>
               <FormControl fullWidth>
                 <label
-                  id="picku"
-                  style={{ fontSize: "16px", fontWeight: "600" }}
+                  id="pickup"
+                  style={{ fontSize: "15px", fontWeight: "600" }}
                 >
                   Pick-up Location
                 </label>
                 <Select
                   style={{ ...styles.select, maxWidth: "400px" }}
+                  labelId="pickup"
                   sx={{
                     fontSize: "16px",
                   }}
-                  labelId="picku"
                   id="demo-simple-select"
                   value={selectedCity}
                   onChange={handleCityChange}
@@ -326,14 +333,19 @@ const Search = () => {
                   Make
                 </label>
                 <Select
-                  style={{ ...styles.select, maxWidth: "400px", zIndex: 100, fontSize: "16px" }}
+                  style={{
+                    ...styles.select,
+                    maxWidth: "400px",
+                    zIndex: 100,
+                    fontSize: "16px",
+                  }}
                   labelId="make"
                   id="make"
                   value={make}
                   onChange={handleMakeChange}
                   label="Make"
                   sx={{
-                    fontSize: "16px"
+                    fontSize: "16px",
                   }}
                   MenuProps={{
                     anchorOrigin: {
@@ -376,16 +388,22 @@ const Search = () => {
                 </label>
                 <Select
                   style={{ ...styles.select, maxWidth: "400px" }}
-                  sx={{fontSize: "16px"}} 
+                  sx={{ fontSize: "16px" }}
                   labelId="demo-simple-select-label"
                   id="demo-simple-select"
                   value={selectedModel}
                   label="Age"
                   onChange={handleModelChange}
                 >
-                  <MenuItem sx={{fontSize: "16px"}} value="any">Any</MenuItem>
+                  <MenuItem sx={{ fontSize: "16px" }} value="any">
+                    Any
+                  </MenuItem>
                   {model.map((m) => {
-                    return <MenuItem sx={{fontSize: "16px"}}  value={m}>{m}</MenuItem>;
+                    return (
+                      <MenuItem sx={{ fontSize: "16px" }} value={m}>
+                        {m}
+                      </MenuItem>
+                    );
                   })}
                 </Select>
               </FormControl>
@@ -404,11 +422,17 @@ const Search = () => {
                   id="demo-simple-select"
                   value={transmission}
                   onChange={handleTransmissionChange}
-                  sx={{fontSize: "16px"}} 
+                  sx={{ fontSize: "16px" }}
                 >
-                  <MenuItem sx={{fontSize: "16px"}}  value="any">Any</MenuItem>
-                  <MenuItem sx={{fontSize: "16px"}}  value="Automatic">Automatic</MenuItem>
-                  <MenuItem sx={{fontSize: "16px"}}  value="Manual">Manual</MenuItem>
+                  <MenuItem sx={{ fontSize: "16px" }} value="any">
+                    Any
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "16px" }} value="Automatic">
+                    Automatic
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "16px" }} value="Manual">
+                    Manual
+                  </MenuItem>
                 </Select>
               </FormControl>
             </div>
@@ -427,12 +451,20 @@ const Search = () => {
                   id="demo-simple-select"
                   value={category}
                   onChange={handleCategoryChange}
-                  sx={{fontSize: "16px"}} 
+                  sx={{ fontSize: "16px" }}
                 >
-                  <MenuItem sx={{fontSize: "16px"}}  value="any">Any</MenuItem>
-                  <MenuItem sx={{fontSize: "16px"}}  value="Sedan">Sedan</MenuItem>
-                  <MenuItem sx={{fontSize: "16px"}}  value="Convertible">Convertible</MenuItem>
-                  <MenuItem sx={{fontSize: "16px"}}  value="Suv">SUV</MenuItem>
+                  <MenuItem sx={{ fontSize: "16px" }} value="any">
+                    Any
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "16px" }} value="Sedan">
+                    Sedan
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "16px" }} value="Convertible">
+                    Convertible
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "16px" }} value="Suv">
+                    SUV
+                  </MenuItem>
                 </Select>
               </FormControl>
             </div>
