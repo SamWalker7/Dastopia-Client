@@ -92,7 +92,7 @@ function Navbar() {
 
             {user && (
               <li onClick={handleLogout}>
-                <div className="navbar__buttons__sign-in">Sign out</div>
+                <div className="navbar__buttons__sign-in" style={{cursor: "pointer"}}>Sign out</div>
               </li>
             )}
           </ul>

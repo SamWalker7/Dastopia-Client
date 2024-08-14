@@ -18,6 +18,8 @@ const BookingConfirmation = () => {
   const id = sessionStorage.getItem("car_id");
   const pickupTime = sessionStorage.getItem("pickup_time")
   const dropOffTime = sessionStorage.getItem("dropoff_time")
+  const first_name = sessionStorage.getItem("first_name")
+  const last_name = sessionStorage.getItem("last_name")
 
   const [details, setDetails] = useState(null);
   const navigate = useNavigate();
@@ -37,19 +39,7 @@ const BookingConfirmation = () => {
   }, []);
 
   console.log(details, "details");
-  const bookingDetails = {
-    bookingId: "12345",
-    name: "John Doe",
-    email: "johndoe@example.com",
-    date: "2024-07-26",
-    service: "Car Rental",
-    carMake: "Toyota",
-    carModel: "Corolla",
-    transmission: "Automatic",
-    year: 2022,
-    pickupDate: "2024-08-01",
-    dropoffDate: "2024-08-10",
-  };
+ 
 
   return (
     <>
@@ -62,11 +52,11 @@ const BookingConfirmation = () => {
             Payment Accepted
           </Typography>
           <Typography variant="h6" gutterBottom style={styles.subHeader}>
-            Thank you, {bookingDetails.name}!
+            Thank you, {first_name} {last_name} !
           </Typography>
-          <Typography variant="body1" style={styles.bodyText}>
+          <Typography variant="h6" style={styles.bodyText}>
             Your payment has been successfully processed. Below are your booking
-            details:
+            details
           </Typography>
           <Divider style={styles.divider} />
           {
