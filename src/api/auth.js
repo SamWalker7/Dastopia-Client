@@ -37,15 +37,16 @@ export function signup( email, firstName, lastName, phoneNumber, password) {
   });
 }
 
-export function signin(email, password) {
+export function signin(signinOption, password) {
+ 
   return new Promise((resolve, reject) => {
     const authenticationDetails = new AuthenticationDetails({
-      Username: email,
+      Username: signinOption,
       Password: password,
     });
 
     const cognitoUser = new CognitoUser({
-      Username: email,
+      Username: signinOption,
       Pool: userPool,
     });
 
