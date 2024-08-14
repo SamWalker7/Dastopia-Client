@@ -66,7 +66,7 @@ const BookingConfirmation = () => {
           <Typography variant="h6" gutterBottom style={styles.subHeader}>
             Thank you, {first_name} {last_name} !
           </Typography>
-          <Typography variant="body1" style={styles.bodyText}>
+          <Typography variant="h6" style={styles.bodyText}>
             Your payment has been successfully processed. Below are your booking
             details:
           </Typography>

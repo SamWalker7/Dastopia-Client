@@ -176,9 +176,10 @@ export default function Details(props) {
                 PrevIcon={<ChevronLeft />}
                 navButtonsProps={{
                   style: {
-                    backgroundColor: "#1732c6e9",
+                    backgroundColor: "#000000",
                   },
                 }}
+                navButtonsAlwaysInvisible={true}
               >
                 {selected.images.map((item) => (
                   <Item item={item} imageLoading={imageLoading} />
