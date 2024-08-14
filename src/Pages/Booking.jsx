@@ -145,6 +145,9 @@ const Booking = () => {
     try {
       const response = await initializePayment(formData);
       console.log(response.checkout_url, "url")
+      sessionStorage.setItem('pickup_time', formData.pickupDate)
+      sessionStorage.setItem('dropoff_time', formData.dropOffDate)
+      sessionStorage.setItem('car_id', id);
       window.location.href = response.checkout_url
     } catch (err) {
       console.log("err");
