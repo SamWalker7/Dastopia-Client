@@ -46,7 +46,8 @@ export const initializePayment = async (data) => {
             'first_name': data.firstName,
             'last_name': data.lastName,
             'email': data.email,
-            'amount': Math.floor(Math.random() * (10000 - 500 + 1)) + 500
+            'amount': Math.floor(Math.random() * (10000 - 500 + 1)) + 500,
+            "return_url": "https://dastopia-client.vercel.app/booking-confirmation/"
         })
 
         return response.data.message.data
