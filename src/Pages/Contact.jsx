@@ -16,15 +16,10 @@ function Contact() {
 
     const subject = `Inquiry from ${firstName} ${lastName}`;
     const body = `Name: ${firstName} ${lastName}
-
                   Phone Number: ${phoneNumber}
-
                   Company Name: ${companyName}
-
                   Job Role: ${jobRole}
-
                   Email: ${email}
-
                   Message: ${message}`;
 
     const emailLink = `mailto:contact@dastopia.org?subject=${encodeURIComponent(

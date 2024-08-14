@@ -42,8 +42,8 @@ const SignUp = () => {
     const newErrors = {};
     if (!formData.firstName) newErrors.firstName = "First Name is required";
     if (!formData.lastName) newErrors.lastName = "Last Name is required";
-    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email))
-      newErrors.email = "Valid Email is required";
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = "Enter a valid email";
     if (!formData.password) newErrors.password = "Password is required";
     if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = "Passwords must match";
@@ -109,9 +109,9 @@ const SignUp = () => {
         formData.password
       );
 
-      console.log("signup data", d);
+      
 
-      const phone_number = formData.email;
+      const phone_number = phone;
 
       setFormData({
         firstName: "",
@@ -174,6 +174,11 @@ const SignUp = () => {
             }}
             error={!!errors.firstName}
             helperText={errors.firstName}
+            FormHelperTextProps={{
+              sx:{
+                fontSize: "1.5rem"
+              }
+            }}
           />
           <TextField
             margin="normal"
@@ -197,10 +202,15 @@ const SignUp = () => {
             }}
             error={!!errors.lastName}
             helperText={errors.lastName}
+            FormHelperTextProps={{
+              sx:{
+                fontSize: "1.5rem"
+              }
+            }}
           />
           <TextField
             margin="normal"
-            required
+           
             fullWidth
             id="email"
             label="Email Address"
@@ -220,6 +230,11 @@ const SignUp = () => {
             }}
             error={!!errors.email}
             helperText={errors.email}
+            FormHelperTextProps={{
+              sx:{
+                fontSize: "1.5rem"
+              }
+            }}
           />
 
           <PhoneInput
@@ -256,6 +271,11 @@ const SignUp = () => {
             }}
             error={!!errors.password}
             helperText={errors.password}
+            FormHelperTextProps={{
+              sx:{
+                fontSize: "1.5rem"
+              }
+            }}
           />
           <TextField
             margin="normal"
@@ -280,6 +300,11 @@ const SignUp = () => {
             }}
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword}
+            FormHelperTextProps={{
+              sx:{
+                fontSize: "1.5rem"
+              }
+            }}
           />
           <Button
             type="submit"

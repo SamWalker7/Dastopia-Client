@@ -20,10 +20,10 @@ function Footer() {
 
               <li>
                 <a
-                  href="mailto:contact@dastopia.org"
+                  href="mailto:“contact@dastechnologies.org”"
                 >
                   <i className="fa-solid fa-envelope"></i>
-                  &nbsp; contact@dastopia.org
+                  &nbsp; contact@dastechnologies.org
                 </a>
               </li>
               <li>

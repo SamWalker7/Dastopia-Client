@@ -39,7 +39,7 @@ const Booking = () => {
   const navigate = useNavigate()
 
   const fetchData = async () => {
-    const response = await getOneVehicle(id);
+    const response = await getOneVehicle (id);
     const data = response.body;
     let urls = [];
     setSelected({

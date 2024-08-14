@@ -33,8 +33,8 @@ function App() {
         <Route path="contact" element={<Contact />} />
         <Route path="/details/:id" element={<Details />} />
         <Route path="search" element={<Search />} />
-        <Route path="booking/:id" element={<Booking />} />
-        <Route path="booking-confirmation" element={<BookingConfirmation />} />
+        <Route path="/booking/:id" element={<Booking />} />
+        <Route path="/booking-confirmation" element={<BookingConfirmation />} />
         <Route path="signin" element={<SignIn />} />
         <Route path="signup" element={<SignUp />} />
         <Route path="/confirmaccount/:email" element={<OTPInput />} />
