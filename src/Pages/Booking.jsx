@@ -161,7 +161,13 @@ const Booking = () => {
   return (
     <Container style={{ paddingTop: 220 }}>
       {selected ? (
-        <>
+        <div
+          style={{
+            border: "2px solid black",
+            padding: "2em",
+            borderRadius: "15px",
+          }}
+        >
           <Typography
             style={{ fontWeight: "bolder", fontSize: "35px" }}
             variant="h4"
@@ -260,7 +266,6 @@ const Booking = () => {
                   label="Pickup Date"
                   name="pickupDate"
                   type="date"
-                 
                   inputProps={{ min: today }}
                   value={formData.pickupDate}
                   onChange={handleChange}
@@ -271,7 +276,6 @@ const Booking = () => {
                     sx: {
                       fontSize: "1.5rem",
                     },
-                    
                   }}
                   required
                   autoFocus
@@ -284,7 +288,6 @@ const Booking = () => {
                   label="Drop Off Date"
                   name="dropOffDate"
                   type="date"
-                  
                   inputProps={{ min: pickupDate }}
                   value={formData.dropOffDate}
                   onChange={handleChange}
@@ -294,6 +297,7 @@ const Booking = () => {
                   InputLabelProps={{
                     sx: {
                       fontSize: "1.5rem",
+                      shrink: true,
                     },
                   }}
                   required
@@ -399,7 +403,7 @@ const Booking = () => {
               </Grid>
             </Grid>
           </form>
-        </>
+        </div>
       ) : (
         <Typography variant="h4" gutterBottom>
           Loading
