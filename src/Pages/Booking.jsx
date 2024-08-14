@@ -15,13 +15,11 @@ import { getDownloadUrl, getOneVehicle, initializePayment } from "../api";
 const Booking = () => {
   const { id } = useParams();
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  console.log(user);
   const [formData, setFormData] = useState({
-    firstName: user ? user.firstName : "",
-    lastName: user ? user.lastName : "",
-    email: user ? user.email : "",
-    phoneNumber: user ? user.phoneNumber : "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
     pickupDate: "",
     dropOffDate: "",
     carMake: "",
@@ -29,6 +27,19 @@ const Booking = () => {
     transmission: "",
     year: "",
   });
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        phoneNumber: user.phoneNumber || "",
+      }));
+    }
+  }, []);
   const [errors, setErrors] = useState({});
   const location = useLocation();
   const [selected, setSelected] = useState({});
@@ -140,26 +151,29 @@ const Booking = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      const response = await initializePayment(formData);
-      console.log(response.checkout_url, "url");
-      sessionStorage.setItem("pickup_time", formData.pickupDate);
-      sessionStorage.setItem("dropoff_time", formData.dropOffDate);
-      sessionStorage.setItem("first_name", formData.firstName);
-      sessionStorage.setItem("last_name", formData.lastName);
-      sessionStorage.setItem("car_id", id);
-      window.location.href = response.checkout_url;
-    } catch (err) {
-      console.log("err");
-      setErrors(err.message);
+    if (validate()) {
+      try {
+        const response = await initializePayment(formData);
+
+        sessionStorage.setItem("pickup_time", formData.pickupDate);
+        sessionStorage.setItem("dropoff_time", formData.dropOffDate);
+        sessionStorage.setItem("first_name", formData.firstName);
+        sessionStorage.setItem("last_name", formData.lastName);
+        sessionStorage.setItem("car_id", id);
+        window.location.href = response.checkout_url;
+      } catch (err) {
+        console.log("err");
+        setErrors(err.message);
+      }
     }
   };
 
-  const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split("T")[0];
   const pickupDate = formData.pickupDate || today;
 
   return (
     <Container style={{ paddingTop: 220 }}>
+      
       {selected ? (
         <div
           style={{
@@ -300,8 +314,8 @@ const Booking = () => {
                   InputLabelProps={{
                     shrink: true,
                     sx: {
-                      fontSize: "14px"
-                    }
+                      fontSize: "14px",
+                    },
                   }}
                   required
                   autoFocus
@@ -328,10 +342,9 @@ const Booking = () => {
                   InputLabelProps={{
                     shrink: true,
                     sx: {
-                      fontSize: "14px"
-                    }
-                  }
-               }
+                      fontSize: "14px",
+                    },
+                  }}
                   required
                   autoFocus
                 />
@@ -447,8 +460,12 @@ const Booking = () => {
                   variant="contained"
                   color="primary"
                   type="submit"
-                  
-                  sx={{ py: 1, px: 5, fontSize: 12, backgroundColor: "#2a43cf" }}
+                  sx={{
+                    py: 1,
+                    px: 5,
+                    fontSize: 12,
+                    backgroundColor: "#2a43cf",
+                  }}
                   onClick={handleSubmit}
                 >
                   Book Now

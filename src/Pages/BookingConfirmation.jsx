@@ -39,19 +39,7 @@ const BookingConfirmation = () => {
   }, []);
 
   console.log(details, "details");
-  const bookingDetails = {
-    bookingId: "12345",
-    name: "John Doe",
-    email: "johndoe@example.com",
-    date: "2024-07-26",
-    service: "Car Rental",
-    carMake: "Toyota",
-    carModel: "Corolla",
-    transmission: "Automatic",
-    year: 2022,
-    pickupDate: "2024-08-01",
-    dropoffDate: "2024-08-10",
-  };
+ 
 
   return (
     <>
@@ -68,7 +56,7 @@ const BookingConfirmation = () => {
           </Typography>
           <Typography variant="h6" style={styles.bodyText}>
             Your payment has been successfully processed. Below are your booking
-            details:
+            details
           </Typography>
           <Divider style={styles.divider} />
           {
