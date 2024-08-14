@@ -308,29 +308,29 @@ function SignIn() {
               Sign In
             </Button>
 
-            <div
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <p style={{ fontSize: "15px" }}> Dont have an account yet ? </p>
+            <a
+              href="/signup"
               style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
+                textDecoration: "none",
+                color: "#2a43cf",
+                fontSize: "13px",
               }}
             >
-              <p style={{ fontSize: "15px" }}> Don't have an account yet? </p>
-              <a
-                href="/signup"
-                style={{
-                  textDecoration: "none",
-                  color: "#2a43cf",
-                  fontSize: "13px",
-                }}
-              >
-                Register here
-              </a>
-            </div>
-          </Box>
+              Signup here
+            </a>
+          </div>
         </Box>
-      </Container>
+      </Box>
+    </Container>
     </div>
   );
 }
