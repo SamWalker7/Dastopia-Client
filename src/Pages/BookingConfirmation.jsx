@@ -18,6 +18,8 @@ const BookingConfirmation = () => {
   const id = sessionStorage.getItem("car_id");
   const pickupTime = sessionStorage.getItem("pickup_time")
   const dropOffTime = sessionStorage.getItem("dropoff_time")
+  const first_name = sessionStorage.getItem("first_name")
+  const last_name = sessionStorage.getItem("last_name")
 
   const [details, setDetails] = useState(null);
   const navigate = useNavigate();
@@ -62,7 +64,7 @@ const BookingConfirmation = () => {
             Payment Accepted
           </Typography>
           <Typography variant="h6" gutterBottom style={styles.subHeader}>
-            Thank you, {bookingDetails.name}!
+            Thank you, {first_name} {last_name} !
           </Typography>
           <Typography variant="body1" style={styles.bodyText}>
             Your payment has been successfully processed. Below are your booking

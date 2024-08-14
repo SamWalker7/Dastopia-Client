@@ -147,6 +147,8 @@ const Booking = () => {
       console.log(response.checkout_url, "url")
       sessionStorage.setItem('pickup_time', formData.pickupDate)
       sessionStorage.setItem('dropoff_time', formData.dropOffDate)
+      sessionStorage.setItem("first_name", formData.firstName);
+      sessionStorage.setItem("last_name", formData.lastName)
       sessionStorage.setItem('car_id', id);
       window.location.href = response.checkout_url
     } catch (err) {
