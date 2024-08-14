@@ -36,10 +36,10 @@ const Booking = () => {
 
   const vehicles = useSelector((state) => state.vehicle.vehicles);
   const dispatch = useDispatch();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const fetchData = async () => {
-    const response = await getOneVehicle (id);
+    const response = await getOneVehicle(id);
     const data = response.body;
     let urls = [];
     setSelected({
@@ -70,8 +70,6 @@ const Booking = () => {
   useEffect(() => {
     fetchData();
   }, [id]);
-
-
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -144,16 +142,16 @@ const Booking = () => {
 
     try {
       const response = await initializePayment(formData);
-      console.log(response.checkout_url, "url")
-      sessionStorage.setItem('pickup_time', formData.pickupDate)
-      sessionStorage.setItem('dropoff_time', formData.dropOffDate)
+      console.log(response.checkout_url, "url");
+      sessionStorage.setItem("pickup_time", formData.pickupDate);
+      sessionStorage.setItem("dropoff_time", formData.dropOffDate);
       sessionStorage.setItem("first_name", formData.firstName);
-      sessionStorage.setItem("last_name", formData.lastName)
-      sessionStorage.setItem('car_id', id);
-      window.location.href = response.checkout_url
+      sessionStorage.setItem("last_name", formData.lastName);
+      sessionStorage.setItem("car_id", id);
+      window.location.href = response.checkout_url;
     } catch (err) {
       console.log("err");
-      setErrors(err.message)
+      setErrors(err.message);
     }
   };
 
@@ -164,13 +162,18 @@ const Booking = () => {
     <Container style={{ paddingTop: 220 }}>
       {selected ? (
         <>
-          <Typography style={{fontWeight:"bolder", fontSize: "35px"}} variant="h4" gutterBottom>
+          <Typography
+            style={{ fontWeight: "bolder", fontSize: "35px" }}
+            variant="h4"
+            gutterBottom
+          >
             Booking Page
           </Typography>
           <form onSubmit={handleSubmit} style={{ paddingTop: "2rem" }}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <TextField
+                  sx={{ fontSize: "1.5rem" }}
                   fullWidth
                   label="First Name"
                   name="firstName"
@@ -179,12 +182,18 @@ const Booking = () => {
                   error={!!errors.firstName}
                   helperText={errors.firstName}
                   style={{ marginBottom: 16 }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   required
                   autoFocus
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
+                  sx={{ fontSize: "1.5rem" }}
                   fullWidth
                   label="Last Name"
                   name="lastName"
@@ -193,12 +202,18 @@ const Booking = () => {
                   error={!!errors.lastName}
                   helperText={errors.lastName}
                   style={{ marginBottom: 16 }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   required
                   autoFocus
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
+                  sx={{ fontSize: "1.5rem" }}
                   fullWidth
                   label="Email"
                   name="email"
@@ -208,12 +223,18 @@ const Booking = () => {
                   error={!!errors.email}
                   helperText={errors.email}
                   style={{ marginBottom: 16 }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   required
                   autoFocus
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
+                  sx={{ fontSize: "1.5rem" }}
                   fullWidth
                   label="Phone Number"
                   name="phoneNumber"
@@ -223,12 +244,18 @@ const Booking = () => {
                   error={!!errors.phoneNumber}
                   helperText={errors.phoneNumber}
                   style={{ marginBottom: 16 }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   required
                   autoFocus
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
+                  sx={{ fontSize: "1.5rem" }}
                   fullWidth
                   label="Pickup Date"
                   name="pickupDate"
@@ -240,12 +267,18 @@ const Booking = () => {
                   error={!!errors.pickupDate}
                   helperText={errors.pickupDate}
                   style={{ marginBottom: 16 }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   required
                   autoFocus
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
+                  sx={{ fontSize: "1.5rem" }}
                   fullWidth
                   label="Drop Off Date"
                   name="dropOffDate"
@@ -257,12 +290,18 @@ const Booking = () => {
                   error={!!errors.dropOffDate}
                   helperText={errors.dropOffDate}
                   style={{ marginBottom: 16 }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   required
                   autoFocus
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
+                  sx={{ fontSize: "1.5rem" }}
                   fullWidth
                   label="Car Make"
                   name="carMake"
@@ -271,12 +310,18 @@ const Booking = () => {
                   error={!!errors.carMake}
                   helperText={errors.carMake}
                   style={{ marginBottom: 16 }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   required
                   disabled
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
+                  sx={{ fontSize: "1.5rem" }}
                   fullWidth
                   label="Car Model"
                   name="carModel"
@@ -285,6 +330,11 @@ const Booking = () => {
                   error={!!errors.carModel}
                   helperText={errors.carModel}
                   style={{ marginBottom: 16 }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: "1.5rem",
+                    },
+                  }}
                   required
                   disabled
                 />
@@ -292,11 +342,17 @@ const Booking = () => {
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth style={{ marginBottom: 16 }}>
                   <TextField
+                    sx={{ fontSize: "1.5rem" }}
                     label="Transmission"
                     name="transmission"
                     value={formData.transmission}
                     onChange={handleChange}
                     error={!!errors.transmission}
+                    InputLabelProps={{
+                      sx: {
+                        fontSize: "1.5rem",
+                      },
+                    }}
                     required
                     autoFocus
                     disabled
@@ -309,11 +365,17 @@ const Booking = () => {
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth style={{ marginBottom: 16 }}>
                   <TextField
+                    sx={{ fontSize: "1.5rem" }}
                     label="Year of Manufacturing"
                     name="year"
                     value={formData.year}
                     onChange={handleChange}
                     error={!!errors.year}
+                    InputLabelProps={{
+                      sx: {
+                        fontSize: "1.5rem",
+                      },
+                    }}
                     required
                     autoFocus
                     disabled
