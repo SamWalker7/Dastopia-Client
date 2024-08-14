@@ -620,8 +620,8 @@ function Item(props) {
     <Paper style={{ boxShadow: "none" }}>
       <div
         style={{
-          height: "auto",
-          width: windowWidth > 1020 ? "50vw" : "100%",
+          height: "30vh",
+          width: "auto" ,
           position: "relative",
         }}
       >
