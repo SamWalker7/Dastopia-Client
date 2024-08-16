@@ -24,6 +24,7 @@ const ResultsGrid = ({ pickUpTime, DropOffTime, lastEvaluatedKey }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchPagination = async () => {
+    setIsLoading(true);
     const response = await paginatedSearch(itemsPerPage, lastEvaluated);
     if (response && response.statusCode && response.statusCode === 200) {
       setLastEvaluated(response.body.lastEvaluatedKey);
@@ -52,21 +53,18 @@ const ResultsGrid = ({ pickUpTime, DropOffTime, lastEvaluatedKey }) => {
         });
       }
       setCurrentVehicles(fetched);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    setIsLoading(true);
     fetchPagination();
-    setIsLoading(false);
   }, [currentPage]);
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
     if (value > currentPage) {
-      setIsLoading(true)
       fetchPagination();
-      setIsLoading(false)
     }
   };
 
