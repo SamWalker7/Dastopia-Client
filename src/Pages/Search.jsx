@@ -14,12 +14,15 @@ import makesData from "../api/makes.json";
 import modelData from "../api/models.json";
 import MapComponent from "../components/GoogleMaps";
 import zIndex from "@mui/material/styles/zIndex";
+import { getDownloadUrl, paginatedSearch } from "../api";
 
 const Search = () => {
   const dispatch = useDispatch();
 
-  const vehicles = useSelector((state) => state?.vehicle.vehicles);
-  const isLoading = useSelector((state) => state?.vehicle.loading);
+  const [vehicles, setVehicles] = useState([]);
+  const [lastEvaluated, setLastEvaluated] = useState(null);
+
+  const [isLoading, setIsLoading] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   const ethiopianCities = [
@@ -32,21 +35,43 @@ const Search = () => {
     "Hawassa",
   ];
 
-  useEffect(() => {
-    const loadData = async () => {
-      const response = await dispatch(fetchVehicles());
-      if (fetchVehicles.fulfilled.match(response)) {
-        const vehicles = response.payload;
-        vehicles.forEach(async (vehicle) => {
-          await dispatch(fetchImages(vehicle));
+  const fetchPagination = async () => {
+    setIsLoading(true);
+    const response = await paginatedSearch(10);
+    if (response.statusCode === 200) {
+      setLastEvaluated(response.body.lastEvaluatedKey);
+
+      const data = response.body.items.map((item) => {
+        return {
+          ...item,
+          images: [],
+          imageLoading: true,
+        };
+      });
+      setVehicles(data);
+
+      let fetched = [];
+
+      for (let d of data) {
+        let urls = [];
+        for (let image of d.vehicleImageKeys) {
+          const path = await getDownloadUrl(image.key);
+          urls.push(path.body || "https://via.placeholder.com/300");
+        }
+        fetched.push({
+          ...d,
+          images: urls,
+          imageLoading: false,
         });
       }
-    };
-
-    if (vehicles.length < 1) {
-      loadData();
+      setVehicles(fetched);
+      setIsLoading(false);
     }
-  }, [dispatch, vehicles.length]);
+  };
+
+  useEffect(() => {
+    fetchPagination();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -504,6 +529,7 @@ const Search = () => {
                   vehicles={filteredVehicles}
                   pickUpTime={startDate}
                   DropOffTime={endDate}
+                  lastEvaluatedKey={lastEvaluated}
                 />
               </div>
             ) : (

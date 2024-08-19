@@ -55,3 +55,18 @@ export const initializePayment = async (data) => {
         console.log(err)
     }
 }
+
+export const paginatedSearch = async(limit, lastEvaluatedKey) => {
+    try{
+
+        const response = await axios.post(url('add_vehicle'), {
+            'operation': "allVehicle",
+            'limit': limit ? limit : null,
+            lastEValuatedKey: lastEvaluatedKey ? lastEvaluatedKey : null
+        })
+
+        return response.data
+    }catch(err){
+        console.log(err)
+    }
+}

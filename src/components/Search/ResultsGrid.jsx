@@ -9,34 +9,76 @@ import {
   Pagination,
 } from "@mui/material";
 import Skeleton from "@mui/material/Skeleton";
+import { getDownloadUrl, paginatedSearch } from "../../api";
 
-const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
+const ResultsGrid = ({ pickUpTime, DropOffTime, lastEvaluatedKey }) => {
   const [imageUrls, setImageUrls] = useState([]);
   const [loadingStates, setLoadingStates] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const indexOfLastVehicle = currentPage * itemsPerPage;
   const indexOfFirstVehicle = indexOfLastVehicle - itemsPerPage;
-  const currentVehicles = vehicles.slice(
-    indexOfFirstVehicle,
-    indexOfLastVehicle
-  );
+  const [currentVehicles, setCurrentVehicles] = useState([]);
+  const [lastEvaluated, setLastEvaluated] = useState(lastEvaluatedKey || null);
+  const [isLoading, setIsLoading] = useState(false)
+  
 
-  const handlePageChange = (event, value) => {
-    setCurrentPage(value);
+  const fetchPagination = async () => {
+    setIsLoading(true)
+    const response = await paginatedSearch(itemsPerPage, lastEvaluated);
+    if (response && response.statusCode && response.statusCode === 200) {
+      setLastEvaluated(response.body.lastEvaluatedKey);
+
+      const data = response.body.items.map((item) => {
+        return {
+          ...item,
+          images: [],
+          imageLoading: true,
+        };
+      });
+      setCurrentVehicles(data);
+
+      let fetched = [];
+
+      for (let d of data) {
+        let urls = [];
+        for (let image of d.vehicleImageKeys) {
+          const path = await getDownloadUrl(image.key);
+          urls.push(path.body || "https://via.placeholder.com/300");
+        }
+        fetched.push({
+          ...d,
+          images: urls,
+          imageLoading: false,
+        });
+      }
+      setCurrentVehicles(fetched);
+      setIsLoading(false)
+    }
   };
 
   useEffect(() => {
-    const urls = vehicles.map((vehicle) => {
+    fetchPagination();
+  }, [currentPage]);
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+    if (value > currentPage) {
+      fetchPagination();
+    }
+  };
+
+  useEffect(() => {
+    const urls = currentVehicles.map((vehicle) => {
       if (Array.isArray(vehicle.images) && vehicle.images.length > 0) {
-        return vehicle.images[0]; // Get the first image URL
+        return vehicle.images[0];
       } else {
         return null;
       }
     });
-    setImageUrls(urls);
+    // setImageUrls(urls);
     setLoadingStates({});
-  }, [vehicles]);
+  }, [currentVehicles]);
 
   const handleImageLoad = (index) => {
     setLoadingStates((prev) => ({ ...prev, [index]: false }));
@@ -47,6 +89,7 @@ const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
   };
 
   return (
+    <>
     <>
       <Grid
         container
@@ -105,13 +148,13 @@ const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
                     ) : null}
                     <CardMedia
                       component="img"
-                      image={imageUrls[indexOfFirstVehicle + index] || ""}
+                      image={vehicle.images[0]}
                       alt={`Vehicle Image ${index}`}
                       style={{
                         maxHeight: "100%",
                         objectFit: "cover",
                         opacity:
-                          loadingStates[indexOfFirstVehicle + index] !== false
+                          vehicle.imageLoading
                             ? 0
                             : 1,
                         transition: "opacity 0.5s ease-in-out",
@@ -333,9 +376,7 @@ const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
                             Fuel Type:
                           </strong>{" "}
                           <p style={{ fontSize: "13px" }}>
-                            {vehicle.fuelType
-                              ? vehicle.typeType
-                              : "Unknown"}
+                            {vehicle.fuelType ? vehicle.typeType : "Unknown"}
                           </p>
                         </div>
                       </Typography>
@@ -351,9 +392,7 @@ const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
                             alignItems: "center",
                           }}
                         >
-                          <strong style={{ fontSize: "13px" }}>
-                            Year
-                          </strong>{" "}
+                          <strong style={{ fontSize: "13px" }}>Year</strong>{" "}
                           <p style={{ fontSize: "13px" }}>
                             {vehicle.year ? vehicle.year : "Unknown"}
                           </p>
@@ -365,11 +404,11 @@ const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
                         sx={{ alignSelf: "flex-end" }}
                         onClick={() => {
                           window.location.href = `/Details/${vehicle.id}?pickUpTime=${pickUpTime}&dropOffTime=${DropOffTime}`;
-                          localStorage.setItem("pickUpTime", pickUpTime)
-                          localStorage.setItem("dropOffTime",DropOffTime)
+                          localStorage.setItem("pickUpTime", pickUpTime);
+                          localStorage.setItem("dropOffTime", DropOffTime);
                         }}
                       >
-                       <p style={{ fontSize: "13px" }}> View Details</p>
+                        <p style={{ fontSize: "13px" }}> View Details</p>
                       </Button>
                     </div>
                   </CardContent>
@@ -380,12 +419,13 @@ const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
         ))}
       </Grid>
       <Pagination
-        count={Math.ceil(vehicles.length / itemsPerPage)}
+        count={100 / itemsPerPage}
         page={currentPage}
         onChange={handlePageChange}
         color="primary"
         sx={{ marginTop: "16px", justifyContent: "center", display: "flex" }}
       />
+    </>
     </>
   );
 };

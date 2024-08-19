@@ -73,7 +73,7 @@ body {
   height: auto;
   display: flex;
   justify-content: space-between;
-  align-items: start;
+  align-items: center;
   padding: 2.7rem 7rem;
   position: absolute;
   top: 0;
@@ -88,7 +88,7 @@ body {
   width: 14.5rem;
 }
 .navbar__img img {
-  width: 60%;
+  width: 12em;
   height: 60%;
 }
 
@@ -286,11 +286,13 @@ body {
   z-index: 3;
   max-width: 50rem;
   margin-top: 5rem;
+  margin-top: -30rem;
 }
 @media (max-width: 800px) {
   .hero-content__text {
     text-align: center;
     align-items: center;
+    margin-top: -5rem;
   }
 }
 .hero-content__text h4 {
@@ -367,7 +369,8 @@ body {
   right: 0;
   top: 25%;
   width: 65%;
-  margin-top: 5rem;
+  /* margin-top: 5rem; */
+  margin-top: -1rem;
 }
 @media (max-width: 800px) {
   .hero-content__car-img {
@@ -401,6 +404,7 @@ body {
 .book-section {
   position: relative;
   background: linear-gradient(to bottom, #f8f8f8 20%, #ffffff 80%);
+  margin-top: -230px;
 }
 
 .book-content {
@@ -1318,7 +1322,7 @@ body {
   display: flex;
   gap: 2rem;
   align-items: center;
-  margin-top: 3rem;
+  /* margin-top: 3rem; */
   cursor: pointer;
 }
 .all-testimonials__box__name__profile img {

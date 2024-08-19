@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import Logo from "../images/logo/logo192.png";
+import Logo from "../images/logo/dasguzo_logo.png";
 import { useState } from "react";
 import Img2 from "../images/user/person.png";
 import { signout } from "../api/auth";
@@ -138,7 +138,7 @@ function Navbar() {
           ) : (
             <div className="all-testimonials__box__name" onClick={openNav}>
               <div className="all-testimonials__box__name__profile">
-                <img src={Img2} alt="user_img" />
+                <img style={{width: "", height: ""}} src={Img2} alt="user_img" />
                 <span>
                   <h4>
                     {user.given_name} {user.family_name}
