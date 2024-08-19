@@ -21,7 +21,6 @@ const Booking = () => {
     firstName: "",
     lastName: "",
     email: "",
- 
     pickupDate: "",
     dropOffDate: "",
     carMake: "",
@@ -32,22 +31,7 @@ const Booking = () => {
 
   const [phone, setPhone] = useState("")
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-   
 
-   
-    if (user) {
-      setFormData((prev) => ({
-        ...prev,
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        email: user.email || "",
-        phoneNumber: user.phoneNumber || "",
-        
-      }));
-    }
-  }, [localStorage]);
   const [errors, setErrors] = useState({});
   const location = useLocation();
   const [selected, setSelected] = useState({});
@@ -63,6 +47,7 @@ const Booking = () => {
 
     const pickUpTime =  localStorage.getItem("pickUpTime")
     const dropOffTime = localStorage.getItem("dropOffTime");
+    const user = JSON.parse(localStorage.getItem("user"));
 
 
     console.log(pickUpTime, "pickuptime")
@@ -94,8 +79,14 @@ const Booking = () => {
       transmission: data.transmission,
       year: data.year,
       pickupDate: pickUpTime || "",
-      dropOffDate: dropOffTime || ""
+      dropOffDate: dropOffTime || "",
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      email: user.email || "",
+      phoneNumber: user.phoneNumber || "",
     });
+
+    setPhone(user.phoneNumber || "")
   };
 
   useEffect(() => {
