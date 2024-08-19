@@ -365,6 +365,8 @@ const ResultsGrid = ({ vehicles, pickUpTime, DropOffTime }) => {
                         sx={{ alignSelf: "flex-end" }}
                         onClick={() => {
                           window.location.href = `/Details/${vehicle.id}?pickUpTime=${pickUpTime}&dropOffTime=${DropOffTime}`;
+                          localStorage.setItem("pickUpTime", pickUpTime)
+                          localStorage.setItem("dropOffTime",DropOffTime)
                         }}
                       >
                        <p style={{ fontSize: "13px" }}> View Details</p>
