@@ -31,7 +31,6 @@ const Booking = () => {
 
   const [phone, setPhone] = useState("")
 
-
   const [errors, setErrors] = useState({});
   const location = useLocation();
   const [selected, setSelected] = useState({});
@@ -93,20 +92,7 @@ const Booking = () => {
     fetchData();
   }, [id]);
 
-  // useEffect(() => {
-  //   const queryParams = new URLSearchParams(location.search);
-  //   const pickupTime = queryParams.get("pickUpTime");
-  //   const dropOffTime = queryParams.get("dropOffTime");
-
-  //   console.log(pickupTime, dropOffTime, 'time')
-
-  //   if (pickupTime) {
-  //     setFormData((prevData) => ({ ...prevData, pickupDate: pickupTime }));
-  //   }
-  //   if (dropOffTime) {
-  //     setFormData((prevData) => ({ ...prevData, dropOffDate: dropOffTime }));
-  //   }
-  // }, [location.search]);
+ 
 
   const validate = () => {
     let tempErrors = {};

@@ -374,9 +374,12 @@ const ResultsGrid = ({ pickUpTime, DropOffTime, lastEvaluatedKey }) => {
                         >
                           <strong style={{ fontSize: "13px" }}>
                             Fuel Type:
+                            Fuel Type:
                           </strong>{" "}
                           <p style={{ fontSize: "13px" }}>
-                            {vehicle.fuelType ? vehicle.typeType : "Unknown"}
+                            {vehicle.fuelType
+                              ? vehicle.typeType
+                              : "Unknown"}
                           </p>
                         </div>
                       </Typography>
@@ -392,7 +395,9 @@ const ResultsGrid = ({ pickUpTime, DropOffTime, lastEvaluatedKey }) => {
                             alignItems: "center",
                           }}
                         >
-                          <strong style={{ fontSize: "13px" }}>Year</strong>{" "}
+                          <strong style={{ fontSize: "13px" }}>
+                            Year
+                          </strong>{" "}
                           <p style={{ fontSize: "13px" }}>
                             {vehicle.year ? vehicle.year : "Unknown"}
                           </p>
