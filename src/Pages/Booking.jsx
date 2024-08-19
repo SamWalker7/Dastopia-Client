@@ -21,7 +21,6 @@ const Booking = () => {
     firstName: "",
     lastName: "",
     email: "",
- 
     pickupDate: "",
     dropOffDate: "",
     carMake: "",
@@ -32,30 +31,29 @@ const Booking = () => {
 
   const [phone, setPhone] = useState("")
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user) {
-      setFormData((prev) => ({
-        ...prev,
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        email: user.email || "",
-        phoneNumber: user.phoneNumber || "",
-      }));
-    }
-  }, [localStorage]);
   const [errors, setErrors] = useState({});
   const location = useLocation();
   const [selected, setSelected] = useState({});
   const [vehiclesData, setVehiclesData] = useState([]);
+
+  console.log(formData, "form data")
 
   const vehicles = useSelector((state) => state.vehicle.vehicles);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const fetchData = async () => {
+
+    const pickUpTime =  localStorage.getItem("pickUpTime")
+    const dropOffTime = localStorage.getItem("dropOffTime");
+    const user = JSON.parse(localStorage.getItem("user"));
+
+
+    console.log(pickUpTime, "pickuptime")
+
     const response = await getOneVehicle(id);
     const data = response.body;
+   
     let urls = [];
     setSelected({
       ...data,
@@ -79,27 +77,22 @@ const Booking = () => {
       carModel: data.model,
       transmission: data.transmission,
       year: data.year,
+      pickupDate: pickUpTime || "",
+      dropOffDate: dropOffTime || "",
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      email: user.email || "",
+      phoneNumber: user.phoneNumber || "",
     });
+
+    setPhone(user.phoneNumber || "")
   };
 
   useEffect(() => {
     fetchData();
   }, [id]);
 
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const pickupTime = queryParams.get("pickUpTime");
-    const dropOffTime = queryParams.get("dropOffTime");
-
-    console.log(pickupTime, dropOffTime, 'time')
-
-    if (pickupTime) {
-      setFormData((prevData) => ({ ...prevData, pickupDate: pickupTime }));
-    }
-    if (dropOffTime) {
-      setFormData((prevData) => ({ ...prevData, dropOffDate: dropOffTime }));
-    }
-  }, [location.search]);
+ 
 
   const validate = () => {
     let tempErrors = {};

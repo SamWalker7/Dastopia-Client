@@ -56,7 +56,7 @@ function BookCar() {
 
   return (
     <>
-      <section id="booking-section" className="book-section" style={{paddingTop: "300px"}}>
+      <section id="booking-section" className="book-section" >
         <div className="container">
           <div className="book-content">
             <div className="book-content__box">
