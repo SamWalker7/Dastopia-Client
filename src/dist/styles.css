@@ -73,7 +73,7 @@ body {
   height: auto;
   display: flex;
   justify-content: space-between;
-  align-items: start;
+  align-items: center;
   padding: 2.7rem 7rem;
   position: absolute;
   top: 0;
@@ -88,7 +88,7 @@ body {
   width: 14.5rem;
 }
 .navbar__img img {
-  width: 60%;
+  width: 12em;
   height: 60%;
 }
 
