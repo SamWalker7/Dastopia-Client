@@ -29,70 +29,51 @@ const Booking = () => {
     year: "",
   });
 
-  const [phone, setPhone] = useState("")
+  const [phone, setPhone] = useState("");
 
   const [errors, setErrors] = useState({});
   const location = useLocation();
   const [selected, setSelected] = useState({});
   const [vehiclesData, setVehiclesData] = useState([]);
 
-  console.log(formData, "form data")
+  console.log(formData, "form data");
 
   const vehicles = useSelector((state) => state.vehicle.vehicles);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const fetchData = async () => {
-
-    const pickUpTime =  localStorage.getItem("pickUpTime")
+    const pickUpTime = localStorage.getItem("pickUpTime");
     const dropOffTime = localStorage.getItem("dropOffTime");
     const user = JSON.parse(localStorage.getItem("user"));
 
-
-    console.log(pickUpTime, "pickuptime")
-
     const response = await getOneVehicle(id);
     const data = response.body;
-   
-    let urls = [];
-    setSelected({
-      ...data,
-      imageLoading: true,
-      images: [],
-    });
-
-    for (const image of data.vehicleImageKeys) {
-      const path = await getDownloadUrl(image.key);
-      urls.push(path.body || "https://via.placeholder.com/300");
-    }
 
     setSelected({
       ...data,
-      imageLoading: false,
-      images: urls,
     });
+
     setFormData({
       ...formData,
-      carMake: data.make,
-      carModel: data.model,
-      transmission: data.transmission,
-      year: data.year,
+      carMake: data.make || "",
+      carModel: data.model || "",
+      transmission: data.transmission || "",
+      year: data.year || "",
       pickupDate: pickUpTime || "",
       dropOffDate: dropOffTime || "",
-      firstName: user.firstName || "",
-      lastName: user.lastName || "",
-      email: user.email || "",
-      phoneNumber: user.phoneNumber || "",
+      firstName: user ? user.firstName : "",
+      lastName: user ? user.lastName : "",
+      email: user ? user.email : "",
+      phoneNumber: user ? user.phoneNumber : "",
     });
 
-    setPhone(user.phoneNumber || "")
+    setPhone(user ? user.phoneNumber : "");
   };
 
   useEffect(() => {
     fetchData();
   }, [id]);
-
- 
 
   const validate = () => {
     let tempErrors = {};
@@ -110,7 +91,7 @@ const Booking = () => {
       tempErrors.email = "Valid email is required";
       isValid = false;
     }
-    
+
     if (!formData.pickupDate) {
       tempErrors.pickupDate = "Pickup date is required";
       isValid = false;
@@ -141,18 +122,18 @@ const Booking = () => {
   };
 
   const handleChange = (e) => {
-   
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
-
-
     e.preventDefault();
 
     if (validate()) {
       try {
-        const response = await initializePayment({...formData, phoneNumber: phone});
+        const response = await initializePayment({
+          ...formData,
+          phoneNumber: phone,
+        });
 
         sessionStorage.setItem("pickup_time", formData.pickupDate);
         sessionStorage.setItem("dropoff_time", formData.dropOffDate);
@@ -172,7 +153,6 @@ const Booking = () => {
 
   return (
     <Container style={{ paddingTop: 220 }}>
-      
       {selected ? (
         <div
           style={{
@@ -267,16 +247,16 @@ const Booking = () => {
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-              <PhoneInput
-            country={"et"}
-            value={phone}
-            onChange={setPhone}
-            placeholder="+251965667890"
-            inputStyle={{
-              width: "100%",
-              height: "60px",
-            }}
-          />
+                <PhoneInput
+                  country={"et"}
+                  value={phone}
+                  onChange={setPhone}
+                  placeholder="+251965667890"
+                  inputStyle={{
+                    width: "100%",
+                    height: "60px",
+                  }}
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
