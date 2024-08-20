@@ -420,7 +420,7 @@ export default function Details(props) {
                     fontWeight: "bold",
                   }}
                 >
-                  <option>Dani Plaza</option>
+                  <option>Addis Ababa</option>
                 </select>
               </div>
               <div
