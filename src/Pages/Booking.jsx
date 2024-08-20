@@ -45,6 +45,7 @@ const Booking = () => {
   const fetchData = async () => {
     const pickUpTime = localStorage.getItem("pickUpTime");
     const dropOffTime = localStorage.getItem("dropOffTime");
+    // console.log(pickUpTime, "pickup")
     const user = JSON.parse(localStorage.getItem("user"));
 
     const response = await getOneVehicle(id);

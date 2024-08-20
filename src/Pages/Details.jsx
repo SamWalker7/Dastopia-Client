@@ -45,7 +45,7 @@ export default function Details(props) {
       ? new Date(endDate).setHours(0, 0, 0, 0)
       : null;
 
-    if (selectedStartDate > currentDate) {
+    if (selectedStartDate < currentDate) {
       setError("Pickup date cannot be before the current date.");
       setStartDate("");
     } else if (selectedEndDate && selectedStartDate > selectedEndDate) {
@@ -53,7 +53,10 @@ export default function Details(props) {
       setStartDate("");
     } else {
       setError("");
+
       setStartDate(value);
+      localStorage.setItem("pickUpTime", value);
+   
     }
   };
 
@@ -68,6 +71,7 @@ export default function Details(props) {
     } else {
       setError("");
       setEndDate(value);
+      localStorage.setItem("dropOffTime", value);
     }
   };
 
