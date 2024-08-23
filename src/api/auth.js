@@ -38,7 +38,6 @@ export function signup( email, firstName, lastName, phoneNumber, password) {
 }
 
 export function signin(signinOption, password) {
-  console.log(signinOption, password)
   return new Promise((resolve, reject) => {
     const authenticationDetails = new AuthenticationDetails({
       Username: `+${signinOption}`,
