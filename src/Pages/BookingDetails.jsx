@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 
 import { Info } from "lucide-react";
 import { getOneVehicle, initializePayment } from "../api";
+import TermsAndConditions from "./TermsAndConditions";
 
 const BookingDetails = () => {
   const id = sessionStorage.getItem("car_id");
@@ -21,11 +22,12 @@ const BookingDetails = () => {
   const last_name = sessionStorage.getItem("last_name");
   const phoneNumber = sessionStorage.getItem("phone_number");
   const email = sessionStorage.getItem("email");
-  const amount = Math.floor(Math.random() * (1000 - 500 + 1)) + 500
+  const amount = Math.floor(Math.random() * (1000 - 500 + 1)) + 500;
   const [details, setDetails] = useState(null);
+  const [isTerms, setTerms] = useState(false);
   const navigate = useNavigate();
 
-  const value = new Date(dropOffTime) - new Date(pickupTime)
+  const value = new Date(dropOffTime) - new Date(pickupTime);
   const differenceInDays = value / (1000 * 3600 * 24);
 
   const handleClick = async () => {
@@ -43,16 +45,12 @@ const BookingDetails = () => {
       email: email,
     };
 
-  
-
     const response = await initializePayment({
       ...data,
-      amount: amount * differenceInDays
+      amount: amount * differenceInDays + amount * differenceInDays * 0.13,
     });
 
-   
-
-    window.location.href = response.checkout_url
+    window.location.href = response.checkout_url;
   };
 
   const fetchVehicle = async () => {
@@ -63,127 +61,146 @@ const BookingDetails = () => {
   useEffect(() => {
     fetchVehicle();
   }, [id]);
-
-  console.log(details, "details");
-
   return (
     <>
-      <Container maxWidth="md" style={styles.container}>
-        <Paper elevation={3} style={styles.paper}>
-          <Grid container justifyContent="center" style={styles.iconContainer}>
-            <Info style={styles.icon} />
-          </Grid>
-          <Typography variant="h4" gutterBottom style={styles.header}>
-            Booking
-          </Typography>
-
-          <Typography variant="h6" style={styles.bodyText}>
-            Your can view the booking info here
-          </Typography>
-          <Divider style={styles.divider} />
-
-          {details !== null ? (
-            <Grid item xs={12} sm={6} style={styles.rightColumn}>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "flex-start",
-                  alignItems: "flex-start",
-                }}
+      {isTerms ? (
+        <>
+          <Container maxWidth="md" style={styles.container}>
+            <Paper elevation={3} style={styles.paper}>
+              <Grid
+                container
+                justifyContent="center"
+                style={styles.iconContainer}
               >
-                <Typography
-                  variant="h6"
-                  gutterBottom
-                  style={styles.columnHeader}
-                >
-                  Car Details & Price
-                </Typography>
+                <Info style={styles.icon} />
+              </Grid>
+              <Typography variant="h4" gutterBottom style={styles.header}>
+                Booking
+              </Typography>
 
-                <>
-                  <Typography variant="body1" style={styles.detailText}>
-                    <strong>Car Make:</strong> {details.make}
-                  </Typography>
-                  <Typography variant="body1" style={styles.detailText}>
-                    <strong>Car Model:</strong> {details.model}
-                  </Typography>
-                  <Typography variant="body1" style={styles.detailText}>
-                    <strong>Transmission:</strong> {details.transmission}
-                  </Typography>
-                  <Typography variant="body1" style={styles.detailText}>
-                    <strong>Year of Manufacturing:</strong> {details.year}
-                  </Typography>
-                  <Typography variant="body1" style={styles.detailText}>
-                    <strong>Pickup Date:</strong> {pickupTime}
-                  </Typography>
-                  <Typography variant="body1" style={styles.detailText}>
-                    <strong>Dropoff Date:</strong> {dropOffTime}
-                  </Typography>
-                </>
+              <Typography variant="h6" style={styles.bodyText}>
+                Your can view the booking info here
+              </Typography>
+              <Divider style={styles.divider} />
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-
-                    alignItems: "start",
-                    gap: "2px",
-                  }}
-                >
-                  <Typography
-                    variant="body1"
-                    style={{
-                      fontSize: "16px",
-                      marginTop: "40px",
-                    }}
-                  >
-                    <strong>Price: </strong> {amount} <strong>ETB/day</strong>
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    style={{
-                      fontSize: "16px",
-                      marginTop: "2px",
-                      // borderBottom: "1px solid black",
-                    }}
-                  >
-                    <strong>Days: </strong> {differenceInDays} day
-                  </Typography>
+              {details !== null ? (
+                <Grid item xs={12} sm={6} style={styles.rightColumn}>
                   <div
                     style={{
-                      border: "1px solid black",
-                      maxWidth: "300px",
-                      width: "100%",
-                    }}
-                  ></div>
-                  <Typography
-                    variant="body1"
-                    style={{
-                      fontSize: "16px",
-                      marginTop: "2px",
-                    
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "flex-start",
+                      alignItems: "flex-start",
                     }}
                   >
-                    <strong>Total: </strong> {differenceInDays * amount} <strong>ETB</strong>
-                  </Typography>
-                </div>
-              </div>
-            </Grid>
-          ) : (
-            <></>
-          )}
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      style={styles.columnHeader}
+                    >
+                      Car Details & Price
+                    </Typography>
 
-          <Divider style={styles.divider} />
-          <Button
-            variant="contained"
-            color="primary"
-            style={styles.button}
-            onClick={handleClick}
-          >
-            Checkout
-          </Button>
-        </Paper>
-      </Container>
+                    <>
+                      <Typography variant="body1" style={styles.detailText}>
+                        <strong>Car Make:</strong> {details.make}
+                      </Typography>
+                      <Typography variant="body1" style={styles.detailText}>
+                        <strong>Car Model:</strong> {details.model}
+                      </Typography>
+                      <Typography variant="body1" style={styles.detailText}>
+                        <strong>Transmission:</strong> {details.transmission}
+                      </Typography>
+                      <Typography variant="body1" style={styles.detailText}>
+                        <strong>Year of Manufacturing:</strong> {details.year}
+                      </Typography>
+                      <Typography variant="body1" style={styles.detailText}>
+                        <strong>Pickup Date:</strong> {pickupTime}
+                      </Typography>
+                      <Typography variant="body1" style={styles.detailText}>
+                        <strong>Dropoff Date:</strong> {dropOffTime}
+                      </Typography>
+                    </>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+
+                        alignItems: "start",
+                        gap: "2px",
+                      }}
+                    >
+                      <Typography
+                        variant="body1"
+                        style={{
+                          fontSize: "16px",
+                          marginTop: "40px",
+                        }}
+                      >
+                        <strong>Price: </strong> {amount}{" "}
+                        <strong>ETB/day</strong>
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        style={{
+                          fontSize: "16px",
+                          marginTop: "2px",
+                          // borderBottom: "1px solid black",
+                        }}
+                      >
+                        <strong>Days: </strong> {differenceInDays} day
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        style={{
+                          fontSize: "16px",
+                        }}
+                      >
+                        <strong>Price: </strong> 10%
+                      </Typography>
+                      <div
+                        style={{
+                          border: "1px solid black",
+                          maxWidth: "300px",
+                          width: "100%",
+                        }}
+                      ></div>
+                      <Typography
+                        variant="body1"
+                        style={{
+                          fontSize: "16px",
+                          marginTop: "2px",
+                        }}
+                      >
+                        <strong>Total: </strong>{" "}
+                        {differenceInDays * amount + amount * 0.13}{" "}
+                        <strong>ETB</strong>
+                      </Typography>
+                    </div>
+                  </div>
+                </Grid>
+              ) : (
+                <></>
+              )}
+
+              <Divider style={styles.divider} />
+              <Button
+                variant="contained"
+                color="primary"
+                style={styles.button}
+                onClick={() => setTerms(true )}
+              >
+                Checkout
+              </Button>
+            </Paper>
+          </Container>
+        </>
+      ) : (
+        <>
+          <TermsAndConditions handleClick={handleClick} />{" "}
+        </>
+      )}
     </>
   );
 };
@@ -241,6 +258,7 @@ const styles = {
   button: {
     display: "block",
     margin: "2rem auto 0",
+    cursor: "pointer"
   },
 };
 

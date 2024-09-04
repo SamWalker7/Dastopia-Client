@@ -19,6 +19,7 @@ import AWS from 'aws-sdk';
 import OTPInput from "./Pages/OTP";
 import NotFound from "./components/404";
 import BookingDetails from "./Pages/BookingDetails";
+import TermsAndConditions from "./Pages/TermsAndConditions";
 
 AWS.config.region = 'us-east-1';
 
