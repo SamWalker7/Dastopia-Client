@@ -131,17 +131,15 @@ const Booking = () => {
 
     if (validate()) {
       try {
-        const response = await initializePayment({
-          ...formData,
-          phoneNumber: phone,
-        });
-
+        console.log(formData, "formData")
         sessionStorage.setItem("pickup_time", formData.pickupDate);
         sessionStorage.setItem("dropoff_time", formData.dropOffDate);
         sessionStorage.setItem("first_name", formData.firstName);
         sessionStorage.setItem("last_name", formData.lastName);
         sessionStorage.setItem("car_id", id);
-        window.location.href = response.checkout_url;
+        sessionStorage.setItem("phone_number", phone)
+        sessionStorage.setItem("email", formData.email)
+        navigate(`/booking_details/${id}`)
       } catch (err) {
         console.log("err");
         setErrors(err.message);
