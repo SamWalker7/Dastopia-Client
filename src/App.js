@@ -18,6 +18,8 @@ import SignUp from "./Pages/SignUp";
 import AWS from 'aws-sdk';
 import OTPInput from "./Pages/OTP";
 import NotFound from "./components/404";
+import BookingDetails from "./Pages/BookingDetails";
+import TermsAndConditions from "./Pages/TermsAndConditions";
 
 AWS.config.region = 'us-east-1';
 
@@ -39,6 +41,7 @@ function App() {
         <Route path="signin" element={<SignIn />} />
         <Route path="signup" element={<SignUp />} />
         <Route path="/confirmaccount/:email" element={<OTPInput />} />
+        <Route path="/booking_details/:id" element={<BookingDetails />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
