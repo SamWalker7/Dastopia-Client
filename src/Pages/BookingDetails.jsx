@@ -63,7 +63,7 @@ const BookingDetails = () => {
   }, [id]);
   return (
     <>
-      {isTerms ? (
+      {!isTerms ? (
         <>
           <Container maxWidth="md" style={styles.container}>
             <Paper elevation={3} style={styles.paper}>
