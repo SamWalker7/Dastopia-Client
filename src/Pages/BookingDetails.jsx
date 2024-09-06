@@ -47,7 +47,7 @@ const BookingDetails = () => {
 
     const response = await initializePayment({
       ...data,
-      amount: (amount * differenceInDays) + (amount * differenceInDays * 0.13),
+      amount: amount * differenceInDays + amount * differenceInDays * 0.1,
     });
 
     window.location.href = response.checkout_url;
@@ -157,8 +157,9 @@ const BookingDetails = () => {
                           fontSize: "16px",
                         }}
                       >
-                        <strong>Price: </strong> 10%
+                        <strong>Tax: </strong> 10% = {differenceInDays * amount * 0.1}
                       </Typography>
+
                       <div
                         style={{
                           border: "1px solid black",
