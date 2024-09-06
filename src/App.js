@@ -21,6 +21,7 @@ import NotFound from "./components/404";
 import BookingDetails from "./Pages/BookingDetails";
 import TermsAndConditions from "./Pages/TermsAndConditions";
 import BookingRequests from "./Pages/BookingRequests";
+import MyRequests from "./Pages/MyRequests";
 
 AWS.config.region = 'us-east-1';
 
@@ -44,6 +45,7 @@ function App() {
         <Route path="/confirmaccount/:email" element={<OTPInput />} />
         <Route path="/booking_details/:id" element={<BookingDetails />} />
         <Route path='/booking_requests' element={<BookingRequests />} /> 
+        <Route path="/my_requests" element={<MyRequests /> } /> 
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

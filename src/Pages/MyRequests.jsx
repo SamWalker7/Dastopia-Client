@@ -1,52 +1,9 @@
 import { Message } from "@mui/icons-material";
-import {
-  Avatar,
-  Box,
-  Button,
-  Paper,
-  Step,
-  StepContent,
-  StepLabel,
-  Stepper,
-  Typography,
-} from "@mui/material";
+import { Avatar, Box, Step, StepLabel, Stepper } from "@mui/material";
 import { Fuel, LifeBuoy, Mail, Map, Phone, User } from "lucide-react";
 import React from "react";
 
-const steps = [
-  {
-    label: "Select campaign settings",
-    description: `For each ad campaign that you create, you can control how much
-              you're willing to spend on clicks and conversions, which networks
-              and geographical locations you want your ads to show on, and more.`,
-  },
-  {
-    label: "Create an ad group",
-    description:
-      "An ad group contains one or more ads which target a shared set of keywords.",
-  },
-  {
-    label: "Create an ad",
-    description: `Try out different ad text to see what brings in the most customers,
-              and learn how to enhance your ads using features like ad extensions.
-              If you run into any problems with your ads, find out how to tell if
-              they're running and how to resolve approval issues.`,
-  },
-];
-function CustomStepIcon() {
-  return (
-    <div
-      style={{
-        width: "24px",
-        height: "24px",
-        borderRadius: "50%",
-        backgroundColor: "transparent",
-      }}
-    />
-  );
-}
-
-function BookingRequests() {
+function MyRequests() {
   const [activeStep, setActiveStep] = React.useState(3);
 
   const handleNext = () => {
@@ -866,7 +823,7 @@ function BookingRequests() {
                       color: "#000",
                     }}
                   >
-                    Chat with Renter
+                    Chat with Owner
                   </p>
                 </div>
               </div>
@@ -887,25 +844,12 @@ function BookingRequests() {
                   backgroundColor: "#FFDAD6",
                   border: "1px solid #410002",
                   borderRadius: "50rem",
-                  cursor: "pointer"
+                  cursor: "pointer",
                 }}
               >
-                Reject Request
+                Cancel Booking
               </button>
-              <button
-                style={{
-                  width: "100%",
-                  paddingTop: "10px",
-                  paddingBottom: "10px",
-                  backgroundColor: "#00173C",
-                  border: "1px solid #00173C",
-                  borderRadius: "50rem",
-                  color: "white", 
-                  cursor: "pointer"
-                }}
-              >
-                Approve Request
-              </button>
+              
             </div>
           </div>
         </div>
@@ -914,4 +858,4 @@ function BookingRequests() {
   );
 }
 
-export default BookingRequests;
+export default MyRequests;
