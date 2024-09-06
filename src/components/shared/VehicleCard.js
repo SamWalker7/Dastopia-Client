@@ -14,6 +14,8 @@ const VehicleCard = ({ vehicle, index, handleClick, handleClose, toggleListing, 
         return () => window.removeEventListener("resize", handleResize);
       }, []);
 
+    //   console.log(vehicle, "vehicle")
+
     return (
         <div className="models-div__box" ref={ref} data-id={vehicle?.id}>
             <div className="models-div__box__img">
@@ -83,7 +85,7 @@ const VehicleCard = ({ vehicle, index, handleClick, handleClose, toggleListing, 
 
                         </div>
                         <div className="models-div__box__descr__name-price__price">
-                            <h4>ETB 2,500</h4>
+                        <h4>ETB {vehicle.price || 2500}</h4>
                             <p>per day</p>
                         </div>
                     </div>

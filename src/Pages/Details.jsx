@@ -56,7 +56,6 @@ export default function Details(props) {
 
       setStartDate(value);
       localStorage.setItem("pickUpTime", value);
-   
     }
   };
 
@@ -97,7 +96,7 @@ export default function Details(props) {
       imageLoading: false,
       images: urls,
     });
-    setImageLoading(false)
+    setImageLoading(false);
   };
 
   useEffect(() => {
@@ -181,10 +180,8 @@ export default function Details(props) {
                 navButtonsProps={{
                   style: {
                     backgroundColor: "#000000",
-                    
                   },
                 }}
-               
               >
                 {selected.images.map((item) => (
                   <Item item={item} imageLoading={imageLoading} />
@@ -346,7 +343,7 @@ export default function Details(props) {
                 >
                   <CircleDollarSign />
                   <p style={{ fontSize: "15px", fontWeight: "bold" }}>
-                    37 / day
+                    {selected.price || 2500}
                   </p>
                 </div>
               </div>
@@ -627,7 +624,7 @@ function Item(props) {
       <div
         style={{
           height: "30vh",
-          width: "auto" ,
+          width: "auto",
           position: "relative",
         }}
       >
