@@ -47,7 +47,7 @@ const BookingDetails = () => {
 
     const response = await initializePayment({
       ...data,
-      amount: amount * differenceInDays + amount * differenceInDays * 0.13,
+      amount: (amount * differenceInDays) + (amount * differenceInDays * 0.13),
     });
 
     window.location.href = response.checkout_url;
