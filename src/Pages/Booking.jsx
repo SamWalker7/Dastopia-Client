@@ -27,6 +27,7 @@ const Booking = () => {
     carModel: "",
     transmission: "",
     year: "",
+    price: ""
   });
 
   const [phone, setPhone] = useState("");
@@ -67,6 +68,7 @@ const Booking = () => {
       lastName: user ? user.lastName : "",
       email: user ? user.email : "",
       phoneNumber: user ? user.phoneNumber : "",
+      price: data.price ? data.price : "2500"
     });
 
     setPhone(user ? user.phoneNumber : "");
@@ -138,7 +140,8 @@ const Booking = () => {
         sessionStorage.setItem("last_name", formData.lastName);
         sessionStorage.setItem("car_id", id);
         sessionStorage.setItem("phone_number", phone)
-        sessionStorage.setItem("email", formData.email)
+        sessionStorage.setItem("email", formData.email);
+        sessionStorage.setItem("price", formData.price)
         navigate(`/booking_details/${id}`)
       } catch (err) {
         console.log("err");

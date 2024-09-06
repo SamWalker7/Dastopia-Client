@@ -22,7 +22,7 @@ const BookingDetails = () => {
   const last_name = sessionStorage.getItem("last_name");
   const phoneNumber = sessionStorage.getItem("phone_number");
   const email = sessionStorage.getItem("email");
-  const amount = Math.floor(Math.random() * (1000 - 500 + 1)) + 500;
+  const amount = sessionStorage.getItem("price");
   const [details, setDetails] = useState(null);
   const [isTerms, setTerms] = useState(false);
   const navigate = useNavigate();
@@ -189,7 +189,7 @@ const BookingDetails = () => {
                 variant="contained"
                 color="primary"
                 style={styles.button}
-                onClick={() => setTerms(true )}
+                onClick={() => setTerms(true)}
               >
                 Checkout
               </Button>
@@ -258,7 +258,7 @@ const styles = {
   button: {
     display: "block",
     margin: "2rem auto 0",
-    cursor: "pointer"
+    cursor: "pointer",
   },
 };
 
