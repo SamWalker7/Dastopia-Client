@@ -174,7 +174,8 @@ const BookingDetails = () => {
                         }}
                       >
                         <strong>Total: </strong>{" "}
-                        {differenceInDays * amount + amount * 0.13}{" "}
+                        {differenceInDays * amount +
+                          amount * differenceInDays * 0.1}{" "}
                         <strong>ETB</strong>
                       </Typography>
                     </div>
