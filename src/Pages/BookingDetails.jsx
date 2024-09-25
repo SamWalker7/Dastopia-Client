@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { Info } from "lucide-react";
 import { getOneVehicle, initializePayment } from "../api";
 import TermsAndConditions from "./TermsAndConditions";
+import { useSelector } from "react-redux";
 
 const BookingDetails = () => {
   const id = sessionStorage.getItem("car_id");
@@ -23,6 +24,9 @@ const BookingDetails = () => {
   const phoneNumber = sessionStorage.getItem("phone_number");
   const email = sessionStorage.getItem("email");
   const amount = sessionStorage.getItem("price");
+  const ownerId = sessionStorage.getItem("ownerId");
+
+  const user = useSelector((state) => state.auth.user);
   const [details, setDetails] = useState(null);
   const [isTerms, setTerms] = useState(false);
   const navigate = useNavigate();
@@ -44,6 +48,8 @@ const BookingDetails = () => {
       carModel: details.model,
       email: email,
     };
+
+    
 
     const response = await initializePayment({
       ...data,
@@ -157,7 +163,8 @@ const BookingDetails = () => {
                           fontSize: "16px",
                         }}
                       >
-                        <strong>Tax: </strong> 10% = {differenceInDays * amount * 0.1}
+                        <strong>Tax: </strong> 10% ={" "}
+                        {differenceInDays * amount * 0.1}
                       </Typography>
 
                       <div

@@ -1,5 +1,6 @@
 import axios from "axios"
 import { dastopiaAPI } from "../config/constants";
+import BASE_URL from "./baseUrl";
 
 export const url = (path) => (dastopiaAPI + path);
 
@@ -28,7 +29,7 @@ export const getAllVehicles = async () => {
 
 export const getOneVehicle = async(id) => {
     try{
-        const response = await axios.post(url('add_vehicle'), {
+        const response = await axios.get(`${BASE_URL}/vehicle/${id}`, {
             "operation": "getVehicleById",
             id: id
         })

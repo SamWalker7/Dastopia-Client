@@ -2,7 +2,7 @@
 import React, { useCallback } from 'react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 
-const API_KEY = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4"
+export const API_KEY = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4"
 
 const containerStyle = {
     width: '100%',
@@ -16,17 +16,7 @@ const center = {
 };
 
 
-const createCustomIcon = (text) => {
-    const svg = `
-      <svg width="30" height="30" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="20" cy="20" r="20" fill="white" stroke="white" stroke-width="2" />
-        <text x="50%" y="50%" text-anchor="middle" stroke="black" dy=".3em" font-size="14" font-weight="bold" fill="red">${text}</text>
-      </svg>
-    `;
-    return {
-        url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
-    };
-};
+
 
 const locations = [
 
