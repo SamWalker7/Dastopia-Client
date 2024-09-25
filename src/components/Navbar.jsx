@@ -2,20 +2,24 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import Logo from "../images/logo/dasguzo_logo.png";
 import { useState } from "react";
 import Img2 from "../images/user/person.png";
-import { signout } from "../api/auth";
+
+import { useDispatch } from "react-redux";
+import { signout } from "../store/slices/authSlice";
 
 function Navbar() {
   const [nav, setNav] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const user = JSON.parse(localStorage.getItem("user"));
 
   const handleLogout = async () => {
-    await signout();
+   
     localStorage.removeItem("user");
-    localStorage.removeItem("accToken");
+    localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("accExp");
+    dispatch(signout());
     navigate("/");
     openNav();
   };
@@ -78,7 +82,7 @@ function Navbar() {
                 </NavLink>
               </li>
             )}
-            {!user && ( 
+            {!user && (
               <li>
                 <NavLink
                   onClick={openNav}
@@ -92,13 +96,16 @@ function Navbar() {
 
             {user && (
               <li onClick={handleLogout}>
-                <div className="navbar__buttons__sign-in" style={{cursor: "pointer"}}>Sign out</div>
+                <div
+                  className="navbar__buttons__sign-in"
+                  style={{ cursor: "pointer" }}
+                >
+                  Sign out
+                </div>
               </li>
             )}
           </ul>
         </div>
-
-      
 
         <div className="navbar">
           <div className="navbar__img">
@@ -106,9 +113,7 @@ function Navbar() {
               <img src={Logo} alt="logo-img" />
             </Link>
           </div>
-          
 
-         
           {!user ? (
             <div
               style={{
@@ -119,15 +124,12 @@ function Navbar() {
               }}
             >
               {!user && (
-                <li style={{ listStyle: "none", textDecoration: "none" }} className="outer_signin">
-                  <NavLink
-                   
-                    className="navbar__buttons__sign-in"
-                    to="/signin"
-                  >
-                    <p>
-                    Sign In/ Signup
-                    </p>
+                <li
+                  style={{ listStyle: "none", textDecoration: "none" }}
+                  className="outer_signin"
+                >
+                  <NavLink className="navbar__buttons__sign-in" to="/signin">
+                    <p>Sign In/ Signup</p>
                   </NavLink>
                 </li>
               )}
@@ -138,7 +140,11 @@ function Navbar() {
           ) : (
             <div className="all-testimonials__box__name" onClick={openNav}>
               <div className="all-testimonials__box__name__profile">
-                <img style={{width: "", height: ""}} src={Img2} alt="user_img" />
+                <img
+                  style={{ width: "", height: "" }}
+                  src={Img2}
+                  alt="user_img"
+                />
                 <span>
                   <h4>
                     {user.given_name} {user.family_name}

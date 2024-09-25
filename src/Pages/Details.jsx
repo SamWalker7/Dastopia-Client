@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Carousel from "react-material-ui-carousel";
-import { Paper, Button, TextField } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchImages, fetchVehicles } from "../store/slices/vehicleSlice";
+import { Paper, Modal, Box, Tabs, Tab } from "@mui/material";
+
 import {
   Antenna,
   Armchair,
@@ -11,7 +10,6 @@ import {
   CarFront,
   ChevronLeft,
   ChevronRight,
-  Circle,
   CircleDollarSign,
   CircleUser,
   DoorOpen,
@@ -19,13 +17,22 @@ import {
   List,
   PaintBucket,
   Phone,
+  X,
 } from "lucide-react";
-import MapComponent from "../components/GoogleMaps";
-import { useParams } from "react-router-dom";
+import MapComponent, { API_KEY } from "../components/GoogleMaps";
+import { useNavigate, useParams } from "react-router-dom";
 import Skeleton from "@mui/material/Skeleton";
 import { getDownloadUrl, getOneVehicle } from "../api";
 
+import Availability from "./booking/availability";
+import Payment from "./booking/payment";
+import { useDispatch, useSelector } from "react-redux";
+import { requestBooking } from "../store/slices/bookingRequestSlice";
+
 export default function Details(props) {
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { id } = useParams();
   const [selected, setSelected] = useState(null);
   const [startDate, setStartDate] = useState("");
@@ -33,9 +40,21 @@ export default function Details(props) {
   const [imageLoading, setImageLoading] = useState(true);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [error, setError] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("basic");
+  const [planOption, setPlanOption] = useState("");
+  const rentalDays = 3;
+  const dailyFee = 2450;
+  const [selectedLocation, setSelectedLocation] = React.useState(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [pickUpLocation, setPickUpLocation] = useState("");
+  const [dropOffLocation, setDropOffLocation] = useState("");
+  const [isDriverProvided, setIsDriverProvided] = useState(false);
+  const libraries = ["places"];
+  const [totalPrice, setTotal] = useState(0);
 
-  const vehicles = useSelector((state) => state.vehicle.vehicles);
-  const dispatch = useDispatch();
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
 
   const handleStartDateChange = (event) => {
     const value = event.target.value;
@@ -74,11 +93,13 @@ export default function Details(props) {
     }
   };
 
-  console.log(selected, "selected");
-
   const fetchData = async () => {
     const response = await getOneVehicle(id);
     const data = response.body;
+
+    sessionStorage.setItem("ownerId", data.ownerId);
+
+    console.log("data", data);
     let urls = [];
     setSelected({
       ...data,
@@ -153,8 +174,150 @@ export default function Details(props) {
     padding: "15px",
   };
 
+  const handlePlanChange = (event) => {
+    setSelectedPlan(event.target.value);
+  };
+
+  const handlePlanOptionChange = (event) => {
+    setPlanOption(event.target.value);
+  };
+
+  const [searchBox, setSearchBox] = React.useState(null);
+  const [open, setOpen] = useState(false);
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleSignin = () => {
+    navigate("/signin");
+  };
+
+  const handleSubmitBooking = () => {
+    const bookingData = {
+      ownerId: selected.ownerId,
+      renteeId: user.userId,
+      carId: id,
+      startDate: startDate,
+      endDate: endDate,
+      pickUpLocation: `${pickUpLocation.lat} ${pickUpLocation.lng}`,
+      dropOffLocation: `${dropOffLocation.lat} ${dropOffLocation.lng}`,
+      cancelUrl: "https://google.com",
+      returnUrl: "https://google.com",
+      price: `${totalPrice}`,
+    };
+
+    console.log("booking details", bookingData);
+
+    try {
+      dispatch(requestBooking(bookingData));
+      setOpen(false);
+    } catch (e) {
+      console.log("error in details", e);
+    }
+  };
+
+  // console.log("selected", selected);
   return (
     <>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            height: "100%",
+            position: "relative",
+            maxWidth: "40vw",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: "10px",
+              position: "absolute",
+              top: "10%",
+              left: "60%",
+              width: "100%",
+              height: "fit-content",
+            }}
+          >
+            <div
+              onClick={handleClose}
+              style={{
+                display: "flex",
+                width: "100%",
+                justifyContent: "flex-end",
+                padding: "10px",
+              }}
+            >
+              <X />
+            </div>
+
+            <div>
+              <div>
+                <Tabs
+                  value={activeTab}
+                  onChange={handleTabChange}
+                  sx={{
+                    width: "100%",
+
+                    display: "flex",
+                  }}
+                >
+                  <Tab
+                    sx={{
+                      width: "100%",
+                      fontSize: "14px",
+                    }}
+                    label="Availability"
+                  />
+                  <Tab
+                    sx={{
+                      width: "100%",
+                      fontSize: "14px",
+                    }}
+                    label="Payment"
+                  />
+                </Tabs>
+              </div>
+
+              {activeTab === 0 && (
+                <Availability
+                  setSelectedLocation={setSelectedLocation}
+                  setSearchBox={setSearchBox}
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  isDriverProvided={isDriverProvided}
+                  setIsDriverProvided={setIsDriverProvided}
+                  setPickUpLocation={setPickUpLocation}
+                  setDropOffLocation={setDropOffLocation}
+                />
+              )}
+
+              {activeTab === 1 && (
+                <Payment
+                  handlePlanChange={handlePlanChange}
+                  selectedPlan={selectedPlan}
+                  planOption={planOption}
+                  handlePlanOptionChange={handlePlanOptionChange}
+                  dailyFee={dailyFee}
+                  rentalDays={rentalDays}
+                  pickupTime={startDate}
+                  dropOffTime={endDate}
+                  handleSubmitBooking={handleSubmitBooking}
+                  setTotal={setTotal}
+                />
+              )}
+            </div>
+          </div>
+        </Box>
+      </Modal>
       {selected ? (
         <div style={styles.container}>
           <div
@@ -432,22 +595,39 @@ export default function Details(props) {
                   gap: "2px",
                 }}
               >
-                <button
-                  style={{
-                    maxWidth: "190px",
-                    background: "",
-                    padding: "10px 20px 10px 20px",
-                    border: "1px solid blue",
-                    borderRadius: "10px",
-                    cursor: "pointer",
-                  }}
-                  className="colored-button"
-                  onClick={() =>
-                    (window.location.href = `/booking/${selected.id}?pickUpTime=${startDate}&dropOffTime=${endDate}`)
-                  }
-                >
-                  Book Now
-                </button>
+                {isAuthenticated && (
+                  <button
+                    style={{
+                      maxWidth: "190px",
+                      background: "",
+                      padding: "10px 20px 10px 20px",
+                      border: "1px solid blue",
+                      borderRadius: "10px",
+                      cursor: "pointer",
+                    }}
+                    className="colored-button"
+                    onClick={() => setOpen(true)}
+                  >
+                    Book Now
+                  </button>
+                )}
+
+                {!isAuthenticated && (
+                  <button
+                    style={{
+                      maxWidth: "190px",
+                      background: "",
+                      padding: "10px 20px 10px 20px",
+                      border: "1px solid blue",
+                      borderRadius: "10px",
+                      cursor: "pointer",
+                    }}
+                    className="colored-button"
+                    onClick={handleSignin}
+                  >
+                    Signin and Book
+                  </button>
+                )}
               </div>
             </div>
           </div>

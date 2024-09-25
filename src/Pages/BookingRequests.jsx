@@ -11,7 +11,9 @@ import {
   Typography,
 } from "@mui/material";
 import { Fuel, LifeBuoy, Mail, Map, Phone, User } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
+import { fetchBookingRequests } from "../store/slices/bookingRequestSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 const steps = [
   {
@@ -48,6 +50,16 @@ function CustomStepIcon() {
 
 function BookingRequests() {
   const [activeStep, setActiveStep] = React.useState(3);
+
+  const dispatch = useDispatch();
+
+  const booking = useSelector((state) => state.booking.bookingRequests);
+
+  useEffect(() => {
+    dispatch(fetchBookingRequests());
+  },[]);
+
+  // console.log("booking", booking)
 
   const handleNext = () => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
@@ -482,6 +494,11 @@ function BookingRequests() {
                       </p>
                     </div>
                   </div>
+
+
+
+
+                  
                   <div
                     style={{
                       marginTop: "24px",
@@ -887,7 +904,7 @@ function BookingRequests() {
                   backgroundColor: "#FFDAD6",
                   border: "1px solid #410002",
                   borderRadius: "50rem",
-                  cursor: "pointer"
+                  cursor: "pointer",
                 }}
               >
                 Reject Request
@@ -900,8 +917,8 @@ function BookingRequests() {
                   backgroundColor: "#00173C",
                   border: "1px solid #00173C",
                   borderRadius: "50rem",
-                  color: "white", 
-                  cursor: "pointer"
+                  color: "white",
+                  cursor: "pointer",
                 }}
               >
                 Approve Request

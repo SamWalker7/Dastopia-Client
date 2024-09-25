@@ -1,10 +1,14 @@
 import { Message } from "@mui/icons-material";
 import { Avatar, Box, Step, StepLabel, Stepper } from "@mui/material";
 import { Fuel, LifeBuoy, Mail, Map, Phone, User } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchBookingRequests } from "../store/slices/bookingRequestSlice";
 
 function MyRequests() {
   const [activeStep, setActiveStep] = React.useState(3);
+
+ 
 
   const handleNext = () => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
@@ -849,7 +853,6 @@ function MyRequests() {
               >
                 Cancel Booking
               </button>
-              
             </div>
           </div>
         </div>
