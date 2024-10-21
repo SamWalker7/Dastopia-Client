@@ -19,9 +19,7 @@ function Footer() {
               </li>
 
               <li>
-                <a
-                  href="mailto:“contact@dastechnologies.org”"
-                >
+                <a href="mailto:“contact@dastechnologies.org”">
                   <i className="fa-solid fa-envelope"></i>
                   &nbsp; contact@dastechnologies.org
                 </a>
@@ -63,8 +61,6 @@ function Footer() {
               <li>Sat: 9:00AM - 4:00PM</li>
               <li>Sun: Closed</li>
             </ul>
-
-         
           </div>
         </div>
       </footer>

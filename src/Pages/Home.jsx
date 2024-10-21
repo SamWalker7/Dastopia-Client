@@ -13,7 +13,7 @@ function Home() {
   return (
     <>
       <Hero />
-      <BookCar />
+      {/* <BookCar /> */}
       <PlanTrip />
       <PickCar />
       <Banner />

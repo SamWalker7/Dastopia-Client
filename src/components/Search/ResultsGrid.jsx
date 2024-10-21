@@ -1,30 +1,34 @@
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Button,
-  Grid,
-  Pagination,
-} from "@mui/material";
-import Skeleton from "@mui/material/Skeleton";
 import { getDownloadUrl, paginatedSearch } from "../../api";
+import {
+  FaStar,
+  FaGasPump,
+  FaCogs,
+  FaUserFriends,
+  FaHeart,
+} from "react-icons/fa";
+import { GoHeart } from "react-icons/go";
 
 const ResultsGrid = ({ pickUpTime, DropOffTime, lastEvaluatedKey }) => {
-  const [imageUrls, setImageUrls] = useState([]);
-  const [loadingStates, setLoadingStates] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const indexOfLastVehicle = currentPage * itemsPerPage;
-  const indexOfFirstVehicle = indexOfLastVehicle - itemsPerPage;
+  const [vehiclesData, setVehiclesData] = useState([]); // Store fetched pages in state
   const [currentVehicles, setCurrentVehicles] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [lastEvaluated, setLastEvaluated] = useState(lastEvaluatedKey || null);
-  const [isLoading, setIsLoading] = useState(false)
-  
+  const [isLoading, setIsLoading] = useState(false);
+  const itemsPerPage = 4;
 
-  const fetchPagination = async () => {
-    setIsLoading(true)
+  // Fetch new data and store pages in state
+  const fetchPagination = async (page) => {
+    setIsLoading(true);
+
+    // Check if data for this page already exists
+    if (vehiclesData[page - 1]) {
+      setCurrentVehicles(vehiclesData[page - 1]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Fetch new page data from API
     const response = await paginatedSearch(itemsPerPage, lastEvaluated);
     if (response && response.statusCode && response.statusCode === 200) {
       setLastEvaluated(response.body.lastEvaluatedKey);
@@ -32,14 +36,12 @@ const ResultsGrid = ({ pickUpTime, DropOffTime, lastEvaluatedKey }) => {
       const data = response.body.items.map((item) => {
         return {
           ...item,
-          images: [],
-          imageLoading: true,
+          images: [], // Prepare the images
         };
       });
-      setCurrentVehicles(data);
 
+      // Fetch image URLs for each vehicle
       let fetched = [];
-
       for (let d of data) {
         let urls = [];
         for (let image of d.vehicleImageKeys) {
@@ -49,389 +51,151 @@ const ResultsGrid = ({ pickUpTime, DropOffTime, lastEvaluatedKey }) => {
         fetched.push({
           ...d,
           images: urls,
-          imageLoading: false,
         });
       }
+
+      // Store the fetched page in vehiclesData array
+      const updatedVehiclesData = [...vehiclesData];
+      updatedVehiclesData[page - 1] = fetched;
+      setVehiclesData(updatedVehiclesData);
+
       setCurrentVehicles(fetched);
-      setIsLoading(false)
     }
+    setIsLoading(false);
   };
 
   useEffect(() => {
-    fetchPagination();
+    fetchPagination(currentPage); // Fetch vehicles whenever the page changes
   }, [currentPage]);
 
-  const handlePageChange = (event, value) => {
-    setCurrentPage(value);
-    if (value > currentPage) {
-      fetchPagination();
-    }
-  };
-
-  useEffect(() => {
-    const urls = currentVehicles.map((vehicle) => {
-      if (Array.isArray(vehicle.images) && vehicle.images.length > 0) {
-        return vehicle.images[0];
-      } else {
-        return null;
-      }
-    });
-    // setImageUrls(urls);
-    setLoadingStates({});
-  }, [currentVehicles]);
-
-  const handleImageLoad = (index) => {
-    setLoadingStates((prev) => ({ ...prev, [index]: false }));
-  };
-
-  const handleImageError = (index) => {
-    setLoadingStates((prev) => ({ ...prev, [index]: false }));
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   return (
-    <>
-    <>
-      <Grid
-        container
-        spacing={3}
-        sx={{
-          overflowY: "scroll",
-          maxHeight: "410px",
-          marginTop: "2px",
-          width: "95%",
-          scrollbarWidth: "none", // For Firefox
-          "&::-webkit-scrollbar": {
-            display: "none", // For Chrome, Safari, and Opera
-          },
-        }}
-      >
-        {currentVehicles.map((vehicle, index) => (
-          <Grid
-            item
-            xs={12}
-            key={vehicle.id}
-            sx={{
-              marginLeft: { xs: "20px", md: "10px" },
-              marginRight: { xs: "0px", md: "20px" },
-            }}
-          >
-            <Card
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "row", md: "row" },
-                height: "100%",
-                borderRadius: "8px",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                border: "1px solid gray",
-              }}
+    <div className=" ">
+      {/* Loading Spinner */}
+      {isLoading && (
+        <div className="flex justify-center items-center my-8">
+          <div className="w-12 h-12 border-4 border-blue-400 border-solid border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+
+      {/* Vehicle Grid */}
+      {!isLoading && (
+        <div className="flex flex-wrap justify-between ">
+          {currentVehicles.map((vehicle, index) => (
+            <div
+              key={index}
+              className="max-w-xs w-full h-fit my-4 bg-white rounded-xl shadow-md   overflow-hidden "
+              style={{ minWidth: "275px" }} // Ensuring consistent width and height
             >
-              <Grid container>
-                <Grid item xs={12} md={4}>
-                  <div
-                    style={{
-                      position: "relative",
-                      width: "100%",
-                      height: "100%",
-                    }}
-                  >
-                    {loadingStates[indexOfFirstVehicle + index] !== false ? (
-                      <Skeleton
-                        variant="rectangular"
-                        width="100%"
-                        height={200}
-                        style={{ marginBottom: "1px" }}
-                        animation="wave"
-                        sx={{
-                          borderRadius: "8px",
-                        }}
-                      />
-                    ) : null}
-                    <CardMedia
-                      component="img"
-                      image={vehicle.images[0]}
-                      alt={`Vehicle Image ${index}`}
-                      style={{
-                        maxHeight: "100%",
-                        objectFit: "cover",
-                        opacity:
-                          vehicle.imageLoading
-                            ? 0
-                            : 1,
-                        transition: "opacity 0.5s ease-in-out",
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: "100%",
-                        borderTopLeftRadius: "8px",
-                        borderBottomLeftRadius: "8px",
-                      }}
-                      onLoad={() =>
-                        handleImageLoad(indexOfFirstVehicle + index)
-                      }
-                      onError={() =>
-                        handleImageError(indexOfFirstVehicle + index)
-                      }
-                    />
-                  </div>
-                </Grid>
-                <Grid item xs={6} md={4}>
-                  <CardContent
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      height: "100%", // Ensures content stretches to full height
-                    }}
-                  >
-                    <div>
-                      <Typography
-                        gutterBottom
-                        variant="h6"
-                        component="div"
-                        sx={{
-                          color: "#354148",
-                          fontWeight: 600,
-                          marginBottom: "8px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "2px",
-                            alignItems: "center",
-                          }}
-                        >
-                          <strong style={{ fontSize: "15px" }}>Make: </strong>
-                          <p style={{ fontSize: "15px" }}>
-                            {vehicle.make ? vehicle.make : "Unknown"}
-                          </p>
-                        </div>
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        sx={{ marginBottom: "8px" }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "2px",
-                            alignItems: "center",
-                          }}
-                        >
-                          <strong style={{ fontSize: "13px" }}>
-                            Transmission:
-                          </strong>{" "}
-                          <p style={{ fontSize: "13px" }}>
-                            {vehicle.transmission
-                              ? vehicle.transmission
-                              : "Unknown"}
-                          </p>
-                        </div>
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        sx={{ marginBottom: "8px" }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "2px",
-                            alignItems: "center",
-                          }}
-                        >
-                          <strong style={{ fontSize: "13px" }}>Color:</strong>{" "}
-                          <p style={{ fontSize: "13px" }}>
-                            {vehicle.color ? vehicle.color : "Unknown"}
-                          </p>
-                        </div>
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        sx={{ marginBottom: "8px" }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "2px",
-                            alignItems: "center",
-                          }}
-                        >
-                          <strong style={{ fontSize: "13px" }}>Seats:</strong>{" "}
-                          <p style={{ fontSize: "13px" }}>
-                            {vehicle.seats ? vehicle.seats : "Unknown"}
-                          </p>
-                        </div>
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        sx={{ marginBottom: "8px" }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "2px",
-                            alignItems: "center",
-                          }}
-                        >
-                          <strong style={{ fontSize: "13px" }}>Doors:</strong>{" "}
-                          <p style={{ fontSize: "13px" }}>
-                            {vehicle.doors ? vehicle.doors : "Unknown"}
-                          </p>
-                        </div>
-                      </Typography>
-                    </div>
-                  </CardContent>
-                </Grid>
-                <Grid item xs={6} md={4}>
-                  <CardContent
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      height: "100%",
-                    }}
-                  >
-                    <div>
-                      <Typography
-                        gutterBottom
-                        variant="h6"
-                        component="div"
-                        sx={{
-                          color: "#354148",
-                          fontWeight: 600,
-                          marginBottom: "8px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "2px",
-                            alignItems: "center",
-                          }}
-                        >
-                          <strong style={{ fontSize: "15px" }}>Model: </strong>
-                          <p style={{ fontSize: "15px" }}>
-                            {vehicle.model ? vehicle.model : "Unknown"}
-                          </p>
-                        </div>
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        gutterBottom
-                        sx={{ marginBottom: "8px" }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "2px",
-                            alignItems: "center",
-                          }}
-                        >
-                          <strong style={{ fontSize: "13px" }}>
-                            Category:{" "}
-                          </strong>
-                          <p style={{ fontSize: "13px" }}>
-                            {" "}
-                            {vehicle.category ? vehicle.category : "Unknown"}
-                          </p>
-                        </div>
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        sx={{ marginBottom: "8px" }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "2px",
-                            alignItems: "center",
-                          }}
-                        >
-                          <strong style={{ fontSize: "13px" }}>City:</strong>{" "}
-                          <p style={{ fontSize: "13px" }}>
-                            {vehicle.city ? vehicle.city : "Unknown"}
-                          </p>
-                        </div>
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        sx={{ marginBottom: "8px" }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "2px",
-                            alignItems: "center",
-                          }}
-                        >
-                          <strong style={{ fontSize: "13px" }}>
-                            Fuel Type:
-                            Fuel Type:
-                          </strong>{" "}
-                          <p style={{ fontSize: "13px" }}>
-                            {vehicle.fuelType
-                              ? vehicle.typeType
-                              : "Unknown"}
-                          </p>
-                        </div>
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        sx={{ marginBottom: "8px" }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "2px",
-                            alignItems: "center",
-                          }}
-                        >
-                          <strong style={{ fontSize: "13px" }}>
-                            Year
-                          </strong>{" "}
-                          <p style={{ fontSize: "13px" }}>
-                            {vehicle.year ? vehicle.year : "Unknown"}
-                          </p>
-                        </div>
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{ alignSelf: "flex-end" }}
-                        onClick={() => {
-                          window.location.href = `/Details/${vehicle.id}?pickUpTime=${pickUpTime}&dropOffTime=${DropOffTime}`;
-                          localStorage.setItem("pickUpTime", pickUpTime);
-                          localStorage.setItem("dropOffTime", DropOffTime);
-                        }}
-                      >
-                        <p style={{ fontSize: "13px" }}> View Details</p>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Grid>
-              </Grid>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      <Pagination
-        count={100 / itemsPerPage}
-        page={currentPage}
-        onChange={handlePageChange}
-        color="primary"
-        sx={{ marginTop: "16px", justifyContent: "center", display: "flex" }}
-      />
-    </>
-    </>
+              {/* Car Title & Subtitle */}
+              <div className="px-6 py-8 w-full justify-between flex">
+                {/* Heart Icon */}
+
+                <div>
+                  {" "}
+                  <h3 className="text-2xl font-semibold">
+                    {vehicle.make ? vehicle.make : "Unknown"}{" "}
+                    <span className="text-gray-400">
+                      {vehicle.model ? vehicle.model : "Unknown"}
+                    </span>
+                  </h3>
+                  <p className="text-xl font-extralight text-gray-400">
+                    {vehicle.category ? vehicle.category : "Unknown"}
+                  </p>
+                </div>
+                <div className="flex justify-end p-2">
+                  <GoHeart />
+                </div>
+              </div>
+
+              {/* Car Image */}
+              <div className="">
+                <img
+                  className=" w-full h-72 object-cover" // Set a fixed image size for uniformity
+                  src={vehicle.images[0]}
+                  alt={`Vehicle ${index}`}
+                />
+              </div>
+
+              {/* Car Features */}
+              <div className="flex justify-between items-center px-6 py-4 my-2 text-gray-400 text-base">
+                <div className="flex items-center space-x-2">
+                  <FaGasPump size={12} />
+                  <span>{vehicle.fuelType ? vehicle.fuelType : "Unknown"}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <FaCogs size={12} />
+                  <span>
+                    {vehicle.transmission ? vehicle.transmission : "Unknown"}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <FaUserFriends size={13} />
+                  <span>
+                    {vehicle.seats ? vehicle.seats : "Unknown"} People
+                  </span>
+                </div>
+              </div>
+
+              {/* Pricing */}
+              <div className="flex justify-between items-center px-6 pb-4">
+                <div>
+                  <p className="text-sm text-gray-400">Total Price</p>
+                  <p className="text-xl font-semibold">1,490 Birr</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400">Daily Rent</p>
+                  <p className="text-xl font-semibold">190 Birr</p>
+                </div>
+              </div>
+
+              {/* Rating and Rent Button */}
+              <div className="flex justify-between items-center px-6 py-4 ">
+                <div className="flex items-center mr-8 ">
+                  <FaStar className="text-yellow-400" />
+                  <span className="text-xl  font-medium">4.5</span>
+                </div>
+                <button className="bg-sky-950 w-full text-white rounded-full px-4 py-3 text-base font-normal">
+                  Rent Now
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      <div className="flex text-base font-normal justify-center mt-6">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1 || isLoading}
+          className={`px-4 py-2 mx-2 rounded-lg ${
+            currentPage === 1 || isLoading
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-blue-400 text-white"
+          }`}
+        >
+          Previous
+        </button>
+
+        <span className="px-4 py-2 mx-2 text-gray-700">Page {currentPage}</span>
+
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={lastEvaluated === null || isLoading}
+          className={`px-4 py-2 mx-2 rounded-lg ${
+            lastEvaluated === null || isLoading
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-blue-400 text-white"
+          }`}
+        >
+          Next
+        </button>
+      </div>
+    </div>
   );
 };
 

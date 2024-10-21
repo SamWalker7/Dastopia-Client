@@ -15,6 +15,8 @@ import modelData from "../api/models.json";
 import MapComponent from "../components/GoogleMaps";
 import zIndex from "@mui/material/styles/zIndex";
 import { getDownloadUrl, paginatedSearch } from "../api";
+import Dropdown from "../components/Search/Dropdown";
+import Footer from "../components/Footer";
 
 const Search = () => {
   const dispatch = useDispatch();
@@ -25,6 +27,7 @@ const Search = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
+  const makeDisplayArray = makesData.Makes.map((Makes) => Makes.make_display);
   const ethiopianCities = [
     "Addis Ababa",
     "Dire Dawa",
@@ -184,373 +187,179 @@ const Search = () => {
       (!selectedCity || vehicle.city === selectedCity)
     );
   });
+  // State to hold the input value
+  const [inputValue, setInputValue] = useState("");
 
-  const gridContainerStyle = {
-    display: "flex",
-    width: "100%",
-    borderRadius: "5px",
-    padding: "10px",
-    justifyContent: "center",
-    gap: "0px",
+  // Function to handle input change
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
   };
 
-  const colSpanStyle = {
-    width: "50%",
-  };
-
-  const mapContainerStyle = {
-    backgroundColor: "white",
-    width: "50%",
-
-    "@media (max-width: 768px)": {
-      display: "none",
-    },
-  };
-
-  const mapDetailsStyle = {
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "#6b7280",
-    fontSize: "20px",
-  };
-
-  const styles = {
-    filterContainer: {
-      paddingLeft: "16px",
-      paddingRight: "16px",
-      paddingTop: "5px",
-      backgroundColor: "#ffffff",
-      borderRadius: "4px",
-      display: "flex",
-      flexWrap: "wrap",
-      marginBottom: "10px",
-    },
-    topFormControl: {
-      minWidth: "20%",
-      marginRight: "16px",
-      marginTop: windowWidth < 500 ? "1.5rem" : "0.5rem",
-      marginBottom: "2rem",
-      height: "3vh",
-      zIndex: 100,
-      fontSize: "16px",
-    },
-    formControl: {
-      minWidth: "20%",
-      marginRight: "16px",
-      marginBottom: "10px",
-      flex: "1 0 20%",
-      marginTop: "0.5rem",
-      height: "6vh",
-    },
-    label: {
-      fontWeight: "bold",
-      marginBottom: "2px",
-      display: "block",
-    },
-    select: {
-      padding: "3px",
-      borderRadius: "4px",
-      border: "1px solid #ccc",
-      width: "100%",
-      height: "4vh",
-      zIndex: 100,
-    },
-    resultInfo: {
-      color: "#6b7280",
-      fontSize: "15px",
-      paddingLeft: "30px",
-      marginBottom: "3px",
-    },
-  };
-
-  if (windowWidth < 768) {
-    gridContainerStyle.flexDirection = "column";
-
-    colSpanStyle.width = "100%";
-    mapContainerStyle.display = "none";
-
-    styles.formControl = {
-      ...styles.formControl,
-      minWidth: "100%",
-    };
-    styles.topFormControl = {
-      ...styles.topFormControl,
-      minWidth: "100%",
-    };
-  }
+  // Optional: Validation Example (disallow special characters)
+  const isValidInput = /^[0-9 ]*$/.test(inputValue);
 
   return (
-    <div style={{ padding: "30px", position: "relative", paddingTop: "20rem" }}>
-      <main>
-        <div
-          style={{
-            boxShadow: "shadows[4]",
-            paddingBottom: "16px",
-            marginBottom: "5px",
-          }}
-        >
-          {error && (
-            <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>
-          )}
-          <div style={styles.filterContainer}>
-            <div style={styles.topFormControl}>
-              <FormControl fullWidth>
-                <label
-                  id="pickup"
-                  style={{ fontSize: "15px", fontWeight: "600" }}
+    <div>
+      <div className=" bg-[#FAF9FE]  py-32 flex w-full">
+        <div className=" w-1/2 flex flex-col px-32 py-12  items-center ">
+          <div className="bg-white w-full px-10 py-4 justify-between text-lg md:text-2xl  rounded-xl shadow-sm shadow-blue-300 border border-blue-300  flex">
+            <div className="flex items-center">
+              {" "}
+              <div className="flex flex-col ">
+                <div>Bole International Airport</div>
+                <div>Wed, Aug 28,2024 , 10:00</div>
+              </div>
+              <div className="mx-4">
+                {" "}
+                <svg
+                  className=" text-gray-800 w-8 h-8 transform transition-transform duration-200 
+                -rotate-90"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
                 >
-                  Pick-up Location
-                </label>
-                <Select
-                  style={{ ...styles.select, maxWidth: "400px" }}
-                  labelId="pickup"
-                  sx={{
-                    fontSize: "16px",
-                  }}
-                  id="demo-simple-select"
-                  value={selectedCity}
-                  onChange={handleCityChange}
-                  label="Pick-upLocation"
-                >
-                  <MenuItem value="any">Any</MenuItem>
-                  {ethiopianCities.map((m) => {
-                    return <MenuItem value={m}>{m}</MenuItem>;
-                  })}
-                </Select>
-              </FormControl>
+                  <path d="M5.23 7.21a.75.75 0 011.06 0L10 10.92l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0l-4.25-4.25a.75.75 0 010-1.06z" />
+                </svg>
+              </div>
+              <div className="flex flex-col ">
+                <div>Bole International Airport</div>
+                <div>Wed, Aug 28,2024 , 10:00</div>
+              </div>
             </div>
-
-            <div style={styles.topFormControl}>
-              <label htmlFor="picktime">
-                <i className="fa-regular fa-calendar-days"></i> &nbsp; Pick-up{" "}
-                <b>*</b>
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={handleStartDateChange}
-                style={styles.select}
-                min={new Date().toISOString().split("T")[0]}
-              />
-            </div>
-            <div style={styles.topFormControl}>
-              <label htmlFor="droptime">
-                <i className="fa-regular fa-calendar-days "></i> &nbsp; Drop-off{" "}
-                <b>*</b>
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={handleEndDateChange}
-                style={styles.select}
-                min={startDate}
-              />
-            </div>
+            <button className=" bg-blue-950 text-lg text-white rounded-full px-12 ml-8 my-2  py-2">
+              Edit
+            </button>
           </div>
-          <div style={styles.filterContainer}>
-            <div style={styles.topFormControl}>
-              <FormControl fullWidth>
-                <label
-                  id="make"
-                  style={{ fontSize: "15px", fontWeight: "600" }}
-                >
-                  Make
-                </label>
-                <Select
-                  style={{
-                    ...styles.select,
-                    maxWidth: "400px",
-                    zIndex: 100,
-                    fontSize: "16px",
-                  }}
-                  labelId="make"
-                  id="make"
-                  value={make}
-                  onChange={handleMakeChange}
-                  label="Make"
-                  sx={{
-                    fontSize: "16px",
-                  }}
-                  MenuProps={{
-                    anchorOrigin: {
-                      vertical: "bottom",
-                      horizontal: "left",
-                    },
-                    transformOrigin: {
-                      vertical: "top",
-                      horizontal: "left",
-                    },
-                    getContentAnchorEl: null,
-                  }}
-                >
-                  <MenuItem sx={{ fontSize: "16px" }} value="any">
-                    Any
-                  </MenuItem>
-                  {makesData.Makes.map((m) => {
-                    return (
-                      <MenuItem
-                        sx={{
-                          fontSize: "16px",
+          <div className="flex flex-col bg-white my-12 w-full px-8 py-4 text-lg md:text-2xl  rounded-xl shadow-md shadow-gray-100  ">
+            <div className="text-3xl mx-4 font-normal mt-4">Filters</div>
+            <div className=" flex justify-center items-center">
+              <div className="flex flex-col m-4 w-1/2 ">
+                <Dropdown label="Make" options={makeDisplayArray} />{" "}
+                <Dropdown label="Make" options={makeDisplayArray} />{" "}
+                <Dropdown label="Make" options={makeDisplayArray} />
+              </div>
+
+              <div className="flex flex-col m-4 w-1/2">
+                <div className="flex">
+                  {" "}
+                  {/* input box */}
+                  <div className="relative inline-block my-3 text-lg w-full mr-4 ">
+                    <label className="absolute -top-2 left-3 text-sm bg-white px-1  text-gray-500">
+                      Min Price
+                    </label>
+                    <div className="border  border-gray-400 rounded-md bg-white">
+                      <input
+                        id="textBox"
+                        type="text"
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        placeholder="Type here..."
+                        style={{
+                          padding: "10px",
+                          width: "100%",
+                          border: isValidInput
+                            ? "1px solid #D6D9DE"
+                            : "1px solid red",
                         }}
-                        value={m.make_display}
-                      >
-                        {m.make_display}
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
-            </div>
-
-            <div style={styles.topFormControl}>
-              <FormControl fullWidth>
-                <label
-                  id="demo-simple-select-label"
-                  style={{ fontSize: "15px", fontWeight: "600" }}
-                >
-                  Model
-                </label>
-                <Select
-                  style={{ ...styles.select, maxWidth: "400px" }}
-                  sx={{ fontSize: "16px" }}
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  value={selectedModel}
-                  label="Age"
-                  onChange={handleModelChange}
-                >
-                  <MenuItem sx={{ fontSize: "16px" }} value="any">
-                    Any
-                  </MenuItem>
-                  {model.map((m) => {
-                    return (
-                      <MenuItem sx={{ fontSize: "16px" }} value={m}>
-                        {m}
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
-            </div>
-            <div style={styles.topFormControl}>
-              <FormControl fullWidth>
-                <label
-                  id="demo-simple-select-label"
-                  style={{ fontSize: "15px", fontWeight: "600" }}
-                >
-                  Transmission
-                </label>
-                <Select
-                  style={{ ...styles.select, maxWidth: "400px" }}
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  value={transmission}
-                  onChange={handleTransmissionChange}
-                  sx={{ fontSize: "16px" }}
-                >
-                  <MenuItem sx={{ fontSize: "16px" }} value="any">
-                    Any
-                  </MenuItem>
-                  <MenuItem sx={{ fontSize: "16px" }} value="Automatic">
-                    Automatic
-                  </MenuItem>
-                  <MenuItem sx={{ fontSize: "16px" }} value="Manual">
-                    Manual
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-
-            <div style={styles.topFormControl}>
-              <FormControl fullWidth>
-                <label
-                  id="demo-simple-select-label"
-                  style={{ fontSize: "15px", fontWeight: "600" }}
-                >
-                  Category
-                </label>
-                <Select
-                  style={{ ...styles.select, maxWidth: "400px" }}
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  value={category}
-                  onChange={handleCategoryChange}
-                  sx={{ fontSize: "16px" }}
-                >
-                  <MenuItem sx={{ fontSize: "16px" }} value="any">
-                    Any
-                  </MenuItem>
-                  <MenuItem sx={{ fontSize: "16px" }} value="Sedan">
-                    Sedan
-                  </MenuItem>
-                  <MenuItem sx={{ fontSize: "16px" }} value="Convertible">
-                    Convertible
-                  </MenuItem>
-                  <MenuItem sx={{ fontSize: "16px" }} value="Suv">
-                    SUV
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-          </div>
-        </div>
-
-        <div style={gridContainerStyle}>
-          <div style={colSpanStyle}>
-            {isLoading ? (
-              <div
-                style={{
-                  textAlign: "center",
-                  marginTop: "20px",
-                }}
-              >
-                <CircularProgress />
-              </div>
-            ) : filteredVehicles.length > 0 ? (
-              <div
-                style={{
-                  "@media (min-width: 768px)": {
-                    width: "90vw",
-                    maxWidth: "800px",
-                    margin: "0 auto",
-                    paddingLeft: "30px",
-                  },
-                  "@media (max-width: 768px)": {
-                    width: "100vw",
-                    paddingLeft: "0px",
-                  },
-                }}
-              >
-                <div style={styles.resultInfo}>
-                  {filteredVehicles.length} vehicle(s) found.
+                      />
+                      {!isValidInput && (
+                        <p style={{ color: "red", marginTop: "10px" }}>
+                          Only numeric characters are allowed.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {/* input box */}
+                  <div className="relative inline-block my-3 text-lg w-full  ">
+                    <label className="absolute -top-2 left-3 text-sm bg-white px-1  text-gray-500">
+                      Max Price
+                    </label>
+                    <div className="border  border-gray-400 rounded-md bg-white">
+                      <input
+                        id="textBox"
+                        type="text"
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        placeholder="Type here..."
+                        style={{
+                          padding: "10px",
+                          width: "100%",
+                          border: isValidInput
+                            ? "1px solid #D6D9DE"
+                            : "1px solid red",
+                        }}
+                      />
+                      {!isValidInput && (
+                        <p style={{ color: "red", marginTop: "10px" }}>
+                          Only numeric characters are allowed.
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <ResultsGrid
-                  vehicles={filteredVehicles}
-                  pickUpTime={startDate}
-                  DropOffTime={endDate}
-                  lastEvaluatedKey={lastEvaluated}
-                />
+                <Dropdown label="Make" options={makeDisplayArray} />{" "}
+                <Dropdown label="Make" options={makeDisplayArray} />
               </div>
-            ) : (
-              <div
-                style={{
-                  textAlign: "center",
-                  marginTop: "20px",
-                  color: "#6b7280",
-                }}
-              >
-                No vehicles found.
-              </div>
-            )}
+            </div>
           </div>
-          <div style={mapContainerStyle}>
-            <div style={mapDetailsStyle}>
-              <MapComponent />
+
+          <div className=" flex flex-col w-full  items-center ">
+            <div className="flex flex-col bg-white my-4 w-full px-8 py-4 text-lg md:text-2xl  rounded-xl shadow-md shadow-gray-100  ">
+              <div className="flex flex-wrap">
+                {isLoading ? (
+                  <div>
+                    <CircularProgress />
+                  </div>
+                ) : filteredVehicles.length > 0 ? (
+                  <div>
+                    <div className="text-3xl m-4 font-normal my-8">
+                      Found{" "}
+                      <span className="font-bold">
+                        {" "}
+                        ({filteredVehicles.length})
+                      </span>{" "}
+                      Cars
+                    </div>
+                    <ResultsGrid
+                      vehicles={filteredVehicles}
+                      pickUpTime={startDate}
+                      DropOffTime={endDate}
+                      lastEvaluatedKey={lastEvaluated}
+                    />
+                  </div>
+                ) : (
+                  <div>No vehicles found.</div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </main>
+
+        <div className="flex flex-col w-1/2 pr-20">
+          {error && <div>{error}</div>}
+          <div className="flex  bg-white my-10 w-full px-8 py-4 text-lg md:text-2xl justify-between  rounded-xl shadow-md shadow-gray-100  ">
+            <div className=" flex  items-center ">
+              <div className=" flex space-x-6 ">
+                <Dropdown label="Make" options={makeDisplayArray} />{" "}
+                <Dropdown label="Make" options={makeDisplayArray} />{" "}
+                <Dropdown label="Make" options={makeDisplayArray} />
+              </div>
+            </div>
+            <button className=" bg-blue-950 text-lg text-white rounded-full px-12 ml-8  py-2 my-4">
+              Filter
+            </button>
+          </div>
+          <div></div>
+          <div>
+            <div className="flex  bg-white  w-full p-8 text-lg md:text-2xl justify-between  rounded-xl shadow-md shadow-gray-100  ">
+              {" "}
+              <MapComponent />{" "}
+            </div>
+          </div>
+        </div>
+      </div>
+      <Footer />
     </div>
   );
 };
