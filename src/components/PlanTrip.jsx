@@ -4,7 +4,7 @@ import Person from "../images/hero/person.png";
 import Afordable from "../images/plan/Funding.png";
 import Selection from "../images/plan/Choice.png";
 import Community from "../images/plan/Community.png";
-
+import ComingSoon from "../images/plan/ComingSoon.png";
 function PlanTrip() {
   return (
     <>
@@ -110,6 +110,33 @@ function PlanTrip() {
             <div className="text-gray-300 text-xl font-normal my-6">
               Trusted Community
             </div>
+          </div>
+        </div>
+      </div>
+      {/* Coming Soon */}
+      <div className="relative bg-white h-fit p-10 md:px-40 flex items-center justify-center">
+        <div className="relative md:pb-20 md:pr-72 z-10 text-start  text-[#00173C] p-8">
+          <h1 className="text-4xl  md:text-9xl  font-semibold mt-8 mb-8">
+            Mobile App Coming soon
+          </h1>
+          <p className="text-lg md:text-2xl mb-12">
+            Lorem ipsum dolor sit amet consectetur. Vitae condimentum leo
+            convallis nisi tincidunt. Sapien dignissim mattis congue eget elit a
+            imperdiet. Eu non turpis facilisis hendrerit velit massa tincidunt
+            id. Sed at quis.
+          </p>
+        </div>
+        <div className="w-fit md:pl-32 items-center justify-center flex">
+          {" "}
+          <div
+            className="relative h-[550px] w-[450px] mb-6 flex items-center justify-center"
+            style={{
+              backgroundImage: `url(${ComingSoon})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          >
+            {" "}
           </div>
         </div>
       </div>

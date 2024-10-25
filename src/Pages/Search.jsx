@@ -114,6 +114,27 @@ const Search = () => {
   const handleCityChange = (event) => {
     setSelectedCity(event.target.value);
   };
+  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen1, setIsOpen1] = useState(false);
+  const [isOpen2, setIsOpen2] = useState(false);
+  const [isOpen3, setIsOpen3] = useState(false);
+  const [selectedOption, setSelectedOption] = useState("");
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const toggleDropdown1 = () => {
+    setIsOpen1(!isOpen1);
+  };
+
+  const toggleDropdown2 = () => {
+    setIsOpen2(!isOpen2);
+  };
+
+  const toggleDropdown3 = () => {
+    setIsOpen3(!isOpen3);
+  };
 
   const handleStartDateChange = (event) => {
     const value = event.target.value;
@@ -194,6 +215,8 @@ const Search = () => {
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
   };
+  const transmissionType = ["Any", "Automatic", "Manual"];
+  const Category = ["Any", "Sedan", "SUV", "Convertable"];
 
   // Optional: Validation Example (disallow special characters)
   const isValidInput = /^[0-9 ]*$/.test(inputValue);
@@ -235,13 +258,138 @@ const Search = () => {
             <div className="text-3xl mx-4 font-normal mt-4">Filters</div>
             <div className=" flex justify-center items-center">
               <div className="flex flex-col m-4 w-1/2 ">
-                <Dropdown label="Make" options={makeDisplayArray} />{" "}
-                <Dropdown label="Make" options={makeDisplayArray} />{" "}
-                <Dropdown label="Make" options={makeDisplayArray} />
+                <div className="relative inline-block my-3 text-lg w-full">
+                  <FormControl fullWidth>
+                    {/* Label inside the box */}
+                    <label
+                      id="make"
+                      className="absolute -top-2 left-3 text-sm bg-white px-1 text-gray-500"
+                    >
+                      Make
+                    </label>
+
+                    {/* Dropdown button */}
+                    <div className="border border-gray-400 rounded-md bg-white">
+                      <button
+                        onClick={toggleDropdown}
+                        className="flex justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400"
+                      >
+                        <span>{make || "Select your car type"}</span>
+
+                        {/* Arrow icon */}
+                        <svg
+                          className={`w-4 h-4 text-gray-500 transform transition-transform duration-200 ${
+                            isOpen ? "rotate-180" : ""
+                          }`}
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path d="M5.23 7.21a.75.75 0 011.06 0L10 10.92l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0l-4.25-4.25a.75.75 0 010-1.06z" />
+                        </svg>
+                      </button>
+
+                      {/* Dropdown options */}
+                      {isOpen && (
+                        <ul className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md max-h-60 overflow-y-auto z-10">
+                          <MenuItem
+                            sx={{ fontSize: "16px" }}
+                            value="any"
+                            onClick={() =>
+                              handleMakeChange({ target: { value: "any" } })
+                            }
+                          >
+                            Any
+                          </MenuItem>
+
+                          {makesData.Makes.map((m) => (
+                            <li
+                              key={m.make_display}
+                              onClick={() =>
+                                handleMakeChange({
+                                  target: { value: m.make_display },
+                                })
+                              }
+                              className="p-2 text-gray-700 hover:bg-gray-200 cursor-pointer"
+                            >
+                              {m.make_display}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </FormControl>
+                </div>
+
+                {/* Model */}
+                <div className="relative inline-block my-3 text-lg w-full">
+                  <FormControl fullWidth>
+                    <label
+                      id="demo-simple-select-label"
+                      className="absolute -top-2 left-3 text-sm bg-white px-1 text-gray-500"
+                    >
+                      Model
+                    </label>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      value={selectedModel}
+                      label="Age"
+                      onChange={handleModelChange}
+                    >
+                      <MenuItem sx={{ fontSize: "16px" }} value="any">
+                        Any
+                      </MenuItem>
+                      {model.map((m) => {
+                        return (
+                          <MenuItem sx={{ fontSize: "16px" }} value={m}>
+                            {m}
+                          </MenuItem>
+                        );
+                      })}
+                    </Select>
+                  </FormControl>
+                </div>
+
+                <div className="relative inline-block my-3 text-lg w-full">
+                  <FormControl fullWidth>
+                    <label
+                      id="demo-simple-select-label"
+                      className="absolute -top-2 left-3 text-sm bg-white px-1  text-gray-500"
+                    >
+                      Transmission
+                    </label>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      value={transmission}
+                      label="Age"
+                      onChange={handleTransmissionChange}
+                    >
+                      <MenuItem sx={{ fontSize: "16px" }} value="any">
+                        Any
+                      </MenuItem>
+                      {transmissionType.map((m) => {
+                        return (
+                          <MenuItem sx={{ fontSize: "16px" }} value={m}>
+                            {m}
+                          </MenuItem>
+                        );
+                      })}
+                    </Select>
+                  </FormControl>
+                </div>
+
+                {/* <Dropdown
+                  label="Transmission"
+                  options={transmissionType}
+                  onSelect={transmission}
+                /> */}
               </div>
 
-              <div className="flex flex-col m-4 w-1/2">
-                <div className="flex">
+              <div className="flex flex-col justify-start items-start h-full  m-4 w-1/2">
+                <div className="flex mt-4">
                   {" "}
                   {/* input box */}
                   <div className="relative inline-block my-3 text-lg w-full mr-4 ">
@@ -298,8 +446,32 @@ const Search = () => {
                     </div>
                   </div>
                 </div>
-                <Dropdown label="Make" options={makeDisplayArray} />{" "}
-                <Dropdown label="Make" options={makeDisplayArray} />
+
+                <div className="relative inline-block my-3 text-lg w-full">
+                  <FormControl fullWidth>
+                    <label className="absolute -top-2 left-3 text-sm bg-white px-1  text-gray-500">
+                      Category
+                    </label>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      value={category}
+                      label="Age"
+                      onChange={handleCategoryChange}
+                    >
+                      <MenuItem sx={{ fontSize: "16px" }} value="any">
+                        Any
+                      </MenuItem>
+                      {transmissionType.map((m) => {
+                        return (
+                          <MenuItem sx={{ fontSize: "16px" }} value={m}>
+                            {m}
+                          </MenuItem>
+                        );
+                      })}
+                    </Select>
+                  </FormControl>
+                </div>
               </div>
             </div>
           </div>
@@ -338,7 +510,7 @@ const Search = () => {
 
         <div className="flex flex-col w-1/2 pr-20">
           {error && <div>{error}</div>}
-          <div className="flex  bg-white my-10 w-full px-8 py-4 text-lg md:text-2xl justify-between  rounded-xl shadow-md shadow-gray-100  ">
+          {/* <div className="flex  bg-white my-10 w-full px-8 py-4 text-lg md:text-2xl justify-between  rounded-xl shadow-md shadow-gray-100  ">
             <div className=" flex  items-center ">
               <div className=" flex space-x-6 ">
                 <Dropdown label="Make" options={makeDisplayArray} />{" "}
@@ -349,7 +521,7 @@ const Search = () => {
             <button className=" bg-blue-950 text-lg text-white rounded-full px-12 ml-8  py-2 my-4">
               Filter
             </button>
-          </div>
+          </div> */}
           <div></div>
           <div>
             <div className="flex  bg-white  w-full p-8 text-lg md:text-2xl justify-between  rounded-xl shadow-md shadow-gray-100  ">

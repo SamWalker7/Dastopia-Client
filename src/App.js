@@ -36,7 +36,7 @@ function App() {
         <Route path="testimonials" element={<TestimonialsPage />} />
         <Route path="team" element={<Team />} />
         <Route path="contact" element={<Contact />} />
-        <Route path="/details/:id" element={<Details />} />
+        <Route path="/details" element={<Details />} />
         <Route path="search" element={<Search />} />
         <Route path="/booking/:id" element={<Booking />} />
         <Route path="/booking-confirmation" element={<BookingConfirmation />} />

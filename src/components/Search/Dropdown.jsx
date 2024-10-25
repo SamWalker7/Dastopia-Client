@@ -1,30 +1,25 @@
-import React, { useState } from "react";
+import React from "react";
 
-const Dropdown = ({ label, options }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState("");
-
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const handleOptionClick = (option) => {
-    setSelectedOption(option);
-    setIsOpen(false);
-  };
-
+const Dropdown = ({
+  label,
+  options,
+  selectedOption,
+  isOpen,
+  onToggle,
+  onSelect,
+}) => {
   return (
-    <div className="relative inline-block my-3 text-lg w-full ">
+    <div className="relative inline-block my-3 text-lg w-full">
       {/* Label inside box */}
-      <label className="absolute -top-2 left-3 text-sm bg-white px-1  text-gray-500">
+      <label className="absolute -top-2 left-3 text-sm bg-white px-1 text-gray-500">
         {label}
       </label>
-      <div className="border  border-gray-400 rounded-md bg-white">
+      <div className="border border-gray-400 rounded-md bg-white">
         <button
-          onClick={toggleDropdown}
-          className="flex justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400 "
+          onClick={onToggle}
+          className="flex justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400"
         >
-          <span className="">{selectedOption || "Select your car type"}</span>
+          <span>{selectedOption || "Select your car type"}</span>
           {/* Arrow icon */}
           <svg
             className={`w-4 h-4 text-gray-500 transform transition-transform duration-200 ${
@@ -44,8 +39,8 @@ const Dropdown = ({ label, options }) => {
             {options.map((option, index) => (
               <li
                 key={index}
-                onClick={() => handleOptionClick(option)}
-                className="p-2  text-gray-700 hover:bg-gray-200 cursor-pointer"
+                onClick={() => onSelect(option)}
+                className="p-2 text-gray-700 hover:bg-gray-200 cursor-pointer"
               >
                 {option}
               </li>
