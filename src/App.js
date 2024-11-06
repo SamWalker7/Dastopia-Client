@@ -21,7 +21,12 @@ import NotFound from "./components/404";
 import BookingDetails from "./Pages/BookingDetails";
 import TermsAndConditions from "./Pages/TermsAndConditions";
 import BookingRequests from "./Pages/BookingRequests";
-import MyRequests from "./Pages/MyRequests";
+import MyRequest from "./Pages/MyRequests";
+import HowItWorks from "./Pages/How it works/HowItWorks";
+import Profile from "./Pages/Profile";
+import MyListing from "./Pages/MyListing/MyListing";
+import RentalRequests from "./Pages/Rental Requests/rentalRequest";
+import MyRequests from "./Pages/My Request/myRequest";
 
 AWS.config.region = "us-east-1";
 
@@ -31,8 +36,13 @@ function App() {
       <Navbar />
       <Routes>
         <Route index path="/" element={<Home />} />
+        <Route path="profile" element={<Profile />} />
         <Route path="about" element={<About />} />
-        <Route path="models" element={<Models />} />
+        <Route path="howitworks" element={<HowItWorks />} />
+        <Route path="mylisting" element={<MyListing />} />
+        <Route path="mylisting" element={<MyListing />} />
+        <Route path="myrequest" element={<MyRequests />} />
+        <Route path="rentalrequest" element={<RentalRequests />} />
         <Route path="testimonials" element={<TestimonialsPage />} />
         <Route path="team" element={<Team />} />
         <Route path="contact" element={<Contact />} />
@@ -45,7 +55,7 @@ function App() {
         <Route path="/confirmaccount/:email" element={<OTPInput />} />
         <Route path="/booking_details/:id" element={<BookingDetails />} />
         <Route path="/booking_requests" element={<BookingRequests />} />
-        <Route path="/my_requests" element={<MyRequests />} />
+        <Route path="/my_requests" element={<MyRequest />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

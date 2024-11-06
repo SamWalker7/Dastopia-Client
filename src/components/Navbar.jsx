@@ -5,7 +5,9 @@ import Img2 from "../images/user/person.png";
 import { signout } from "../api/auth";
 import { FiPlus } from "react-icons/fi";
 import { MdMenu } from "react-icons/md";
+import { useLocation } from "react-router-dom";
 function Navbar() {
+  const location = useLocation();
   const [nav, setNav] = useState(false);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
@@ -19,7 +21,14 @@ function Navbar() {
     navigate("/");
     setNav(false);
   };
+  // Set paths where the navbar should have the alternative background color
+  const alternativePages = ["/about", "/howitworks"];
 
+  // Determine the navbar background color based on the current path
+  const isAlternativeColor = alternativePages.includes(location.pathname);
+  const backgroundColor = isAlternativeColor
+    ? "bg-[#00173C] text-gray-300 font-normal"
+    : "bg-white text-gray-600";
   const openNav = () => {
     setNav(!nav);
   };
@@ -36,40 +45,42 @@ function Navbar() {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden  bg-white md:flex px-10 py-2 rounded-full space-x-4 items-center">
+          <div
+            className={`${backgroundColor}  p-4 hidden   md:flex px-10 py-2 rounded-full space-x-4 items-center`}
+          >
             <NavLink
               to="/"
-              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
+              className=" hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
             >
               Home
             </NavLink>
             <NavLink
               to="/about"
-              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
+              className=" hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
             >
               About
             </NavLink>
             <NavLink
               to="/models"
-              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
+              className=" hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
             >
               Vehicles
             </NavLink>
             <NavLink
               to="/testimonials"
-              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
+              className=" hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
             >
               Testimonials
             </NavLink>
             <NavLink
               to="/team"
-              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
+              className=" hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
             >
               Our Team
             </NavLink>
             <NavLink
               to="/contact"
-              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
+              className=" hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
             >
               Contact
             </NavLink>
