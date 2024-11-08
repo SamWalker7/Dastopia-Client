@@ -6,13 +6,20 @@ import {
   IoPersonOutline,
 } from "react-icons/io5";
 import { MdOutlineLocalPhone, MdOutlineMail } from "react-icons/md";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// Helper function to convert seconds to hh:mm:ss format
+const formatTime = (seconds) => {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return [h, m, s].map((unit) => String(unit).padStart(2, "0")).join(":");
+};
 
 const RentalRequests = () => {
   const handleConfirmBooking = () => {
     setIsModalVisible(false);
-    // Add your Booking account logic here
-    console.log("Account Bookingd");
+    console.log("Account Booking Confirmed");
   };
 
   const handleCancelBooking = () => {
@@ -26,6 +33,57 @@ const RentalRequests = () => {
     setIsChecked(!isChecked);
   };
 
+  // Define the rental request data and add an initial expiration time in seconds
+  const rentalRequestsData = [
+    {
+      id: 1,
+      expiresInSeconds: 24 * 60 * 60, // 24 hours
+      status: "Booking Pending",
+      bgColor: "bg-[#E9F1FE]",
+      textColor: "text-[#4478EB]",
+      borderColor: "border-[#4478EB]",
+    },
+    {
+      id: 2,
+      expiresInSeconds: 60 * 60, // 1 hour
+      status: "Booking Expired",
+      bgColor: "bg-[#FDEAEA]",
+      textColor: "text-[#EB4444]",
+      borderColor: "border-[#EB4444]",
+    },
+    {
+      id: 3,
+      expiresInSeconds: 24 * 60 * 60, // 24 hours
+      status: "Booking Pending",
+      bgColor: "bg-[#E9F1FE]",
+      textColor: "text-[#4478EB]",
+      borderColor: "border-[#4478EB]",
+    },
+  ];
+
+  // State to keep track of the countdown for each rental request
+  const [rentalRequests, setRentalRequests] = useState(rentalRequestsData);
+
+  useEffect(() => {
+    // Set an interval to update the countdown every second
+    const intervalId = setInterval(() => {
+      setRentalRequests((prevRequests) =>
+        prevRequests.map((request) => {
+          if (request.expiresInSeconds > 0) {
+            return {
+              ...request,
+              expiresInSeconds: request.expiresInSeconds - 1,
+            };
+          }
+          return request; // Return unchanged if time is up
+        })
+      );
+    }, 1000);
+
+    // Clear interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <div className="flex justify-center md:pt-40 p-8 bg-[#F8F8FF] min-h-screen">
       {/* Left Panel - Rental Requests */}
@@ -33,31 +91,9 @@ const RentalRequests = () => {
         <h2 className="text-3xl font-bold text-[#00113D]">Rental Requests</h2>
 
         {/* Rental Request Card */}
-        {[
-          {
-            expiresIn: "24 Hours",
-            status: "Booking Pending",
-            bgColor: "bg-[#E9F1FE]",
-            textColor: "text-[#4478EB]",
-            borderColor: "border-[#4478EB]",
-          },
-          {
-            expiresIn: "1 Hour",
-            status: "Booking Expired",
-            bgColor: "bg-[#FDEAEA]",
-            textColor: "text-[#EB4444]",
-            borderColor: "border-[#EB4444]",
-          },
-          {
-            expiresIn: "24 Hours",
-            status: "Booking Pending",
-            bgColor: "bg-[#E9F1FE]",
-            textColor: "text-[#4478EB]",
-            borderColor: "border-[#4478EB]",
-          },
-        ].map((request, index) => (
+        {rentalRequests.map((request, index) => (
           <div
-            key={index}
+            key={request.id}
             className={`p-4  space-y-8 rounded-lg shadow-blue-100 shadow-md`}
           >
             <div
@@ -68,12 +104,14 @@ const RentalRequests = () => {
               </span>
               <span
                 className={`px-4 py-2 text-sm font-medium rounded-full text-white bg-[#00173C] ${
-                  request.expiresIn === "1 Hour"
+                  request.expiresInSeconds === 0
                     ? "bg-[#410002]"
                     : "bg-[#00173C]"
                 }`}
               >
-                {request.expiresIn}
+                {request.expiresInSeconds > 0
+                  ? formatTime(request.expiresInSeconds)
+                  : "Expired"}
               </span>
             </div>
 
@@ -129,9 +167,11 @@ const RentalRequests = () => {
           </div>
         ))}
       </div>
+
+      {/* Right Panel */}
       <div className=" w-2/3  px-10  flex   space-y-6 flex-col">
         {/* Right Panel - Request Summary */}
-        <div className="flex gap-10  ">
+        <div className="flex gap-10">
           {/* Request Summary */}
           <section className="w-1/2 bg-white p-6   rounded-xl shadow-md  ">
             <h2 className="text-2xl font-semibold text-[#00113D] mb-8">
@@ -151,14 +191,13 @@ const RentalRequests = () => {
                 <p className="text-lg text-[#5A5A5A]">June 12, 2024 3:00AM</p>
               </div>
               <div
-                className={`w-44 flex justify-center items-center py-2 px-4 text-base rounded-xl bg-[#E9F1FE] text-[#4478EB]
-            `}
+                className={`w-44 flex justify-center items-center py-2 px-4 text-base rounded-xl bg-[#E9F1FE] text-[#4478EB]`}
               >
-                {" "}
                 Booking Pending
               </div>
             </div>
-            <h2 className="text-2xl mt-16 mb-4 font-semibold text-[#00113D] ">
+
+            <h2 className="text-2xl mt-16 mb-4 font-semibold text-[#00113D]">
               Car Details
             </h2>
             <div className="text-lg  space-y-2 w-full text-gray-500">
@@ -188,12 +227,10 @@ const RentalRequests = () => {
               <div className="flex items-start gap-2">
                 <div>
                   <p className="flex items-center ">
-                    {" "}
                     <FaRegCircle className="text-gray-400" />{" "}
                     <span className="px-4">Sunday, Jun 30 - 10:00 AM</span>
                   </p>
                   <div className="ml-2 px-6 border-l pb-12 border-gray-300">
-                    {" "}
                     <p className="font-semibold">Bole International Airport</p>
                     <a href="#" className="text-blue-800 underline">
                       View Pick-up detail instructions
@@ -204,12 +241,10 @@ const RentalRequests = () => {
               <div className="flex items-start gap-2">
                 <div>
                   <p className="flex items-center">
-                    {" "}
                     <FaRegCircle className="text-gray-400" />{" "}
                     <span className="px-4">Sunday, Jun 30 - 10:00 AM</span>
                   </p>
                   <div className="ml-2 px-6  pb-8 ">
-                    {" "}
                     <p className="font-semibold">Bole International Airport</p>
                     <a href="#" className="text-blue-800 underline">
                       View Pick-up detail instructions
@@ -224,6 +259,7 @@ const RentalRequests = () => {
             </div>
           </section>
         </div>
+
         <div>
           {/* Rentee Details */}
           <section className="h-fit bg-white p-6 space-y-6   rounded-xl shadow-md">
@@ -261,9 +297,52 @@ const RentalRequests = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-4">
-              <button className="flex-1 py-4 rounded-full bg-[#FDEAEA] text-red-700 border border-red-700">
+              <button
+                onClick={() => setIsModalVisible(true)}
+                className="flex-1 py-4 rounded-full bg-[#FDEAEA] text-red-700 border border-red-700"
+              >
                 Reject Request
               </button>
+              {/* Modal rendering, displayed based on `isModalVisible` */}
+              {isModalVisible && (
+                <>
+                  {/* Overlay background */}
+                  <div className="fixed inset-0 bg-black opacity-50 z-20"></div>
+
+                  {/* Modal content */}
+                  <div className="fixed inset-0 flex items-center justify-center z-30">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-[300px]">
+                      <h2 className="text-3xl mb-4">
+                        Are you sure you want to cancel this request?{" "}
+                      </h2>
+                      <p className="text-gray-600 text-lg my-10">
+                        Cancelling a request will cause you to reenter the
+                        request from the start{" "}
+                      </p>
+                      <div className="flex justify-between space-x-8">
+                        <button
+                          onClick={() => {
+                            handleCancelBooking(); // Perform cancel booking action
+                            setIsModalVisible(false); // Close modal
+                          }}
+                          className="bg-blue-950 text-base flex items-center justify-center w-fit text-white rounded-full px-8 my-2 py-4"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setApproved(false); // Reset approval state
+                            setIsModalVisible(false); // Close modal
+                          }}
+                          className="bg-red-100 text-base flex items-center justify-center w-fit text-red-600 hover:bg-red-600 hover:text-white rounded-full px-8 my-2 py-4"
+                        >
+                          Cancel Booking
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
               <button
                 className="flex-1 py-4 rounded-full bg-[#00113D] text-white"
                 onClick={() => setApproved(true)}
@@ -272,7 +351,6 @@ const RentalRequests = () => {
               </button>
               {approved && (
                 <div>
-                  {" "}
                   {/* Overlay background */}
                   <div className="fixed inset-0 bg-black opacity-50 z-20"></div>
                   {/* Modal content */}

@@ -6,6 +6,7 @@ import { signout } from "../api/auth";
 import { FiPlus } from "react-icons/fi";
 import { MdMenu } from "react-icons/md";
 import { useLocation } from "react-router-dom";
+
 function Navbar() {
   const location = useLocation();
   const [nav, setNav] = useState(false);
@@ -21,22 +22,24 @@ function Navbar() {
     navigate("/");
     setNav(false);
   };
-  // Set paths where the navbar should have the alternative background color
-  const alternativePages = ["/about", "/howitworks"];
 
-  // Determine the navbar background color based on the current path
+  const alternativePages = ["/contact", "/testimonials", "/howitworks"];
   const isAlternativeColor = alternativePages.includes(location.pathname);
   const backgroundColor = isAlternativeColor
     ? "bg-[#00173C] text-gray-300 font-normal"
     : "bg-white text-gray-600";
+  const backgroundColor1 = !isAlternativeColor
+    ? "bg-[#00173C] text-gray-300 font-normal"
+    : "bg-white text-gray-900";
+
   const openNav = () => {
     setNav(!nav);
   };
 
   return (
     <>
-      <nav className="  fixed w-full z-20">
-        <div className=" mx-auto px-4 sm:px-6 lg:pl-32 lg:pr-20 flex w-full justify-between items-center h-32">
+      <nav className="fixed w-full z-20">
+        <div className="mx-auto px-4 sm:px-6 lg:pl-32 lg:pr-20 flex w-full justify-between items-center h-32">
           {/* Left: Logo */}
           <div className="flex-shrink-0">
             <Link to="/" onClick={() => window.scrollTo(0, 0)}>
@@ -46,62 +49,42 @@ function Navbar() {
 
           {/* Desktop Menu */}
           <div
-            className={`${backgroundColor}  p-4 hidden   md:flex px-10 py-2 rounded-full space-x-4 items-center`}
+            className={`${backgroundColor} p-4 hidden md:flex px-10 py-2 rounded-full space-x-4 items-center`}
           >
-            <NavLink
-              to="/"
-              className=" hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
-            >
-              Home
-            </NavLink>
-            <NavLink
-              to="/about"
-              className=" hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
-            >
-              About
-            </NavLink>
-            <NavLink
-              to="/models"
-              className=" hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
-            >
-              Vehicles
-            </NavLink>
-            <NavLink
-              to="/testimonials"
-              className=" hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
-            >
-              Testimonials
-            </NavLink>
-            <NavLink
-              to="/team"
-              className=" hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
-            >
-              Our Team
-            </NavLink>
-            <NavLink
-              to="/contact"
-              className=" hover:text-gray-900 px-3 py-2 rounded-md text-xl font-medium"
-            >
-              Contact
-            </NavLink>
+            {[
+              { to: "/", label: "Home" },
+              { to: "/testimonials", label: "Testimonials" },
+              { to: "/about", label: "About Us" },
+              { to: "/contact", label: "Contact Us" },
+            ].map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded-md text-xl font-medium hover:text-yellow-500 ${
+                    isActive
+                      ? "text-yellow-500 border-b-2 border-yellow-500"
+                      : ""
+                  }`
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
 
             {!user && (
               <>
-                {/* <NavLink
-                  className="text-primary px-4 py-2 rounded-md border border-primary hover:bg-primary hover:text-white"
-                  to="/signin"
-                >
-                  Sign In/Signup
-                </NavLink> */}
                 <NavLink
                   className="text-white bg-primary px-4 py-2 rounded-md hover:bg-opacity-90"
                   to="/signup"
                 >
                   Register
                 </NavLink>
-                <button className=" bg-blue-950 text-lg flex items-center justify-center text-white rounded-full px-8 ml-8 my-2  py-4">
-                  <FiPlus className="mr-4 font-normal text-white" size={12} />{" "}
-                  Add Car
+                <button
+                  className={` ${backgroundColor1} text-xl flex items-center justify-center rounded-full px-8 ml-8 my-2 py-4`}
+                >
+                  <FiPlus className="mr-4 font-normal" size={12} />
+                  <span>Add Car</span>
                 </button>
                 <button onClick={openNav} className="focus:outline-none">
                   <MdMenu size={20} />
@@ -133,48 +116,29 @@ function Navbar() {
         {/* Mobile Menu */}
         {nav && (
           <div className="md:hidden bg-white shadow-md fixed inset-0 z-10 flex flex-col p-4 space-y-2">
-            <NavLink
-              to="/"
-              onClick={openNav}
-              className="text-gray-600 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
-            >
-              Home
-            </NavLink>
-            <NavLink
-              to="/about"
-              onClick={openNav}
-              className="text-gray-600 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
-            >
-              About
-            </NavLink>
-            <NavLink
-              to="/models"
-              onClick={openNav}
-              className="text-gray-600 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
-            >
-              Vehicles
-            </NavLink>
-            <NavLink
-              to="/testimonials"
-              onClick={openNav}
-              className="text-gray-600 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
-            >
-              Testimonials
-            </NavLink>
-            <NavLink
-              to="/team"
-              onClick={openNav}
-              className="text-gray-600 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
-            >
-              Our Team
-            </NavLink>
-            <NavLink
-              to="/contact"
-              onClick={openNav}
-              className="text-gray-600 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
-            >
-              Contact
-            </NavLink>
+            {[
+              { to: "/", label: "Home" },
+              { to: "/about", label: "About" },
+              { to: "/models", label: "Vehicles" },
+              { to: "/testimonials", label: "Testimonials" },
+              { to: "/team", label: "Our Team" },
+              { to: "/contact", label: "Contact" },
+            ].map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                onClick={openNav}
+                className={({ isActive }) =>
+                  `block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive
+                      ? "text-yellow-500 border-b-2 border-yellow-500"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
 
             {!user && (
               <>

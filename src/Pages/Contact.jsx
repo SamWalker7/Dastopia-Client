@@ -1,152 +1,137 @@
+import React from "react";
+import BackgroundImage from "../images/testimonials/OBJECTS2.png";
+import image from "../images/image.png";
+
+import BackgroundImage1 from "../images/howitworks/bgHow.png";
 import Footer from "../components/Footer";
-import { useState } from "react";
 
-function Contact() {
-  const [error, setError] = useState(false);
-  const handleSubmit = (event) => {
-    event.preventDefault();
-
-    const firstName = event.target.elements.firstName.value;
-    const lastName = event.target.elements.lastName.value;
-    const phoneNumber = event.target.elements.phoneNumber.value;
-    const companyName = event.target.elements.companyName.value;
-    const jobRole = event.target.elements.jobRole.value;
-    const email = event.target.elements.email.value;
-    const message = event.target.elements.message.value;
-
-    const subject = `Inquiry from ${firstName} ${lastName}`;
-    const body = `Name: ${firstName} ${lastName}
-                  Phone Number: ${phoneNumber}
-                  Company Name: ${companyName}
-                  Job Role: ${jobRole}
-                  Email: ${email}
-                  Message: ${message}`;
-
-    const emailLink = `mailto:contact@dastopia.org?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body)}`;
-
-    if (
-      firstName === "" ||
-      lastName === "" ||
-      phoneNumber === "" ||
-      email === "" ||
-      message === ""
-    ) {
-      setError(true);
-      setTimeout(() => {
-        setError(false);
-      }, 5000);
-    } else {
-      window.location.href = emailLink;
-    }
-  };
-
+const ContactForm = () => {
   return (
-    <>
-      <section className="contact-page" style={{ paddingTop: "100px" }}>
-        <div className="container">
-          <div className="contact-div">
-            <div className="contact-div__text">
-              <h2>Need additional information?</h2>
-              <p>
-                Need assistance? We're here to help. Contact us for any
-                questions about our vehicles, rental policies, or booking
-                process. Our team is dedicated to ensuring a smooth and
-                enjoyable rental experience. Reach out today!
+    <div
+      style={{
+        backgroundImage: `url(${BackgroundImage1})`,
+      }}
+      className=" flex flex-col overflow-hidden bg-auto  "
+    >
+      <h2 className="text-center text-xl md:my-28 md:mt-52 md:text-9xl  font-medium text-[#00173C] mb-4">
+        Contact Us
+      </h2>
+      <div className="flex justify-center items-center w-full h-screen bg-white">
+        <div className="flex flex-wrap gap-20 bg-white rounded-xl shadow-lg shadow-gray-300 w-full mx-20">
+          {/* Left Panel */}
+          <div
+            className="w-full relative bg-cover bg-center md:w-1/3 p-8 rounded-l-xl"
+            style={{ backgroundImage: `url(${BackgroundImage})` }}
+          >
+            {/* Overlay for background darkening */}
+            <div className="absolute inset-0 bg-[#FABD05]  opacity-95"></div>
+
+            <h2 className="relative text-5xl font-bold text-[#00113D] mb-4">
+              Contact Information
+            </h2>
+            <p className="relative text-lg text-[#00113D] mb-8">
+              Say something to start a live chat!
+            </p>
+            <div className="w-full flex justify-center items-center">
+              {/* Placeholder for car image */}
+              <div
+                style={{ backgroundImage: `url(${image})` }}
+                className="relative w-[300px] h-[300px]  bg-contain bg-center bg-no-repeat"
+              >
+                {/* Add your car image */}
+              </div>
+            </div>
+            {/* Contact Details */}
+            <div className=" relative space-y-4 text-lg text-[#00113D]">
+              <p className="flex items-center gap-2">
+                <i className="fas fa-phone-alt"></i> +1012 3456 789
               </p>
-              <a href={`tel:+251946888444`}>
-                <i className="fa-solid fa-phone"></i>&nbsp; (251) 946-888444
-              </a>
-              <a href="mailto:contact@dastechnologies.org">
-                <i className="fa-solid fa-envelope"></i>&nbsp; contact@dastechnologies.org
-              </a>
-              <p>
-                <i className="fa-solid fa-location-dot"></i>&nbsp; Ethiopia,
-                Addis Ababa, Bole Dani Plaza
+              <p className="flex items-center gap-2">
+                <i className="fas fa-envelope"></i> demo@gmail.com
+              </p>
+              <p className="flex items-center gap-2">
+                <i className="fas fa-map-marker-alt"></i> 132 Dartmouth Street
+                Boston, Massachusetts 02156 United States
               </p>
             </div>
-            <div className="contact-div__form">
-              {error && (
-                <p
-                  style={{
-                    color: "red",
-                    textAlign: "center",
-                    marginBottom: "1rem",
-                    fontSize: "2rem",
-                  }}
+          </div>
+
+          {/* Right Panel */}
+          <div className="w-full md:w-1/2 p-8">
+            <form className="space-y-6">
+              <div className="relative inline-block my-3 text-lg  w-full">
+                <label
+                  htmlFor="first-name"
+                  className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
                 >
-                  All fields marked with <b>*</b> are required!
-                </p>
-              )}
-              <form onSubmit={handleSubmit}>
-                <label>
-                  First Name <b>*</b>
+                  First Name
                 </label>
-                <input type="text" name="firstName" placeholder='E.g: "John"' />
-
-                <label>
-                  Last Name <b>*</b>
-                </label>
-                <input type="text" name="lastName" placeholder='E.g: "Doe"' />
-
-                <label>
-                  Phone Number <b>*</b>
-                </label>
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  placeholder='E.g: "+123456789"'
-                />
-
-                <label>Company Name (Optional)</label>
                 <input
                   type="text"
-                  name="companyName"
-                  placeholder='E.g: "Das Technologies"'
+                  id="first-name"
+                  className="mt-1 block w-full px-4 py-4 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 "
+                  placeholder="Enter your first name"
                 />
+              </div>
 
-                <label>Job Role (Optional)</label>
-                <input type="text" name="jobRole" placeholder='E.g: "CEO"' />
+              <div className="relative inline-block my-3 text-lg  w-full">
+                <label
+                  htmlFor="last-name"
+                  className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
+                >
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  id="last-name"
+                  className="mt-1 block w-full px-4 py-4 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 "
+                  placeholder="Enter your last name"
+                />
+              </div>
 
-                <label>
-                  Email <b>*</b>
+              <div className="relative inline-block my-3 text-lg  w-full">
+                <label
+                  htmlFor="email"
+                  className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
+                >
+                  Email Address
                 </label>
                 <input
                   type="email"
-                  name="email"
-                  placeholder="youremail@example.com"
+                  id="email"
+                  className="mt-1 block w-full px-4 py-4 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 "
+                  placeholder="Enter your email address"
                 />
+              </div>
 
-                <label>
-                  Tell us about it <b>*</b>
+              <div className="relative inline-block my-3 text-lg  w-full">
+                <label
+                  htmlFor="message"
+                  className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
+                >
+                  Message/comments
                 </label>
-                <textarea name="message" placeholder="Write Here.."></textarea>
+                <textarea
+                  id="message"
+                  className="mt-1 block w-full px-4  py-4 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 "
+                  placeholder="Enter total distance in kilometers"
+                  rows="4"
+                ></textarea>
+              </div>
 
-                <button type="submit">
-                  <i className="fa-solid fa-envelope-open-text"></i>&nbsp; Send
-                  Message
-                </button>
-              </form>
-            </div>
+              <button
+                type="submit"
+                className="w-full py-3 bg-[#00113D] text-white rounded-full text-lg hover:bg-[#000a29]"
+              >
+                Send A Message
+              </button>
+            </form>
           </div>
         </div>
-        <div className="book-banner">
-          <div className="book-banner__overlay"></div>
-          <div className="container">
-            <div className="text-content">
-              <h2>Book a car by getting in touch with us</h2>
-              <span>
-                <i className="fa-solid fa-phone"></i>
-                <h3>(251) 946-888444</h3>
-              </span>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </section>
-    </>
+      </div>
+      <Footer />
+    </div>
   );
-}
+};
 
-export default Contact;
+export default ContactForm;
