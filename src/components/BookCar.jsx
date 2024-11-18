@@ -1,11 +1,13 @@
 import { useState } from "react";
 import BackgroundImage from "../images/book-car/book-bg.png";
+import { useNavigate } from "react-router-dom";
 function BookCar() {
   const [pickUp, setPickUp] = useState("");
   const [dropOff, setDropOff] = useState("");
   const [pickTime, setPickTime] = useState("");
   const [dropTime, setDropTime] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const confirmBooking = () => {
     const currentDate = new Date().toISOString().split("T")[0];
@@ -51,7 +53,9 @@ function BookCar() {
     }
   };
   const handleDropTime = (e) => setDropTime(e.target.value);
-
+  const handleRedirect = () => {
+    navigate("/search");
+  };
   const currentDate = new Date().toISOString().split("T")[0];
   const locations = ["Addis Ababa", "Adama", "Hawassa", "Bahir Dar"];
   const [isChecked, setIsChecked] = useState(false);
@@ -151,7 +155,9 @@ function BookCar() {
                 <button
                   className=" bg-blue-950 text-lg text-white rounded-full px-8 my-4 ml-16 "
                   type="button"
-                  onClick={confirmBooking}
+                  onClick={() => {
+                    handleRedirect();
+                  }}
                 >
                   Search
                 </button>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import image from "../images/testimonials/avatar.png";
 
 // Sample chat data
 const chats = [
@@ -48,9 +49,9 @@ const ChatApp = () => {
   };
 
   return (
-    <div className="flex h-screen pt-40 bg-gray-100">
+    <div className="flex bg-[#F8F8FF] md:pt-52 md:px-32 pb-10 h-screen gap-10">
       {/* Sidebar */}
-      <div className="w-1/4 bg-white shadow-lg rounded-l-xl p-4">
+      <div className="w-1/4 bg-white shadow-lg rounded-xl p-4">
         {/* Tabs */}
         <div className="flex justify-between mb-4">
           <button
@@ -86,7 +87,7 @@ const ChatApp = () => {
               onClick={() => setActiveChat(chat)}
             >
               <img
-                src={chat.avatar}
+                src={image}
                 alt={chat.name}
                 className="w-12 h-12 rounded-full mr-3"
               />
@@ -106,7 +107,7 @@ const ChatApp = () => {
       </div>
 
       {/* Chat Window */}
-      <div className="flex-1 bg-white shadow-lg rounded-r-xl p-6 flex flex-col">
+      <div className="flex-1 bg-white shadow-lg rounded-xl p-6 flex flex-col">
         {/* Chat Header */}
         <div className="flex items-center mb-4">
           <div className="text-lg font-bold">{activeChat.name}</div>
