@@ -1,87 +1,33 @@
 import { Link } from "react-router-dom";
-import BgShape from "../images/hero/hero-bg2.png";
+import BackgroundImage from "../images/hero/Hero.png";
 import HeroCar from "../images/hero/main-car.png";
 import { useEffect, useState } from "react";
+import BookCar from "./BookCar";
 
 function Hero({ isHome = false }) {
-  const [goUp, setGoUp] = useState(false);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: (0, 0), behavior: "smooth" });
-  };
-
-  const bookBtn = () => {
-    document
-      .querySelector("#booking-section")
-      .scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    const onPageScroll = () => {
-      if (window.pageYOffset > 600) {
-        setGoUp(true);
-      } else {
-        setGoUp(false);
-      }
-    };
-    window.addEventListener("scroll", onPageScroll);
-
-    return () => {
-      window.removeEventListener("scroll", onPageScroll);
-    };
-  }, []);
   return (
-    <>
-      <section id="home" className="hero-section">
-        <div className="container">
-          {<img className="bg-shape" src={BgShape} alt="bg-shape" style={{
-            width:"20px"
-          }} />}
-          <div className="hero-content">
-            <div className="hero-content__text">
-              <h4>Plan your trip now</h4>
-              <h1>
-                Save <span>big</span> with our car rental
-              </h1>
-              <p>
-                Rent the car of your dreams. Unbeatable prices, amazing cars,
-                flexible pick-up options and much more.
-              </p>
-              <div className="hero-content__text__btns">
-                <Link
-                  onClick={bookBtn}
-                  className="hero-content__text__btns__book-ride"
-                  to="/"
-                >
-                  Book Car &nbsp; <i className="fa-solid fa-circle-check"></i>
-                </Link>
-                <Link
-                  className="hero-content__text__btns__learn-more"
-                  to="/about"
-                >
-                  Learn More &nbsp; <i className="fa-solid fa-angle-right"></i>
-                </Link>
-              </div>
-            </div>
-
-            {/* img */}
-            <img
-              src={HeroCar}
-              alt="car-img"
-              className="hero-content__car-img"
-            />
-          </div>
-        </div>
-
-        {/* page up */}
-        <div
-          onClick={scrollToTop}
-          className={`scroll-up ${goUp ? "show-scroll" : ""}`}
-        >
-          <i className="fa-solid fa-angle-up"></i>
-        </div>
-      </section>
-    </>
+    <div
+      className="relative min-h-screen md:pb-20 px-20 flex items-end justify-start"
+      style={{
+        backgroundImage: `url(${BackgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Overlay for background darkening */}
+      <div className="absolute inset-0 bg-black opacity-20"></div>
+      {/* Content */}
+      <div className="relative z-10 text-start  text-white p-8">
+        <h1 className="text-4xl md:mb-32 md:text-[150px] text-[#FBBC05] font-semibold mb-4">
+          DasGuzo
+        </h1>
+        <p className="text-lg md:text-2xl mb-12">
+          Choose from a wide range of vehicles at affordable rates. Rent from
+          trusted local car owners
+        </p>
+        <BookCar />
+      </div>
+    </div>
   );
 }
 

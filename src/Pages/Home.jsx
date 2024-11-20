@@ -13,14 +13,10 @@ function Home() {
   return (
     <>
       <Hero />
-      <BookCar />
+      {/* <BookCar /> */}
       <PlanTrip />
-      <PickCar />
-      <Banner />
-      <ChooseUs />
       <Testimonials />
       <Faq />
-      <Download />
       <Footer />
     </>
   );

@@ -1,65 +1,67 @@
-// src/MapComponent.js
-import React, { useCallback } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+/* global google */
 
-const API_KEY = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4"
+// MapComponent.jsx
+import React, { useEffect, useRef } from "react";
+import { Loader } from "@googlemaps/js-api-loader";
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
-const containerStyle = {
-    width: '100%',
-    height: '400px'
+const apiOptions = {
+  apiKey: "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4",
+  version: "beta",
+  mapIds: "a314de021ad49107", // Optional: Use your map style ID
 };
 
-
-const center = {
-    lat: 8.99150046103335,
-    lng: 38.773171909982715
+const mapOptions = {
+  tilt: 45,
+  heading: 0,
+  zoom: 17,
+  center: { lat: 52.5213998, lng: 13.4182682 }, // Your desired coordinates
+  mapId: "a314de021ad49107", // Optional: Use your map style ID
 };
-
-
-const createCustomIcon = (text) => {
-    const svg = `
-      <svg width="30" height="30" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="20" cy="20" r="20" fill="white" stroke="white" stroke-width="2" />
-        <text x="50%" y="50%" text-anchor="middle" stroke="black" dy=".3em" font-size="14" font-weight="bold" fill="red">${text}</text>
-      </svg>
-    `;
-    return {
-        url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
-    };
-};
-
-const locations = [
-
-    {
-        id: 1, position: {
-            lat: 8.99150046103335,
-            lng: 38.773171909982715
-        }, text: "37$"
-    },
-
-];
 
 const MapComponent = () => {
-    const onLoad = useCallback((map) => {
-        console.log('Map loaded:', map);
-    }, []);
+  const mapRef = useRef(null); // Reference for the map div
 
-    return (
-        <div>
-            <LoadScript googleMapsApiKey={API_KEY}>
-                <GoogleMap
-                    mapContainerStyle={containerStyle}
-                    center={center}
-                    zoom={13}
-                    onLoad={onLoad}
-                >
-                    {locations.map((location, index) => (
-                        <Marker key={index} position={location.position} />
-                    ))}
-                </GoogleMap>
-            </LoadScript>
-        </div>
-    );
+  useEffect(() => {
+    const initMap = async () => {
+      const apiLoader = new Loader(apiOptions);
+      await apiLoader.load();
+
+      const map = new google.maps.Map(mapRef.current, mapOptions);
+      initWebGLOverlay(map); // Initialize WebGL overlay
+    };
+
+    const initWebGLOverlay = (map) => {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+      const renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: true,
+      });
+
+      // Set the renderer size
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      mapRef.current.appendChild(renderer.domElement); // Append renderer to map div
+
+      const gltfLoader = new GLTFLoader();
+      gltfLoader.load("/path/to/model.gltf", (gltf) => {
+        scene.add(gltf.scene); // Add the loaded model to the scene
+      });
+
+      // Animation loop
+      const animate = () => {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+      };
+
+      animate();
+    };
+
+    initMap();
+  }, []);
+
+  return <div id="map" ref={mapRef} className=" w-full rounded-lg h-[720px]" />;
 };
 
 export default MapComponent;
