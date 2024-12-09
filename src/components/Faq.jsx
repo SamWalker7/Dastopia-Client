@@ -41,13 +41,13 @@ const FAQPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-      <h2 className="text-5xl font-bold text-center mt-16 mb-32">
+      <h2 className="text-4xl font-semibold text-center mt-16 mb-32">
         Frequently Asked Questions
       </h2>
 
       <div className="flex items-center justify-center flex-col lg:flex-row lg:space-x-10">
         {/* Left side: Questions list */}
-        <div className="w-full shadow-md shadow-blue-50 rounded-md lg:w-1/2 space-y-4">
+        <div className="w-full shadow-md shadow-blue-50 text-sm rounded-md lg:w-1/2 space-y-4">
           {faqData.map((faq, index) => (
             <div
               key={index}
@@ -84,10 +84,10 @@ const FAQPage = () => {
 
         {/* Right side: Answer content */}
         <div className="w-full h-fit lg:w-1/2 mt-10 lg:mt-0 p-6 bg-gray-50 rounded-xl shadow-sm shadow-blue-300  transition-all ease-in-out duration-500 transform">
-          <h1 className="text-xl font-semibold my-8 text-gray-800">
+          <h1 className="text-md font-semibold my-8 text-gray-800">
             {faqData[activeIndex].question}
           </h1>
-          <p className="text-lg text-gray-500">{faqData[activeIndex].answer}</p>
+          <p className="text-sm text-gray-500">{faqData[activeIndex].answer}</p>
         </div>
       </div>
     </div>

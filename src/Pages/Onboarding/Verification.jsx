@@ -27,6 +27,15 @@ const Login = () => {
     setPhoneNumber(e.target.value);
   };
 
+  // Validate email format
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const [password, setpassword] = useState("");
+  const [email, setEmail] = useState("");
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE]">
@@ -58,7 +67,7 @@ const Login = () => {
 
         {/* Form */}
         <form>
-          <div className="flex gap-4 mb-4">
+          <div className="flex flex-col  mb-4">
             <div className="relative inline-block my-3 text-lg w-full">
               <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
                 Phone Number
@@ -80,6 +89,37 @@ const Login = () => {
               {errors.phoneNumber && (
                 <p className="text-red-500 mb-4">{errors.phoneNumber}</p>
               )}
+            </div>
+            <div className="relative inline-block my-3 text-lg w-full">
+              {/* Label inside box */}
+              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
+                Email
+              </label>
+              <input
+                type="text"
+                name="email"
+                value={email}
+                onChange={handleChange}
+                placeholder="Enter Your Email"
+                className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
+              />{" "}
+              {errors.email && (
+                <p className="text-red-500 mb-4">{errors.email}</p>
+              )}
+            </div>
+            <div className="relative inline-block my-3 text-lg w-full">
+              {/* Label inside box */}
+              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
+                Password
+              </label>
+              <input
+                type="text"
+                name="password"
+                value={password}
+                onChange={handleChange}
+                placeholder="Enter Your Password"
+                className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
+              />{" "}
             </div>
           </div>
 

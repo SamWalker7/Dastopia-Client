@@ -38,6 +38,7 @@ const Login = () => {
     }
   };
 
+  const [password, setpassword] = useState("");
   return (
     <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 z-50">
       <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE] relative">
@@ -45,7 +46,7 @@ const Login = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div className="flex gap-4 mb-4">
+          <div className="flex flex-col gap-2 mb-4">
             <div className="relative inline-block my-3 text-lg w-full">
               {/* Label inside box */}
               <label
@@ -73,6 +74,20 @@ const Login = () => {
               {errors.phoneNumber && (
                 <p className="text-red-500 mb-4">{errors.phoneNumber}</p>
               )}
+            </div>
+            <div className="relative inline-block my-3 text-lg w-full">
+              {/* Label inside box */}
+              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
+                Password
+              </label>
+              <input
+                type="text"
+                name="password"
+                value={password}
+                onChange={handleChange}
+                placeholder="Enter Your Password"
+                className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
+              />{" "}
             </div>
           </div>
 

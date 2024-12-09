@@ -46,7 +46,7 @@ const Testimonials = () => {
 
   return (
     <div
-      className="relative h-fit  md:px-96 flex items-center justify-center"
+      className="relative h-fit px-8 md:px-96 flex items-center justify-center"
       style={{
         backgroundImage: `url(${BackgroundImage})`,
         backgroundSize: "cover",
@@ -54,10 +54,10 @@ const Testimonials = () => {
       }}
     >
       {/* Overlay for background darkening */}
-      <div className="absolute inset-0 bg-[#031E47] opacity-95"></div>
+      <div className="absolute inset-0 bg-[#FABD05] opacity-95"></div>
 
-      <div className="flex flex-col items-center p-8 justify-center w-full ">
-        <h1 className="relative md:my-8 text-[#FABD05] font-semibold md:text-7xl text-4xl">
+      <div className="flex flex-col items-center p-8  justify-center w-full ">
+        <h1 className="relative my-8 text-[#00173C] font-semibold md:text-5xl text-4xl">
           Testimonials
         </h1>
         <div className="relative w-full max-w-3xl overflow-hidden">
@@ -73,18 +73,18 @@ const Testimonials = () => {
                   <img
                     src={testimonial.image}
                     alt={testimonial.name}
-                    className="w-40 h-40 rounded-full text-white md:mb-4 md:mr-6"
+                    className="w-40 h-40 rounded-full text-white mb-4 md:mr-6"
                   />
 
-                  <p className="text-xl text-gray-300  text-center ">
+                  <p className="text-md text-black  text-center ">
                     {testimonial.message}
                   </p>
                   <img className="w-72 mt-8 h-[1.5px]" src={Line} />
 
-                  <p className="mt-2 text:xl text-white md:text-2xl font-bold">
+                  <p className="mt-2 text:xl text-black md:text-2xl font-semibold">
                     {testimonial.name}
                   </p>
-                  <p className="text-base text-gray-400">{testimonial.role}</p>
+                  <p className="text-base text-gray-800">{testimonial.role}</p>
                 </div>
               </div>
             ))}

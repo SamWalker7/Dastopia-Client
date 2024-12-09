@@ -66,7 +66,7 @@ const testimonials = [
 // Card component to render each testimonial
 const Card = ({ testimonial }) => (
   <div
-    className={`shadow-lg p-5 max-w-lg text-lg rounded-xl ${testimonial.bgColor} space-y-3 transition-all ease-in-out hover:shadow-2xl`}
+    className={`shadow-lg p-5 max-w-lg text-sm rounded-xl ${testimonial.bgColor} space-y-3 transition-all ease-in-out hover:shadow-2xl`}
   >
     <div className="flex items-center space-x-3">
       <img
@@ -113,11 +113,11 @@ const TestimonialsGrid = () => {
       }}
       className=" flex flex-col overflow-hidden bg-auto  "
     >
-      <h2 className="text-center text-xl md:my-28 md:mt-52 md:text-9xl  font-medium text-[#00173C] mb-4">
-        What our customers say
+      <h2 className="text-center text-2xl my-28 md:mt-52 md:text-7xl  font-semibold text-[#00173C] mb-4">
+        What Our Customers Say
       </h2>
       <div className="min-h-screen bg-white md:mb-40 flex justify-center items-center py-8">
-        <div className="flex flex-wrap  gap-6 max-w-8xl justify-center items-center px-96">
+        <div className="flex flex-wrap  gap-6 max-w-8xl justify-center items-center px-10 md:px-52">
           {testimonials.map((testimonial, index) => (
             <Card key={index} testimonial={testimonial} />
           ))}
