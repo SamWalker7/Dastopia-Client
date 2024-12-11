@@ -5,6 +5,7 @@ const SignupForm = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
