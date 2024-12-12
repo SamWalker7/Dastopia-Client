@@ -1,44 +1,67 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import flag from "../../images/hero/image.png";
-
+import {  useNavigate } from "react-router-dom";
 const Login = () => {
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phone_number, setPhoneNumber] = useState("");
+  const [password, setpassword] = useState("");
   const [errors, setErrors] = useState({});
-
+  const navigate = useNavigate();
   useEffect(() => {
     const validatePhoneNumber = () => {
       let validationErrors = { ...errors };
-      const phoneRegex = /^[0-9]{10}$/;
-      if (!phoneNumber) {
-        validationErrors.phoneNumber = "Phone number is required";
-      } else if (!phoneRegex.test(phoneNumber)) {
-        validationErrors.phoneNumber = "Invalid phone number";
+      const phoneRegex = /^\+251(9|7)\d{8}$/; // +251 followed by 9 or 7, and then 8 digits
+
+      if (!phone_number) {
+        validationErrors.phone_number = "Phone number is required";
+      } else if (!phoneRegex.test(phone_number)) {
+        validationErrors.phone_number =
+          "Invalid phone number. It should start with +2519 or +2517 and be 12 digits long.";
       } else {
-        delete validationErrors.phoneNumber;
+        delete validationErrors.phone_number;
       }
+
       setErrors(validationErrors);
     };
 
     validatePhoneNumber();
-  }, [phoneNumber, errors]);
+  }, [phone_number, errors]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit =async (e) => {
     e.preventDefault();
-    if (!errors.phoneNumber) {
-      alert("Account created!");
-      // Account creation logic here
+    const response = await fetch(
+      `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/signin`,
+      {
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        body: JSON.stringify({
+           phone_number,
+           password
+        }),
+      }
+    );
+    const json = await response.json();
+    if (response.ok) {
+      localStorage.setItem("customer",JSON.stringify(json))
+      console.log("yes",json)
+      alert("You have successfully logged in")
+      navigate("/");
+      
     }
+    if (!response.ok) {
+      
+      console.log("no ",json.body.message)
+    }
+    
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "phoneNumber") {
+    if (name === "phone_number") {
       setPhoneNumber(value);
     }
   };
 
-  const [password, setpassword] = useState("");
   return (
     <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 z-50">
       <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE] relative">
@@ -51,7 +74,7 @@ const Login = () => {
               {/* Label inside box */}
               <label
                 className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
-                htmlFor="phoneNumber"
+                htmlFor="phone_number"
               >
                 Phone Number
               </label>
@@ -63,16 +86,16 @@ const Login = () => {
                 />
                 <input
                   type="text"
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  value={phoneNumber}
+                  id="phone_number"
+                  name="phone_number"
+                  value={phone_number}
                   onChange={handleChange}
                   className="flex justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
                   placeholder="Enter your phone number"
                 />
               </div>
-              {errors.phoneNumber && (
-                <p className="text-red-500 mb-4">{errors.phoneNumber}</p>
+              {errors.phone_number && (
+                <p className="text-red-500 mb-4">{errors.phone_number}</p>
               )}
             </div>
             <div className="relative inline-block my-3 text-lg w-full">
@@ -84,7 +107,7 @@ const Login = () => {
                 type="text"
                 name="password"
                 value={password}
-                onChange={handleChange}
+                onChange={(e)=>setpassword(e.target.value)}
                 placeholder="Enter Your Password"
                 className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
               />{" "}
@@ -94,9 +117,9 @@ const Login = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={errors.phoneNumber}
+            disabled={errors.phone_number}
             className={`w-full text-white text-lg rounded-full py-3 transition ${
-              !errors.phoneNumber
+              !errors.phone_number
                 ? "bg-[#00113D] hover:bg-blue-900"
                 : "bg-gray-300 cursor-not-allowed"
             }`}

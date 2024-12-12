@@ -11,7 +11,7 @@ const SignupForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (acceptedTerms) {
-      navigate("/verification");
+      navigate("/verification",{state:{firstName,lastName}});
     }
   };
 

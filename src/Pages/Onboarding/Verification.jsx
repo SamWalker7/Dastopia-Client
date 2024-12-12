@@ -8,12 +8,11 @@ const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { firstName, lastName } = location.state || {};
-  console.log("first_name", firstName);
-  console.log("last_name", lastName);
+  
   useEffect(() => {
     const validatephone_number = () => {
       let validationErrors = { ...errors };
-      const phoneRegex = /^\+251(9|7)\d{9}$/; // +251 followed by 9 or 7, and then 8 digits
+      const phoneRegex = /^\+251(9|7)\d{8}$/; // +251 followed by 9 or 7, and then 8 digits
 
       if (!phone_number) {
         validationErrors.phone_number = "Phone number is required";
@@ -43,7 +42,8 @@ const Login = () => {
   const [password, setpassword] = useState("");
   const [email, setEmail] = useState("");
   //handle Submit
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+e.preventDefault()
     const response = await fetch(
       `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/signup`,
       {
@@ -51,18 +51,21 @@ const Login = () => {
         method: "POST",
         body: JSON.stringify({
           first_name: firstName,
-          last_name,
+          last_name:lastName,
+          phone_number,
           password,
           email,
         }),
       }
     );
     if (response.ok) {
-      navigate("/OTP");
+      navigate("/OTP",{state:{phone_number}});
+      console.log("ok")
     }
     if (!response.ok) {
       const json = await response.json();
-      setErrors(json.message);
+      setErrors(json.body.message);
+      console.log("no ",json.body.message)
     }
   };
   return (

@@ -4,13 +4,17 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from "lucide-react/dist/cjs/lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const OTP = () => {
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [isOtpCorrect, setIsOtpCorrect] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const inputsRef = useRef([]);
-
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { phone_number} = location.state || {};
   const handleChange = (element, index) => {
     const value = element.value.replace(/[^0-9]/g, ""); // Allow only numeric values
     if (!value) return;
@@ -40,23 +44,40 @@ const OTP = () => {
     inputsRef.current[index].select();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     if (otp.includes("")) {
       setIsOtpCorrect(false);
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      if (otp.join("") === "123456") {
-        setIsOtpCorrect(true);
-      } else {
-        setIsOtpCorrect(false);
+    const response = await fetch(
+      `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/confirm_account`,
+      {
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        body: JSON.stringify({
+          otp: otp.join("") ,
+          phone_number
+        }),
+      }
+    );
+    if (response.ok) {
+      setIsLoading(false);
+      setIsOtpCorrect(true);
+      alert("You have successfully registered")
+      navigate("/login");
+      
+    }
+    if (!response.ok) {
+      setIsOtpCorrect(false);
+      setIsLoading(false);
         setOtp(new Array(6).fill("")); // Clear the input fields
         inputsRef.current[0].focus(); // Focus on the first input
-      }
-      setIsLoading(false);
-    }, 3000);
+      const json = await response.json();
+      console.log("no ",json)
+    }
+    
   };
 
   return (
