@@ -1,59 +1,65 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import flag from "../../images/hero/image.png";
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "../../store/auth/authThunks";
 const Login = () => {
   const [phone_number, setPhoneNumber] = useState("");
-  const [password, setpassword] = useState("");
+  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
+
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { loading, error } = useSelector((state) => state.auth);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    dispatch(login(phone_number, password)).then(() => navigate("/"));
+  };
   useEffect(() => {
     const validatePhoneNumber = () => {
-      let validationErrors = { ...errors };
-      const phoneRegex = /^\+251(9|7)\d{8}$/; // +251 followed by 9 or 7, and then 8 digits
+      let validationErrors = {};
+      const phoneRegex = /^\+251(9|7)\d{8}$/;
 
       if (!phone_number) {
         validationErrors.phone_number = "Phone number is required";
       } else if (!phoneRegex.test(phone_number)) {
         validationErrors.phone_number =
           "Invalid phone number. It should start with +2519 or +2517 and be 12 digits long.";
-      } else {
-        delete validationErrors.phone_number;
       }
 
       setErrors(validationErrors);
     };
 
     validatePhoneNumber();
-  }, [phone_number, errors]);
+  }, [phone_number]);
 
-  const handleSubmit =async (e) => {
-    e.preventDefault();
-    const response = await fetch(
-      `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/signin`,
-      {
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({
-           phone_number,
-           password
-        }),
-      }
-    );
-    const json = await response.json();
-    if (response.ok) {
-      localStorage.setItem("customer",JSON.stringify(json))
-      console.log("yes",json)
-      alert("You have successfully logged in")
-      navigate("/");
-      
-    }
-    if (!response.ok) {
-      
-      console.log("no ",json.body.message)
-    }
-    
-  };
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   const response = await fetch(
+  //     `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/signin`,
+  //     {
+  //       headers: { "Content-Type": "application/json" },
+  //       method: "POST",
+  //       body: JSON.stringify({
+  //         phone_number,
+  //         password,
+  //       }),
+  //     }
+  //   );
+  //   const json = await response.json();
+  //   if (response.ok) {
+  //     localStorage.setItem("customer", JSON.stringify(json));
+  //     console.log("yes", json);
+  //     alert("You have successfully logged in");
+  //     navigate("/");
+  //   }
+  //   if (!response.ok) {
+  //     console.log("no ", json.body.message);
+  //   }
+  // };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -89,7 +95,7 @@ const Login = () => {
                   id="phone_number"
                   name="phone_number"
                   value={phone_number}
-                  onChange={handleChange}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                   className="flex justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
                   placeholder="Enter your phone number"
                 />
@@ -107,7 +113,7 @@ const Login = () => {
                 type="text"
                 name="password"
                 value={password}
-                onChange={(e)=>setpassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter Your Password"
                 className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
               />{" "}
@@ -117,15 +123,17 @@ const Login = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={errors.phone_number}
+            disabled={Object.keys(errors).length > 0 || loading}
             className={`w-full text-white text-lg rounded-full py-3 transition ${
               !errors.phone_number
                 ? "bg-[#00113D] hover:bg-blue-900"
                 : "bg-gray-300 cursor-not-allowed"
             }`}
           >
-            Login
+            {" "}
+            {loading ? "Logging in..." : "Login"}
           </button>
+          {error && <p>{error}</p>}
 
           {/* Signup Link */}
           <p className="text-center mt-4 text-gray-600">
