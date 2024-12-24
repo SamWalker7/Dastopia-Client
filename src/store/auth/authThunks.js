@@ -19,7 +19,7 @@ export const login = (phone_number, password) => async (dispatch) => {
 
     if (response.ok) {
       // Save user data to localStorage
-      localStorage.setItem("customer", JSON.stringify(json.body.data));
+      localStorage.setItem("customer", JSON.stringify(json.body));
       alert("You have successfully logged in");
       dispatch(loginSuccess(json.body));
       console.log(json);
