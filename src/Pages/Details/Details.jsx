@@ -31,7 +31,7 @@ export default function Details(props) {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [error, setError] = useState("");
 
-  const vehicles = useSelector((state) => state.vehicle.vehicles);
+  // const vehicles = useSelector((state) => state.vehicle.vehicles);
   const dispatch = useDispatch();
 
   const handleStartDateChange = (event) => {

@@ -52,7 +52,7 @@ const RentalModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl w-full max-w-2xl p-6">
+      <div className="bg-white scale-75 rounded-2xl h-fit w-full max-w-2xl p-6">
         {/* Tabs */}
         <div className="flex w-full bg-[#FAF9FE] border-b mb-6">
           <button
@@ -113,7 +113,7 @@ const RentalModal = ({ isOpen, onClose }) => {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-6 ">
             <h1 className="text-3xl font-semibold my-4"> Insurance Payment</h1>
 
             <div className="bg-blue-50 p-4 rounded-lg mb-6">
@@ -199,7 +199,7 @@ const RentalModal = ({ isOpen, onClose }) => {
             {/* Overlay background */}
             <div className="fixed inset-0 bg-black opacity-50 z-20"></div>
             {/* Modal content */}
-            <div className=" fixed inset-0 flex self-center  justify-center z-30 flex-col items-start p-6 gap-4 w-1/3 h-fit  mx-auto bg-white rounded-lg shadow-md">
+            <div className=" fixed inset-0 flex self-center  justify-center z-30 flex-col items-start p-6 gap-4 w-[55vw] h-fit  mx-auto bg-white rounded-lg shadow-md">
               {/* Header */}
               <div className="flex items-center w-full mb-4">
                 <button

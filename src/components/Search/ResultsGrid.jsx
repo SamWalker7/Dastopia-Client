@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getDownloadUrl, paginatedSearch } from "../../api";
 import { FaStar, FaGasPump, FaCogs, FaUserFriends } from "react-icons/fa";
 import { GoHeart } from "react-icons/go";
+import { Link } from "react-router-dom";
 
 const ResultsGrid = ({
   vehicles,
@@ -153,9 +154,12 @@ const ResultsGrid = ({
                   <FaStar className="text-yellow-400" />
                   <span className="text-xl font-medium">4.5</span>
                 </div>
-                <button className="bg-sky-950 w-full text-white rounded-full px-4 py-3 text-base font-normal">
+                <Link
+                  to="/details"
+                  className="bg-sky-950 w-full text-white rounded-full px-4 py-3 text-base font-normal"
+                >
                   Rent Now
-                </button>
+                </Link>
               </div>
             </div>
           ))}
