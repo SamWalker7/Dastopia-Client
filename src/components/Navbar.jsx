@@ -55,7 +55,7 @@ const MenuItem = ({ icon, text, hasDropdown, children, onClick }) => {
   );
 };
 
-function Navbar() {
+function Navbar({user2}) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -102,7 +102,10 @@ function Navbar() {
   const openNav = () => {
     setNav(!nav);
   };
-
+  
+const gotoProfile=()=>{
+  navigate("/profile",{state:{user2}});
+}
   return (
     <>
       <nav className="fixed w-screen md:bg-transparent bg-white  z-20">
@@ -124,12 +127,12 @@ function Navbar() {
               <img src={Logo} alt="logo-img" className="h-10 w-auto" />
             </Link>
           </div>
-          <Link to="/profile" className="md:hidden ">
+          <div onClick={gotoProfile} className="md:hidden ">
             <img
               src={Img3}
               className="w-10 h-10 rounded-full text-white md:mb-4 md:mr-6"
             />
-          </Link>
+          </div>
 
           {/* Desktop Menu */}
           <div

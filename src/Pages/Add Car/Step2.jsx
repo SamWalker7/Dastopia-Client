@@ -1,7 +1,6 @@
 import Dropdown from "../../components/Search/Dropdown";
 import makesData from "../../api/makes.json";
 import modelsData from "../../api/models.json";
-import { Link } from "react-router-dom";
 import { Button } from "@mui/material";
 import React, { useState } from "react";
 import { FaCar } from "react-icons/fa";
@@ -10,7 +9,8 @@ import { IoFileTray } from "react-icons/io5";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import LibraryAddOutlined from "@mui/icons-material/LibraryAddOutlined";
 import Footer from "../../components/Footer";
-
+import { Link, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 const Step2 = () => {
   const [uploadedPhotos, setUploadedPhotos] = useState({
     front: null,
@@ -21,14 +21,20 @@ const Step2 = () => {
     additional: [],
   });
 
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { millage,seats,manufacturedYear,fuelType,carType,transmissionType } = location.state || {};
+
   const [uploadedDocuments, setUploadedDocuments] = useState({
     libre: null,
     license: null,
     insurance: null,
   });
-
+  console.log("the file is ",uploadedPhotos)
+  console.log("the file is 2  ",uploadedDocuments)
   const handlePhotoUpload = (e, key) => {
     const files = Array.from(e.target.files);
+    console.log("the file is ",files[0])
     if (files.length === 0) return;
 
     setUploadedPhotos((prev) => {
@@ -70,6 +76,9 @@ const Step2 = () => {
   const handleDeleteDocument = (key) => {
     setUploadedDocuments((prev) => ({ ...prev, [key]: null }));
   };
+  const handleNext=()=>{
+    navigate("/Step3",{state:{millage,seats,manufacturedYear,fuelType,carType,transmissionType,uploadedPhotos,uploadedDocuments}});
+  }
 
   return (
     <div className="flex gap-10 bg-[#F8F8FF] md:p-40">

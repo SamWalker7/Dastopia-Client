@@ -52,7 +52,7 @@ const RentalModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white scale-75 rounded-2xl h-fit w-full max-w-2xl p-6">
+      <div className="bg-white scale-50 rounded-2xl h-fit w-full max-w-2xl p-6">
         {/* Tabs */}
         <div className="flex w-full bg-[#FAF9FE] border-b mb-6">
           <button

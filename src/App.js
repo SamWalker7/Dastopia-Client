@@ -15,6 +15,7 @@ import Booking from "./Pages/Booking";
 import BookingConfirmation from "./Pages/BookingConfirmation";
 import SignIn from "./Pages/Signin";
 import SignUp from "./Pages/SignUp";
+import { useEffect } from "react";
 import AWS from "aws-sdk";
 import OTPInput from "./Pages/OTP";
 import NotFound from "./components/404";
@@ -39,15 +40,28 @@ import Step3 from "./Pages/Add Car/Step3";
 import Step4 from "./Pages/Add Car/Step4";
 import Details2 from "./Pages/Details/Details2";
 import Step5 from "./Pages/Add Car/Step5";
+import { useState } from "react";
 
 AWS.config.region = "us-east-1";
 
 function App() {
+const [user,setUser]=useState(null)
+ useEffect(()=>{
+const user=localStorage.getItem("customer");
+const user2=JSON.parse(user)
+console.log("the user iss ",user2.userAttributes)
+if (user2) {
+  setUser(user2);
+}
+  
+},[])
+
   return (
     <>
-      <Navbar />
+    {console.log("THe use r is ",user)}
+      <Navbar user2={user}/>
       <Routes>
-        <Route index path="/" element={<Home />} />
+        <Route index path="/" element={<Home user={user}/>} />
         <Route path="addcar" element={<AddCar />} />
         <Route path="step2" element={<Step2 />} />
         <Route path="step3" element={<Step3 />} />

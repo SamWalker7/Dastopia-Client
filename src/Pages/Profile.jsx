@@ -7,7 +7,8 @@ import flag from "../images/hero/image.png";
 import { MdOutlinePerson } from "react-icons/md";
 import { MdOutlinePersonOff } from "react-icons/md";
 import { IoFileTray } from "react-icons/io5";
-
+import { Link, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 const Profile = () => {
   const [rentals, setRentals] = useState([
     {
@@ -51,12 +52,16 @@ const Profile = () => {
       status: "Completed",
     },
   ]);
-
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user2 } = location.state || {};
+  console.log("in profile " ,user2.userAttributes
+  )
   const [profile, setProfile] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "johndoe@example.com",
-    phoneNumber: "+251971235045",
+    firstName: user2.userAttributes[5].Value,
+    lastName: user2.userAttributes[4].Value,
+    email: user2.userAttributes[0].Value,
+    phoneNumber: user2.userAttributes[2].Value,
     location: "Addis Ababa",
   });
 
@@ -210,7 +215,7 @@ const Profile = () => {
       reader.readAsDataURL(file);
     }
   };
-
+  
   return (
     <div className="py-10 bg-[#FAF9FE] px-32 space-y-8 md:pt-40 flex flex-col">
       <div className="flex space-x-8">

@@ -208,6 +208,7 @@ const Search = () => {
       (!selectedCity || vehicle.city === selectedCity)
     );
   });
+  console.log("filteredVehicles ",filteredVehicles)
   // State to hold the input value
   const [inputValue, setInputValue] = useState("");
 

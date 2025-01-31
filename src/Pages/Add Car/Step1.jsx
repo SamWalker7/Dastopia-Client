@@ -2,13 +2,14 @@ import Dropdown from "../../components/Search/Dropdown";
 import makesData from "../../api/makes.json";
 import modelsData from "../../api/models.json";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link ,useNavigate} from "react-router-dom";
 
 const Step1 = () => {
   const [carMake, setCarMake] = useState("");
   const [carModel, setCarModel] = useState("");
   const [makeDisplayArray, setMakeDisplayArray] = useState([]);
   const [modelOptions, setModelOptions] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const makeOptions = makesData.Makes.map((make) => make.make_display);
@@ -34,6 +35,10 @@ const Step1 = () => {
   const [fuelType, setFuelType] = useState("");
   const [carType, setCarType] = useState("");
   const [transmissionType, setTransmissionType] = useState("");
+  const handleNext= async ()=>{
+    navigate("/Step2",{state:{millage,seats,manufacturedYear,fuelType,carType,transmissionType}});
+   
+  }
 
   return (
     <div className="flex gap-10">
@@ -156,12 +161,12 @@ const Step1 = () => {
 
         {/* Submit Button */}
         <div className="w-full justify-end items-end flex">
-          <Link
-            to="/Step2"
+          <div
+            onClick={handleNext}                                         
             className="min-w-2xl text-white text-xl rounded-full px-32 py-4 my-16 font-normal transition bg-[#00113D] hover:bg-blue-900"
           >
             Upload Picture
-          </Link>
+          </div>
         </div>
       </div>
 

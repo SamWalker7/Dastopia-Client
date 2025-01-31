@@ -9,15 +9,16 @@ import Faq from "../components/Faq";
 import Download from "../components/Download";
 import Footer from "../components/Footer";
 
-function Home() {
+function Home({user}) {
   return (
     <>
-      <Hero />
+      <Hero user={user}/>
       {/* <BookCar /> */}
       <PlanTrip />
       <Testimonials />
       <Faq />
       <Footer />
+      <h1>dftyguhijo</h1>
     </>
   );
 }
