@@ -248,4 +248,4 @@ function Navbar1({ user2 }) {
   );
 }
 
-export default Navbar;
+export default Navbar1;
