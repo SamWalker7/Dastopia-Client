@@ -9,7 +9,8 @@ import { MdOutlinePersonOff } from "react-icons/md";
 import { IoFileTray } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-const Profile = () => {
+import { TextField } from "@mui/material";
+const Profile = ({ user2, setUser }) => {
   const [rentals, setRentals] = useState([
     {
       startDate: "23/3/2022",
@@ -54,9 +55,8 @@ const Profile = () => {
   ]);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user2 } = location.state || {};
-  console.log("in profile " ,user2.userAttributes
-  )
+  //const { user2 } = location.state || {};
+  console.log("in profile ", user2.userAttributes);
   const [profile, setProfile] = useState({
     firstName: user2.userAttributes[5].Value,
     lastName: user2.userAttributes[4].Value,
@@ -177,10 +177,11 @@ const Profile = () => {
   const togglePopup = () => setIsPopupVisible(!isPopupVisible);
 
   // Handle click for "Logout" and "Delete Account"
-  const handleLogout = () => {
-    setIsPopupVisible(false);
-    // Add your logout logic here
-    console.log("Logged out");
+  const handleLogout = async () => {
+    localStorage.removeItem("customer"); // Remove user data
+    setUser(null); // Update state
+    window.dispatchEvent(new Event("storage")); // Trigger update
+    window.location.href = "/"; // Redirect to login page
   };
   const handleDeleteAccountClick = () => {
     setIsPopupVisible(false);
@@ -215,27 +216,27 @@ const Profile = () => {
       reader.readAsDataURL(file);
     }
   };
-  
+
   return (
-    <div className="py-10 bg-[#FAF9FE] px-32 space-y-8 md:pt-40 flex flex-col">
-      <div className="flex space-x-8">
+    <div className="py-10 bg-[#FAF9FE] md:px-20 px-6 space-y-8 md:pt-32 pt-28  flex flex-col">
+      <div className="md:flex space-y-4  md:gap-8">
         {/* Account Information */}
-        <div className="p-10 bg-white w-full justify-between flex shadow-lg rounded-lg">
+        <div className="p-6 bg-white md:w-2/3 h-fit  justify-between md:flex shadow-lg rounded-lg">
           {/* Profile Pic and Account info */}
-          <div className="flex space-y-4 justify-center mr-16 items-center flex-col">
-            <span className="text-2xl mb-4 font-semibold">
+          <div className="flex space-y-4   items-center flex-col">
+            <span className="text-lg mb-4 font-semibold">
               Account Information{" "}
             </span>
             <div className="flex items-end">
               <img
                 src={profilePic}
-                className="w-52 h-52 rounded-full text-white md:mb-4 md:mr-6"
+                className="w-32 h-32 rounded-full text-white md:mb-4 md:mr-6"
               />
               <button
                 onClick={toggleModal}
-                className="flex items-center justify-center mb-8 -ml-16 rounded-full"
+                className="flex items-center justify-center mb-6 md:-ml-14 -ml-6 rounded-full"
               >
-                <img src={edit} className="w-12 h-12" />
+                <img src={edit} className="w-8 h-8" />
               </button>
             </div>
             {/* Modal for Image Selection */}
@@ -247,14 +248,14 @@ const Profile = () => {
                 {/* Modal Content */}
                 <div className="fixed inset-0 flex items-center justify-center z-30">
                   <div className=" bg-gray-100">
-                    <div className="bg-white p-8 rounded-lg shadow-lg md:w-[450px]">
+                    <div className="bg-white p-8 rounded-lg shadow-lg md:w-[550px]">
                       {/* Title */}
-                      <h2 className="text-xl font-medium text-gray-800 mb-4">
+                      <h2 className="text-lg font-medium text-gray-800 mb-4">
                         Upload a picture of your clear face
                       </h2>
 
                       {/* Upload Box */}
-                      <label className=" w-full h-48 border-2 border-dashed border-gray-300 rounded-lg relative flex justify-center items-center cursor-pointer hover:border-gray-500">
+                      <label className=" w-full h-40 border-2 border-dashed border-gray-300 rounded-lg relative flex justify-center items-center cursor-pointer hover:border-gray-500">
                         <div className="flex flex-col items-center">
                           {/* Upload icon */}
                           <IoFileTray />
@@ -270,7 +271,7 @@ const Profile = () => {
                       </label>
 
                       {/* Instructions */}
-                      <ul className="text-left text-lg text-gray-600 mt-4 space-y-3">
+                      <ul className="text-left text-sm text-gray-600 mt-4 space-y-3">
                         <li>
                           <span className="font-semibold">1. Quality:</span> Use
                           a clear, well-lit image, at least 400x400 pixels.
@@ -304,7 +305,7 @@ const Profile = () => {
                       </ul>
 
                       {/* Upload Button */}
-                      <button className="mt-6 w-full bg-blue-950 text-white rounded-full py-3 text-lg">
+                      <button className="mt-6 w-full bg-blue-950 text-white rounded-full py-2 text-sm">
                         Upload
                       </button>
                       <div className="flex justify-end mt-4">
@@ -322,77 +323,62 @@ const Profile = () => {
             )}
           </div>
 
-          <div className="flex flex-col">
-            <div className="relative inline-block my-3 text-lg w-[350px]">
-              {/* Label inside box */}
-              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
-                First Name
-              </label>
-              <input
-                type="text"
-                name="firstName"
-                value={profile.firstName}
-                onChange={handleChange}
-                className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
-              />
-            </div>
-            <div className="relative inline-block my-3 text-lg w-full">
-              {/* Label inside box */}
-              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
-                Email
-              </label>
-              <input
-                type="text"
-                name="email"
-                value={profile.email}
-                onChange={handleChange}
-                className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
-              />{" "}
-              {errors.email && (
-                <p className="text-red-500 mb-4">{errors.email}</p>
-              )}
-            </div>
-            <div className="relative inline-block my-3 text-lg w-full">
-              {/* Label inside box */}
-              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
-                Location
-              </label>
-              <input
-                type="text"
-                name="location"
-                value={profile.location}
-                onChange={handleChange}
-                className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
-              />
-            </div>
+          <div className="flex flex-col py-4 gap-4">
+            {" "}
+            <TextField
+              label=" First Name"
+              variant="outlined"
+              name="firstName"
+              value={profile.firstName}
+              onChange={handleChange}
+              size="small"
+              fullWidth
+            />
+            <TextField
+              label=" Email"
+              variant="outlined"
+              name="email"
+              value={profile.email}
+              onChange={handleChange}
+              size="small"
+              fullWidth
+            />{" "}
+            {errors.email && (
+              <p className="text-red-500 mb-4">{errors.email}</p>
+            )}
+            <TextField
+              label=" Location"
+              variant="outlined"
+              name="location"
+              value={profile.location}
+              onChange={handleChange}
+              size="small"
+              fullWidth
+            />{" "}
           </div>
-          <div className="flex flex-col items-end">
-            <div className="relative inline-block my-3 text-lg w-[350px]">
+          <div className="flex flex-col py-4 items-end">
+            <TextField
+              label=" Last Name"
+              variant="outlined"
+              name="lastName"
+              value={profile.lastName}
+              onChange={handleChange}
+              size="small"
+              fullWidth
+            />{" "}
+            <div className="relative inline-block my-3 text-sm w-full">
               {/* Label inside box */}
-              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
-                Last Name
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                value={profile.lastName}
-                onChange={handleChange}
-                className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
-              />
-            </div>
-            <div className="relative inline-block my-3 text-lg w-full">
-              {/* Label inside box */}
-              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
+              <label className="absolute -top-2 left-3 text-xs bg-white px-1 text-gray-500">
                 Phone Number
               </label>
-              <div className="border border-gray-400 items-center rounded-md flex bg-white">
-                <img src={flag} className="w-12 h-8 rounded-xl ml-4" />
+              <div className="border border-gray-400 items-center rounded-md  flex bg-white">
+                <img src={flag} className="w-6 h-4 rounded ml-4" />
                 <input
                   type="text"
                   name="phoneNumber"
                   value={profile.phoneNumber}
                   onChange={handleChange}
-                  className="flex justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
+                  className="flex justify-between w-full p-3 py-3 bg-white text-gray-700 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
                 />
               </div>{" "}
               {errors.phoneNumber && (
@@ -401,7 +387,7 @@ const Profile = () => {
             </div>
             <button
               onClick={handleUpdate}
-              className=" bg-blue-950 text-base flex items-center justify-center w-fit text-white rounded-full px-8  my-2  py-4"
+              className=" bg-blue-950 text-sm flex items-center justify-center w-full text-white rounded-2xl px-8  my-2  py-2"
             >
               Update
             </button>
@@ -415,16 +401,16 @@ const Profile = () => {
 
             {/* Popup menu */}
             {isPopupVisible && (
-              <div className="absolute top-10 text-xl right-0 bg-white shadow-md rounded-md py-2 w-72 z-10">
+              <div className="absolute top-10 text-base right-0 bg-white shadow-md rounded-md py-2 w-44 z-10">
                 <button
                   onClick={handleLogout}
-                  className="flex items-center w-full  text-left px-4 py-4 hover:bg-gray-100"
+                  className="flex items-center w-full  text-left  py-4 hover:bg-gray-100"
                 >
                   <MdOutlinePerson size={20} className="mx-4" /> Logout
                 </button>
                 <button
                   onClick={handleDeleteAccountClick}
-                  className="flex w-full items-center text-left  px-4 py-4 hover:bg-gray-100 text-red-600"
+                  className="flex w-full items-center text-left   py-4 hover:bg-gray-100 text-red-600"
                 >
                   <MdOutlinePersonOff size={20} className="mx-4" />
                   Delete Account
@@ -439,22 +425,22 @@ const Profile = () => {
 
                 {/* Modal content */}
                 <div className="fixed inset-0 flex items-center justify-center z-30">
-                  <div className="bg-white p-6 rounded-lg shadow-lg w-[300px]">
-                    <h2 className="text-3xl  mb-4">Are You Sure ?</h2>
-                    <p className="text-gray-600 text-lg my-10">
+                  <div className="bg-white p-6 rounded-lg shadow-lg w-[340px]">
+                    <h2 className="text-xl  mb-4">Are You Sure ?</h2>
+                    <p className="text-gray-600 text-base my-10">
                       Deleting your account will erase all information
                       associated with the account.
                     </p>
-                    <div className="flex justify-end space-x-8">
+                    <div className="flex  gap-4">
                       <button
                         onClick={handleCancelDelete}
-                        className=" bg-blue-950 text-base flex items-center justify-center w-fit text-white rounded-full px-8  my-2  py-4"
+                        className=" bg-blue-950 text-sm flex items-center justify-center w-fit text-white rounded-full px-8  my-2  py-2"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleConfirmDelete}
-                        className=" bg-red-100 text-base flex items-center justify-center w-fit text-red-600 hover:bg-red-600 hover:text-white  rounded-full px-8  my-2  py-4"
+                        className=" bg-red-100 text-sm flex items-center justify-center w-fit text-red-600 hover:bg-red-600 hover:text-white  rounded-full px-8  my-2  py-2"
                       >
                         Delete Account
                       </button>
@@ -467,9 +453,9 @@ const Profile = () => {
         </div>
 
         {/* Payment Details */}
-        <div className="p-10 bg-white w-1/3 flex flex-col  shadow-lg rounded-lg">
-          <div className=" text-xl font-semibold mb-8">Payment Details</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2  p-4 gap-4 ">
+        <div className="p-6 bg-white md:w-1/3 flex flex-col   shadow-lg rounded-lg">
+          <div className=" text-lg font-semibold mb-8">Payment Details</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2  text-sm gap-4 ">
             <div className="flex items-center">
               Full Name{" "}
               <span className="mx-2 bg-blue-100 rounded-md p-2 ">
@@ -495,39 +481,39 @@ const Profile = () => {
       {/* Table */}
       <div className=" bg-white w-full  shadow-lg rounded-lg">
         <div className="  p-6  rounded-lg ">
-          <h2 className="text-2xl font-semibold pl-2  my-8">Rental History</h2>
+          <h2 className="text-lg font-semibold pl-2  my-8">Rental History</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-x-0 border-t-0 border-gray-100 rounded-lg">
               <thead>
                 <tr className="bg-gray-50 font-semibold">
                   <th
-                    className="px-6 text-left text-xl font-semibold py-4 text-gray-600"
+                    className="px-6 text-left  font-semibold py-4 text-gray-600"
                     onClick={() => handleSort("startDate")}
                   >
                     Rent start date{" "}
                     <HiMiniArrowsUpDown className="inline ml-1 cursor-pointer" />
                   </th>
                   <th
-                    className="px-6 text-left text-xl font-semibold py-4 text-gray-600"
+                    className="px-6 text-left  font-semibold py-4 text-gray-600"
                     onClick={() => handleSort("endDate")}
                   >
                     Rent end date{" "}
                     <HiMiniArrowsUpDown className="inline ml-1 cursor-pointer" />
                   </th>
                   <th
-                    className="px-6 text-left text-xl font-semibold py-4 text-gray-600"
+                    className="px-6 text-left  font-semibold py-4 text-gray-600"
                     onClick={() => handleSort("carName")}
                   >
                     Car Name{" "}
                     <HiMiniArrowsUpDown className="inline ml-1 cursor-pointer" />
                   </th>
-                  <th className="px-6 text-left text-xl font-semibold py-4 text-gray-600">
+                  <th className="px-6 text-left  font-semibold py-4 text-gray-600">
                     Car Owner
                   </th>
-                  <th className="px-6 text-left text-xl font-semibold py-4 text-gray-600">
+                  <th className="px-6 text-left  font-semibold py-4 text-gray-600">
                     Phone Number
                   </th>
-                  <th className="px-6 text-left text-xl font-semibold py-4 text-gray-600">
+                  <th className="px-6 text-left  font-semibold py-4 text-gray-600">
                     Status
                   </th>
                 </tr>
@@ -535,24 +521,14 @@ const Profile = () => {
               <tbody>
                 {sortedRentals.map((rental, index) => (
                   <tr key={index} className="border-t border-gray-200">
-                    <td className="px-6 py-4 text-lg text-gray-700">
-                      {rental.startDate}
-                    </td>
-                    <td className="px-6 py-4 text-lg text-gray-700">
-                      {rental.endDate}
-                    </td>
-                    <td className="px-6 py-4 text-lg text-gray-700">
-                      {rental.carName}
-                    </td>
-                    <td className="px-6 py-4 text-lg text-gray-700">
-                      {rental.carOwner}
-                    </td>
-                    <td className="px-6 py-4 text-lg text-gray-700">
-                      {rental.phone}
-                    </td>
+                    <td className="px-6   text-gray-700">{rental.startDate}</td>
+                    <td className="px-6   text-gray-700">{rental.endDate}</td>
+                    <td className="px-6   text-gray-700">{rental.carName}</td>
+                    <td className="px-6   text-gray-700">{rental.carOwner}</td>
+                    <td className="px-6   text-gray-700">{rental.phone}</td>
                     <td className="p-8">
                       <span
-                        className={`px-3 py-2 rounded-xl text-base  ${
+                        className={`px-3 py-2 rounded-xl font-semibold text-xs  ${
                           statusColors[rental.status]
                         }`}
                       >

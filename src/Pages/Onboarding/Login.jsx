@@ -16,8 +16,14 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    dispatch(login(phone_number, password)).then(() => navigate("/"));
+    dispatch(login(phone_number, password)).then(() => {
+      navigate("/");
+      setTimeout(() => {
+        window.location.reload();
+      }, 100); // Small delay ensures navigation happens before reload
+    });
   };
+
   useEffect(() => {
     const validatePhoneNumber = () => {
       let validationErrors = {};

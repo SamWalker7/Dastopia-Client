@@ -6,20 +6,15 @@ import BookCar from "./BookCar";
 import { useSelector } from "react-redux";
 
 function Hero({ user }) {
-  
-  
-// console.log("the user iss ",user2.userAttributes)
-if (!user) {
-  console.log("th hero is ",user)
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p>No user logged in.</p>
-    </div>
-  );
-}
-  
-  
- 
+  // console.log("the user iss ",user2.userAttributes)
+  // if (!user) {
+  //   console.log("th hero is ", user);
+  //   return (
+  //     <div className="flex items-center justify-center min-h-screen">
+  //       <p>No user logged in.</p>
+  //     </div>
+  //   );
+  // }
 
   // const firstName = user2.userAttributes?.find(
   //   (attr) => attr.Name === "given_name"

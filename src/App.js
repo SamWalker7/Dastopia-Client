@@ -2,6 +2,8 @@ import "../src/dist/styles.css";
 import About from "./Pages/About Us/About";
 import Home from "./Pages/Home";
 import Navbar from "./components/Navbar";
+
+import Navbar1 from "./components/Navbar1";
 import { Route, Routes } from "react-router-dom";
 import Models from "./Pages/Models";
 import TestimonialsPage from "./Pages/TestimonialsPage";
@@ -41,34 +43,52 @@ import Step4 from "./Pages/Add Car/Step4";
 import Details2 from "./Pages/Details/Details2";
 import Step5 from "./Pages/Add Car/Step5";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 
 AWS.config.region = "us-east-1";
 
 function App() {
-const [user,setUser]=useState(null)
- useEffect(()=>{
-const user=localStorage.getItem("customer");
-const user2=JSON.parse(user)
-console.log("the user iss ",user2.userAttributes)
-if (user2) {
-  setUser(user2);
-}
-  
-},[])
+  const [user, setUser] = useState(() => {
+    // Retrieve user data from localStorage on initial load
+    const storedUser = localStorage.getItem("customer");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+
+  useEffect(() => {
+    // Listen for changes in localStorage and update the user state
+    const handleStorageChange = () => {
+      const storedUser = localStorage.getItem("customer");
+      setUser(storedUser ? JSON.parse(storedUser) : null);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  // useEffect(() => {
+  //   // Redirect to login if user is not available
+  //   if (!user) {
+  //     window.location.href = "/login";
+  //   }
+  // }, [user]);
 
   return (
     <>
-    {console.log("THe use r is ",user)}
-      <Navbar user2={user}/>
+      {console.log("THe use r is ", user)}
+      {user ? <Navbar user2={user} setUser={setUser} /> : <Navbar1 />}
+
       <Routes>
-        <Route index path="/" element={<Home user={user}/>} />
+        <Route index path="/" element={<Home user={user} />} />
         <Route path="addcar" element={<AddCar />} />
         <Route path="step2" element={<Step2 />} />
         <Route path="step3" element={<Step3 />} />
         <Route path="step4" element={<Step4 />} />
         <Route path="step5" element={<Step5 />} />
 
-        <Route path="profile" element={<Profile />} />
+        <Route
+          path="profile"
+          element={<Profile user2={user} setUser={setUser} />}
+        />
         <Route path="booking" element={<ActivBooking />} />
         <Route path="chat" element={<ChatApp />} />
         <Route path="about" element={<About />} />

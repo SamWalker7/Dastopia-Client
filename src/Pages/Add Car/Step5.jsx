@@ -21,7 +21,7 @@ import { IoLocationOutline } from "react-icons/io5";
 const GOOGLE_MAPS_API_KEY = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4";
 const libraries = ["places"];
 
-const Step5 = () => {
+const Step5 = ({ prevStep }) => {
   const handleMyLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(

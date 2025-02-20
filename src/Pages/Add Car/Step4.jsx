@@ -13,7 +13,7 @@ import { IoIosCloseCircleOutline, IoMdClose } from "react-icons/io";
 const GOOGLE_MAPS_API_KEY = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4";
 const libraries = ["places"];
 
-const Step4 = () => {
+const Step4 = ({ nextStep, prevStep }) => {
   const handleMyLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -403,18 +403,18 @@ const Step4 = () => {
 
         {/* Navigation Buttons */}
         <div className="flex mt-16 justify-between">
-          <Link
-            to="/step3"
+          <button
+            onClick={prevStep}
             className="px-12 py-4 border border-gray-300 rounded-full text-xl"
           >
             Back
-          </Link>
-          <Link
-            to="/step5"
+          </button>
+          <button
+            onClick={nextStep}
             className="px-12 py-4 bg-navy-900 text-white rounded-full text-xl"
           >
             Submit Listing
-          </Link>
+          </button>
         </div>
       </div>
 

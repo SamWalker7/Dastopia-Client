@@ -4,7 +4,7 @@ import { FiEdit2, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import Footer from "../../components/Footer";
 
-const Step3 = () => {
+const Step3 = ({ nextStep, prevStep }) => {
   // State management
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFeatures, setSelectedFeatures] = useState(["GPS"]);
@@ -471,18 +471,18 @@ const Step3 = () => {
 
         {/* Navigation Buttons */}
         <div className="flex justify-between">
-          <Link
-            to="/step2"
+          <button
+            onClick={prevStep}
             className="px-12 py-4 border border-gray-300 rounded-full text-xl"
           >
             Back
-          </Link>
-          <Link
-            to="/step4"
+          </button>
+          <button
+            onClick={nextStep}
             className="px-12 py-4 bg-navy-900 text-white rounded-full text-xl"
           >
             Continue
-          </Link>
+          </button>
         </div>
       </div>{" "}
       <div className="p-8 w-1/4 bg-blue-200 py-10 h-fit">

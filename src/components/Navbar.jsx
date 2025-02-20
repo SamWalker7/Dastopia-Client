@@ -55,7 +55,7 @@ const MenuItem = ({ icon, text, hasDropdown, children, onClick }) => {
   );
 };
 
-function Navbar({user2}) {
+function Navbar({ user2, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -81,13 +81,10 @@ function Navbar({user2}) {
   const user = JSON.parse(localStorage.getItem("user"));
 
   const handleLogout = async () => {
-    await signout();
-    localStorage.removeItem("user");
-    localStorage.removeItem("accToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("accExp");
-    navigate("/");
-    setNav(false);
+    localStorage.removeItem("customer"); // Remove user data
+    setUser(null); // Update state
+    window.dispatchEvent(new Event("storage")); // Trigger update
+    window.location.href = "/"; // Redirect to login page
   };
 
   const alternativePages = ["/contact", "/testimonials", "/howitworks"];
@@ -102,10 +99,10 @@ function Navbar({user2}) {
   const openNav = () => {
     setNav(!nav);
   };
-  
-const gotoProfile=()=>{
-  navigate("/profile",{state:{user2}});
-}
+
+  const gotoProfile = () => {
+    navigate("/profile", { state: { user2 } });
+  };
   return (
     <>
       <nav className="fixed w-screen md:bg-transparent bg-white  z-20">
@@ -161,12 +158,6 @@ const gotoProfile=()=>{
 
             {!user && (
               <>
-                <NavLink
-                  className="text-white bg-primary px-4 py-0  hover:bg-opacity-90"
-                  to="/signup"
-                >
-                  Register
-                </NavLink>
                 <NavLink
                   to="/addcar"
                   className={` ${backgroundColor1} text-sm flex items-center justify-center rounded-full px-4 ml-4 my-2 py-1`}
@@ -341,7 +332,7 @@ const gotoProfile=()=>{
                   }}
                   className="text-white bg-primary block w-full text-left px-4 py-0  hover:bg-opacity-90"
                 >
-                  Sign out
+                  Logout
                 </button>
                 <NavLink
                   to="/addcar"
