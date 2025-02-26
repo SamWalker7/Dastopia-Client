@@ -57,12 +57,12 @@ const ActivBooking = () => {
   };
   return (
     <div className=" flex flex-col bg-[#FAF9FE] ">
-      <div className="md:mt-40 mt-10">
+      <div className="md:mt-32 mt-20">
         <div className="relative    ">
-          <div className="flex mx-20  mb-4 sm:mb-6">
+          <div className="flex  mx-20  mb-4 sm:mb-6">
             <button
               onClick={() => setActiveTab("ActiveBooking")}
-              className={`px-12 py-2 text-2xl ${
+              className={`px-12 py-2 text-lg ${
                 activeTab === "ActiveBooking"
                   ? "text-black border-b-2 border-[#00173C]"
                   : "text-gray-500 border-b-2 border-gray-300"
@@ -72,7 +72,7 @@ const ActivBooking = () => {
             </button>
             <button
               onClick={() => setActiveTab("ActiveRental")}
-              className={`px-12 py-2 text-2xl ${
+              className={`px-12 py-2 text-lg ${
                 activeTab === "ActiveRental"
                   ? "text-black border-b-2 border-[#00173C]"
                   : "text-gray-500 border-b-2 border-gray-300"
@@ -86,13 +86,13 @@ const ActivBooking = () => {
             <div>
               <div className="">
                 {activeTab === "ActiveBooking" ? (
-                  <div className="flex">
-                    <div className="h-fit bg-white p-8 space-y-10 m-8 ml-16   rounded-xl shadow-md w-1/3">
+                  <div className="flex md:flex-row flex-col p-4">
+                    <div className="h-fit bg-white p-8 space-y-10 md:m-8 md:ml-16 mb-8   rounded-xl shadow-md w-full md:w-1/3">
                       {/* <ActiveBooking /> */}
-                      <h2 className="text-2xl  mt-4 font-semibold text-[#00113D] ">
+                      <h2 className="text-lg  mt-4 font-semibold text-[#00113D] ">
                         Car Details
                       </h2>
-                      <div className="text-lg  space-y-2 w-full text-gray-500">
+                      <div className="text-sm  space-y-2 w-full text-gray-500">
                         <div className="grid grid-cols-4 gap-4  mt-4">
                           <div className="">
                             <span className="font-medium text-black">
@@ -114,7 +114,7 @@ const ActivBooking = () => {
                               View Pictures
                             </p>
                           </div>
-                          <div className=" text-lg">
+                          <div className=" text-sm">
                             <span className="font-medium text-black">
                               {" "}
                               Driver request
@@ -133,38 +133,38 @@ const ActivBooking = () => {
                           />
                         </div>
                         <div className="grid pt-4 gap-4 grid-cols-1">
-                          <h2 className="text-xl font-semibold text-[#00113D] ">
+                          <h2 className="text-base font-semibold text-[#00113D] ">
                             Owner Details
                           </h2>
-                          <h3 className="flex gap-4 text-lg  text-[#5A5A5A]">
+                          <h3 className="flex gap-4 text-sm  text-[#5A5A5A]">
                             <IoPersonOutline size={18} /> Steven Gerard
                           </h3>
-                          <div className="flex items-center gap-4 text-lg text-[#5A5A5A] mt-1">
+                          <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
                             <MdOutlineLocalPhone size={18} />
                             <p>+251 9243212</p>
                           </div>
-                          <div className="flex items-center gap-4 text-lg text-[#5A5A5A] mt-1">
+                          <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
                             <MdOutlineMail size={18} />
                             <p>jandoe@gmail.com</p>
                           </div>
-                          <div className="flex items-center gap-4 text-lg text-[#5A5A5A] mt-1">
+                          <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
                             <IoLocationOutline size={18} />
                             <p>Addis Ababa, Ethiopia</p>
                           </div>
                         </div>
                       </div>
-                      <button className="flex items-center justify-center  w-full gap-2 mt-4 py-3 text-base  border rounded-full border-[#00113D] text-[#00113D] bg-white">
+                      <button className="flex items-center justify-center  w-full gap-2 mt-4 py-3 text-xs  border rounded-full border-[#00113D] text-[#00113D] bg-white">
                         <IoChatboxOutline size={16} />
                         Chat With Renter
                       </button>
 
                       {/* Action Buttons */}
-                      <div className="flex gap-4">
-                        <button className="flex-1 py-4 rounded-full bg-[#FDEAEA] text-red-700 border border-red-700">
+                      <div className="flex text-sm gap-4">
+                        <button className="flex-1 py-3 rounded-full bg-[#FDEAEA] text-red-700 border border-red-700">
                           Cancel Booking
                         </button>
                         <button
-                          className="flex-1  py-4 rounded-full bg-[#00113D] text-white"
+                          className="flex-1  py-3 rounded-full bg-[#00113D] text-white"
                           onClick={() => setApproved(true)}
                         >
                           Return Car
@@ -177,7 +177,7 @@ const ActivBooking = () => {
                             {/* Modal content */}
                             <div className=" fixed inset-0 flex self-center  justify-center z-30 flex-col items-start p-6 gap-4 w-1/2 h-fit  mx-auto  rounded-lg shadow-md">
                               <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-                                <h1 className="text-2xl font-semibold mb-2">
+                                <h1 className="text-lg font-semibold mb-2">
                                   Car Condition Report
                                 </h1>
                                 <p className="text-gray-600 mb-4">
@@ -186,7 +186,7 @@ const ActivBooking = () => {
                                 </p>
 
                                 {/* Checkbox List */}
-                                <div className="space-y-4 mb-6">
+                                <div className="space-y-1 mb-6">
                                   {conditions.map((condition, index) => (
                                     <div
                                       key={index}
@@ -221,7 +221,7 @@ const ActivBooking = () => {
                                   onChange={(e) =>
                                     setOtherComments(e.target.value)
                                   }
-                                  className="w-full p-3 mb-6 text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:border-[#00113D]"
+                                  className="w-full p-2 mb-2 text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:border-[#00113D]"
                                 />
 
                                 {/* File Upload Areas */}
@@ -241,7 +241,7 @@ const ActivBooking = () => {
                                       key={side}
                                       className="border border-dashed border-gray-400 p-4 rounded-lg flex flex-col items-center"
                                     >
-                                      <div className="font-semibold flex items-center w-full justify-between text-gray-700 capitalize">
+                                      <div className="font-semibold flex items-center  text-xs w-full justify-between text-gray-700 capitalize">
                                         <div>{side} of the car </div>
                                         <div className="flex flex-col items-center">
                                           {/* Upload icon */}
@@ -284,7 +284,7 @@ const ActivBooking = () => {
                                     setApproved(false);
                                     handleSubmit(e);
                                   }}
-                                  className="w-full py-3 text-white bg-[#00113D] rounded-full  text-lg hover:bg-blue-900"
+                                  className="w-full py-2 text-white bg-[#00113D] rounded-full  text-sm   hover:bg-blue-900"
                                 >
                                   Submit Report
                                 </button>
@@ -296,13 +296,13 @@ const ActivBooking = () => {
                     </div>
                     {/* right side */}
                     <section className="w-fit h-fit bg-white p-6   rounded-xl shadow-md">
-                      <h2 className="text-2xl font-semibold text-[#00113D] mb-8">
+                      <h2 className="text-lg font-semibold text-[#00113D] mb-8">
                         Rental Summary
                       </h2>
-                      <h2 className="text-xl  text-[#00113D] my-2">
+                      <h2 className="text-base  text-[#00113D] my-2">
                         Booking Status
                       </h2>
-                      <h2 className="text-lg bg-green-200 rounded-lg w-fit  text-[#00113D] px-4 py-2 mb-16">
+                      <h2 className="text-sm bg-green-200 rounded-lg w-fit  text-[#00113D] px-4 py-2 mb-16">
                         Active
                       </h2>
                       <div className="flex flex-col  text-lg text-[#5A5A5A]">
@@ -314,8 +314,8 @@ const ActivBooking = () => {
                             </p>
                             <div className="ml-2 px-6 flex items-center border-l h-40 pb-12 border-gray-300">
                               {" "}
-                              <div className="-mt-24 bg-gray-200 p-8 flex rounded-lg">
-                                <div className="font-semibold mr-4 w-28 ">
+                              <div className="-mt-24 bg-gray-200 text-sm p-8 flex rounded-lg">
+                                <div className="font-semibold  mr-4 w-28 ">
                                   PickUp
                                 </div>
                                 <div className="">
@@ -334,7 +334,7 @@ const ActivBooking = () => {
                             </p>
                             <div className="ml-2 px-6 flex items-center pt-8  pb-12 border-gray-300">
                               {" "}
-                              <div className="-mt-24 bg-gray-200 p-8 flex rounded-lg">
+                              <div className="-mt-24 bg-gray-200 text-sm p-8 flex rounded-lg">
                                 <div className="font-semibold mr-4 w-28">
                                   Return On
                                 </div>

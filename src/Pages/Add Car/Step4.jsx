@@ -51,7 +51,7 @@ const Step4 = ({ nextStep, prevStep }) => {
   const [placesService, setPlacesService] = useState(null);
 
   const mapStyles = {
-    height: "50vh",
+    height: "30vh",
     width: "100%",
   };
 
@@ -247,30 +247,30 @@ const Step4 = ({ nextStep, prevStep }) => {
   );
 
   return (
-    <div className="flex bg-[#F8F8FF] md:p-40 md:pt-56 gap-10">
-      <div className="mx-auto p-16 w-full bg-white rounded-2xl shadow-sm text-xl">
+    <div className="flex bg-[#F8F8FF]  gap-10">
+      <div className="mx-auto md:p-16 p-6 w-full bg-white rounded-2xl shadow-sm text-sm">
         <div className="flex items-center justify-center">
           <div className="w-4/5 border-b-4 border-[#00113D] mr-2"></div>
           <div className="w-1/5 border-b-4 border-blue-200"></div>
         </div>
         <div className="flex justify-between w-full">
           <div className="flex flex-col w-1/2 items-start">
-            <p className="text-2xl text-gray-800 my-4 font-medium text-center mb-4">
+            <p className="text-lg text-gray-800 my-4 font-medium text-center mb-4">
               Steps 4 of 5
             </p>
           </div>
         </div>
-        <h1 className="text-5xl font-semibold my-8">Car Details</h1>
+        <h1 className="text-3xl font-semibold my-8">Car Details</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="px-6 py-3 bg-[#F8F8FF] gap-4 w-full justify-center text-gray-700 border border-blue-200 shadow-sm items-center rounded-lg text-2xl hover:bg-blue-200 flex transition-colors"
+          className=" py-1 bg-[#F8F8FF] gap-4 w-full justify-center text-gray-700 border border-blue-200 shadow-sm items-center rounded-lg text-base hover:bg-blue-200 flex transition-colors"
         >
-          <FaPlus size={16} />
+          <FaPlus size={12} />
           Add Location
         </button>
         {/* Display Selected Locations */}
         <div className="mt-8">
-          <h2 className="text-3xl font-semibold mb-6">Selected Locations</h2>
+          <h2 className="text-lg font-semibold mb-6">Selected Locations</h2>
           <div className="gap-8 grid grid-cols-1 w-full md:grid-cols-2">
             {markers.pickup.length > 0 && (
               <LocationList
@@ -287,14 +287,16 @@ const Step4 = ({ nextStep, prevStep }) => {
               />
             )}
             {markers.pickup.length === 0 && markers.dropoff.length === 0 && (
-              <p className="text-gray-500 italic">No locations selected yet</p>
+              <p className="text-gray-500 text-sm italic">
+                No locations selected yet
+              </p>
             )}
           </div>
         </div>
         {/* Location Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative">
+            <div className="bg-white rounded-2xl w-full md:max-w-xl max-h-[80vh] overflow-y-auto relative">
               {/* Add close button */}
               <button
                 onClick={() => setShowModal(false)}
@@ -304,14 +306,14 @@ const Step4 = ({ nextStep, prevStep }) => {
               </button>
 
               <div className="p-6">
-                <h2 className="text-3xl font-semibold mb-6">Set Location</h2>
+                <h2 className="text-lg font-semibold mb-6">Set Location</h2>
 
                 <div className="mb-6">
-                  <label className="text-xl text-gray-600 mb-2 block">
+                  <label className="text-base text-gray-600 mb-2 block">
                     Location Type *
                   </label>
                   <select
-                    className="w-full p-4 border rounded-lg text-xl"
+                    className="w-full p-2 border rounded-lg text-sm"
                     value={locationType}
                     onChange={(e) => setLocationType(e.target.value)}
                     required
@@ -326,10 +328,13 @@ const Step4 = ({ nextStep, prevStep }) => {
                 </div>
 
                 <div className="relative mb-6">
-                  <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <FaSearch
+                    size={14}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  />
                   <input
                     type="text"
-                    className="w-full p-4 pl-12 border rounded-lg text-xl"
+                    className="w-full p-2  border rounded-lg text-base"
                     placeholder="Search location"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -342,7 +347,7 @@ const Step4 = ({ nextStep, prevStep }) => {
                           onClick={() =>
                             handleSearchSelect(suggestion.place_id)
                           }
-                          className="p-3 hover:bg-gray-100 cursor-pointer"
+                          className="p-3 text-sm hover:bg-gray-100 cursor-pointer"
                         >
                           {suggestion.description}
                         </li>
@@ -385,14 +390,14 @@ const Step4 = ({ nextStep, prevStep }) => {
                 {/* Add My Location button */}
                 <button
                   onClick={handleMyLocation}
-                  className="w-full p-4 border h-fit flex justify-center gap-4 mt-4 border-gray-300 rounded-full text-xl hover:bg-gray-50"
+                  className="w-full p-2 border h-fit flex justify-center gap-4 mt-4 items-center border-gray-300 rounded-full text-sm hover:bg-gray-50"
                 >
                   <FaMapMarkerAlt size={16} /> My Location
                 </button>
 
                 <button
                   onClick={() => setShowModal(false)}
-                  className="w-full p-4 bg-navy-900 text-white rounded-full text-xl mt-4"
+                  className="w-full p-2 bg-navy-900 text-white rounded-full text-sm mt-4"
                 >
                   Set Location
                 </button>
@@ -402,23 +407,23 @@ const Step4 = ({ nextStep, prevStep }) => {
         )}
 
         {/* Navigation Buttons */}
-        <div className="flex mt-16 justify-between">
+        <div className="flex flex-col gap-4 md:flex-row mt-16 justify-between">
           <button
             onClick={prevStep}
-            className="px-12 py-4 border border-gray-300 rounded-full text-xl"
+            className="px-12 py-3 border border-gray-300 rounded-full text-sm"
           >
             Back
           </button>
           <button
             onClick={nextStep}
-            className="px-12 py-4 bg-navy-900 text-white rounded-full text-xl"
+            className="px-12 py-3 bg-navy-900 text-white rounded-full text-sm"
           >
             Submit Listing
           </button>
         </div>
       </div>
 
-      <div className="p-8 w-1/4 bg-blue-200 py-10 h-fit">
+      <div className="p-4 w-1/4 bg-blue-100 font-light hidden md:flex py-8 h-fit">
         Make sure to upload all documents necessary to validate that you have
         ownership of the rented car
       </div>

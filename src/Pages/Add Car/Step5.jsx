@@ -259,20 +259,20 @@ const Step5 = ({ prevStep }) => {
   // Location list component
 
   return (
-    <div className="flex bg-[#F8F8FF] md:p-40  md:pt-56 gap-10">
-      <div className="mx-auto p-16 w-9/12 bg-white rounded-2xl shadow-sm text-xl">
+    <div className="flex bg-[#F8F8FF] md:flex-row flex-col gap-10">
+      <div className="mx-auto md:p-16 p-6 w-full h-fit  md:w-9/12 bg-white rounded-2xl shadow-sm text-sm">
         <div className="flex items-center justify-center">
           <div className="w-full border-b-4 border-[#00113D] mr-2"></div>
         </div>
         <div className="flex justify-between w-full">
           <div className="flex flex-col w-1/2 items-start">
-            <p className="text-2xl text-gray-800 my-4 font-medium text-center mb-4">
+            <p className="text-xl text-gray-800 my-4 font-medium text-center mb-4">
               Steps 5 of 5
             </p>
           </div>
         </div>
-        <h1 className="text-5xl font-semibold my-8">Summary</h1>
-        <div className="flex w-full items-center">
+        <h1 className="text-3xl font-semibold mt-8">Summary</h1>
+        <div className="flex md:flex-row flex-col w-full items-center">
           <div className="w-fit pr-8">
             <img
               src={audia1}
@@ -291,12 +291,12 @@ const Step5 = ({ prevStep }) => {
               ))}
             </div>
           </div>
-          <div className="w-1/2 px-8">
+          <div className="w-1/2 ">
             <div className="flex   items-center">
-              <h3 className="text-3xl font-semibold">Toyota Corolla</h3>
+              <h3 className="text-lg font-semibold mb-4">Toyota Corolla</h3>
             </div>
-            <div className="flex justify-between  space-x-6 items-center  my-8 w-fit text-gray-800 text-base">
-              <div className="bg-blue-100 flex text-blue-700 py-2 px-4 rounded-lg text-center ">
+            <div className="flex justify-between  space-x-6 items-center  mb-8 w-fit text-gray-800 text-sm">
+              <div className="bg-blue-100 flex items-center text-blue-700 py-2 px-3 rounded-lg text-center ">
                 <FaTag size={12} className="mx-2" /> 900 Birr
               </div>
               <div className="flex items-center space-x-2">
@@ -314,25 +314,25 @@ const Step5 = ({ prevStep }) => {
             </div>
 
             {/* Car Specification */}
-            <h4 className="mt-8 text-3xl font-semibold">Car Specification</h4>
+            <h4 className="mt-8 text-lg font-semibold">Car Specification</h4>
             <div className="grid grid-cols-3 gap-4 mt-4">
               <div>
                 <span className="text-gray-500">Car Brand</span>
-                <p className="font-medium">Toyota</p>
+                <p className="">Toyota</p>
               </div>
               <div>
                 <span className="text-gray-500">Car Model</span>
-                <p className="font-medium">Camry</p>
+                <p className="">Camry</p>
               </div>
               <div>
                 <span className="text-gray-500">Manufacture Date</span>
-                <p className="font-medium">2008</p>
+                <p className="">2008</p>
               </div>
             </div>
             <div className="  text-[#000000]">
               {/* Features */}
-              <section className="my-16">
-                <h2 className="font-semibold text-2xl mb-4">Features</h2>
+              <section className="my-8">
+                <h2 className="font-semibold text-lg mb-4">Features</h2>
                 <div className="flex flex-wrap gap-2">
                   {[
                     "Air Conditioning",
@@ -343,7 +343,7 @@ const Step5 = ({ prevStep }) => {
                   ].map((feature, index) => (
                     <span
                       key={index}
-                      className="border border-gray-400 text-base px-3 py-1 rounded-xl"
+                      className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
                     >
                       {feature}
                     </span>
@@ -357,25 +357,25 @@ const Step5 = ({ prevStep }) => {
       <div className="flex flex-col w-[350px] gap-4">
         {" "}
         <div className="mx-auto p-8 h-fit w-full bg-white rounded-xl shadow-sm ">
-          <div className=" flex items-center gap-20 text-xl">
+          <div className=" flex items-center gap-20 text-sm">
             Booking{" "}
-            <span className=" text-gray-700 px-4 py-1 rounded-xl text-lg border border-gray-300">
+            <span className=" text-gray-700 px-4 py-1 rounded-xl text-sm border border-gray-300">
               Instant
             </span>
           </div>
-          <div className=" flex items-center my-4 gap-4 text-xl">
+          <div className=" flex items-center my-4 gap-4 text-sm">
             Notice Period For Rent{" "}
-            <span className=" text-gray-700 px-4 py-1 rounded-xl text-lg border border-gray-300">
+            <span className=" text-gray-700 px-4 py-1 rounded-xl text-sm border border-gray-300">
               2 days before pickup
             </span>
           </div>
         </div>
         <div className="mx-auto p-8 h-fit w-full bg-white rounded-xl shadow-sm ">
           <div className="">
-            <h3 className="text-2xl font-semibold text-gray-800 mb-3">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">
               Pick up Locations
             </h3>
-            <ul className=" text-xl space-y-6 text-gray-700">
+            <ul className=" text-sm space-y-6 text-gray-700">
               <li className="flex items-center gap-4">
                 <IoLocationOutline size={16} /> CMC roundabout
               </li>
@@ -388,10 +388,10 @@ const Step5 = ({ prevStep }) => {
             </ul>
           </div>
           <div className="my-8">
-            <h3 className="text-2xl font-semibold text-gray-800 mb-3">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">
               Drop off Locations
             </h3>
-            <ul className=" text-xl space-y-6 text-gray-700">
+            <ul className=" text-sm space-y-6 text-gray-700">
               <li className="flex items-center gap-4">
                 <IoLocationOutline size={16} /> CMC roundabout
               </li>
@@ -404,7 +404,7 @@ const Step5 = ({ prevStep }) => {
             </ul>
           </div>
         </div>
-        <div className="mx-auto p-8 py-12 h-fit bg-white w-full text-xl space-y-6 rounded-xl shadow-sm ">
+        <div className="mx-auto p-4  h-fit bg-white w-full text-sm space-y-6 rounded-xl shadow-sm ">
           <div className="flex gap-4 items-center">
             <FaCalendarAlt size={16} /> August 28 - September 28, 2024
           </div>

@@ -61,7 +61,13 @@ const MapComponent = () => {
     initMap();
   }, []);
 
-  return <div id="map" ref={mapRef} className=" w-full rounded-lg h-[720px]" />;
+  return (
+    <div
+      id="map"
+      ref={mapRef}
+      className="  rounded-lg lg:h-[720px] md:h-[500px] h-[400px]"
+    />
+  );
 };
 
 export default MapComponent;

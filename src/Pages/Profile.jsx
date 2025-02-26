@@ -56,7 +56,7 @@ const Profile = ({ user2, setUser }) => {
   const location = useLocation();
   const navigate = useNavigate();
   //const { user2 } = location.state || {};
-  console.log("in profile ", user2.userAttributes);
+  console.log("in profile ", user2);
   const [profile, setProfile] = useState({
     firstName: user2.userAttributes[5].Value,
     lastName: user2.userAttributes[4].Value,

@@ -6,6 +6,7 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  TextField,
 } from "@mui/material";
 import ResultsGrid from "../components/Search/ResultsGrid";
 import { useDispatch, useSelector } from "react-redux";
@@ -208,7 +209,7 @@ const Search = () => {
       (!selectedCity || vehicle.city === selectedCity)
     );
   });
-  console.log("filteredVehicles ",filteredVehicles)
+  console.log("filteredVehicles ", filteredVehicles);
   // State to hold the input value
   const [inputValue, setInputValue] = useState("");
 
@@ -224,10 +225,10 @@ const Search = () => {
 
   return (
     <div>
-      <div className=" bg-[#FAF9FE]  py-32 flex w-full">
-        <div className=" w-1/2 flex flex-col px-32 py-12  items-center ">
-          <div className="bg-white w-full px-10 py-4 justify-between text-lg md:text-2xl  rounded-xl shadow-sm shadow-blue-300 border border-blue-300  flex">
-            <div className="flex items-center">
+      <div className=" bg-[#FAF9FE]  py-32 flex lg:flex-row flex-col items-center lg:items-start w-full">
+        <div className="  flex flex-col  px-8 lg:pl-12 py-2  items-center ">
+          <div className="bg-white w-full px-10 py-4 justify-between text-lg  md:flex-row flex-col  rounded-xl shadow-sm shadow-blue-300 border border-blue-300  flex">
+            <div className="flex md:flex-row flex-col items-center text-base">
               {" "}
               <div className="flex flex-col ">
                 <div>Bole International Airport</div>
@@ -251,225 +252,154 @@ const Search = () => {
                 <div>Wed, Aug 28,2024 , 10:00</div>
               </div>
             </div>
-            <button className=" bg-blue-950 text-lg text-white rounded-full px-12 ml-8 my-2  py-2">
+            <button className=" bg-blue-950 text-sm text-white rounded-full px-4 ml-8 my-2  py-2">
               Edit
             </button>
           </div>
-          <div className="flex flex-col bg-white my-12 w-full px-8 py-4 text-lg md:text-2xl  rounded-xl shadow-md shadow-gray-100  ">
-            <div className="text-3xl mx-4 font-normal mt-4">Filters</div>
-            <div className=" flex justify-center items-center">
-              <div className="flex flex-col m-4 w-1/2 ">
+          <div className="flex flex-col bg-white my-12 w-full px-4 py-4 text-lg   rounded-xl shadow-md shadow-gray-100  ">
+            <div className="text-xl mx-4 font-semibold mt-4">Filters</div>
+            <div className="flex md:flex-row flex-col justify-center lg:items-start items-center">
+              <div className="flex flex-col m-4 w-full lg:w-1/2">
+                {/* Make Dropdown */}
                 <div className="relative inline-block my-3 text-lg w-full">
-                  <FormControl fullWidth>
-                    {/* Label inside the box */}
-                    <label
-                      id="make"
-                      className="absolute -top-2 left-3 text-sm bg-white px-1 text-gray-500"
+                  <FormControl fullWidth size="small">
+                    <InputLabel
+                      id="make-label"
+                      className="bg-white px-1 text-gray-500"
                     >
                       Make
-                    </label>
-
-                    {/* Dropdown button */}
-                    <div className="border border-gray-400 rounded-md bg-white">
-                      <button
-                        onClick={toggleDropdown}
-                        className="flex justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400"
-                      >
-                        <span>{make || "Select your car type"}</span>
-
-                        {/* Arrow icon */}
-                        <svg
-                          className={`w-4 h-4 text-gray-500 transform transition-transform duration-200 ${
-                            isOpen ? "rotate-180" : ""
-                          }`}
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path d="M5.23 7.21a.75.75 0 011.06 0L10 10.92l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0l-4.25-4.25a.75.75 0 010-1.06z" />
-                        </svg>
-                      </button>
-
-                      {/* Dropdown options */}
-                      {isOpen && (
-                        <ul className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md max-h-60 overflow-y-auto z-10">
-                          <MenuItem
-                            sx={{ fontSize: "16px" }}
-                            value="any"
-                            onClick={() =>
-                              handleMakeChange({ target: { value: "any" } })
-                            }
-                          >
-                            Any
-                          </MenuItem>
-
-                          {makesData.Makes.map((m) => (
-                            <li
-                              key={m.make_display}
-                              onClick={() =>
-                                handleMakeChange({
-                                  target: { value: m.make_display },
-                                })
-                              }
-                              className="p-2 text-gray-700 hover:bg-gray-200 cursor-pointer"
-                            >
-                              {m.make_display}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
+                    </InputLabel>
+                    <Select
+                      labelId="make-label"
+                      id="make"
+                      value={make}
+                      onChange={handleMakeChange}
+                      label="Make"
+                    >
+                      <MenuItem value="any">Any</MenuItem>
+                      {makesData.Makes.map((m) => (
+                        <MenuItem key={m.make_display} value={m.make_display}>
+                          {m.make_display}
+                        </MenuItem>
+                      ))}
+                    </Select>
                   </FormControl>
                 </div>
 
-                {/* Model */}
+                {/* Model Dropdown */}
                 <div className="relative inline-block my-3 text-lg w-full">
-                  <FormControl fullWidth>
-                    <label
-                      id="demo-simple-select-label"
-                      className="absolute -top-2 left-3 text-sm bg-white px-1 text-gray-500"
+                  <FormControl fullWidth size="small">
+                    <InputLabel
+                      id="model-label"
+                      className="bg-white px-1 text-gray-500"
                     >
                       Model
-                    </label>
+                    </InputLabel>
                     <Select
-                      labelId="demo-simple-select-label"
-                      id="demo-simple-select"
+                      labelId="model-label"
+                      id="model"
                       value={selectedModel}
-                      label="Age"
                       onChange={handleModelChange}
+                      label="Model"
                     >
-                      <MenuItem sx={{ fontSize: "16px" }} value="any">
-                        Any
-                      </MenuItem>
-                      {model.map((m) => {
-                        return (
-                          <MenuItem sx={{ fontSize: "16px" }} value={m}>
-                            {m}
-                          </MenuItem>
-                        );
-                      })}
+                      <MenuItem value="any">Any</MenuItem>
+                      {model.map((m) => (
+                        <MenuItem key={m} value={m}>
+                          {m}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </div>
 
-                <div className="relative inline-block my-3 text-lg w-full">
-                  <FormControl fullWidth>
-                    <label
-                      id="demo-simple-select-label"
-                      className="absolute -top-2 left-3 text-sm bg-white px-1  text-gray-500"
+                {/* Transmission Dropdown */}
+                <div className="relative inline-block mt-3 text-lg w-full">
+                  <FormControl fullWidth size="small">
+                    <InputLabel
+                      id="transmission-label"
+                      className="bg-white px-1 text-gray-500"
                     >
                       Transmission
-                    </label>
+                    </InputLabel>
                     <Select
-                      labelId="demo-simple-select-label"
-                      id="demo-simple-select"
+                      labelId="transmission-label"
+                      id="transmission"
                       value={transmission}
-                      label="Age"
                       onChange={handleTransmissionChange}
+                      label="Transmission"
                     >
-                      <MenuItem sx={{ fontSize: "16px" }} value="any">
-                        Any
-                      </MenuItem>
-                      {transmissionType.map((m) => {
-                        return (
-                          <MenuItem sx={{ fontSize: "16px" }} value={m}>
-                            {m}
-                          </MenuItem>
-                        );
-                      })}
+                      <MenuItem value="any">Any</MenuItem>
+                      {transmissionType.map((m) => (
+                        <MenuItem key={m} value={m}>
+                          {m}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </div>
-
-                {/* <Dropdown
-                  label="Transmission"
-                  options={transmissionType}
-                  onSelect={transmission}
-                /> */}
               </div>
 
-              <div className="flex flex-col justify-start items-start h-full  m-4 w-1/2">
-                <div className="flex mt-4">
-                  {" "}
-                  {/* input box */}
-                  <div className="relative inline-block my-3 text-lg w-full mr-4 ">
-                    <label className="absolute -top-2 left-3 text-sm bg-white px-1  text-gray-500">
-                      Min Price
-                    </label>
-                    <div className="border  border-gray-400 rounded-md bg-white">
-                      <input
-                        id="textBox"
-                        type="text"
-                        value={inputValue}
-                        onChange={handleInputChange}
-                        placeholder="Type here..."
-                        style={{
-                          padding: "10px",
-                          width: "100%",
-                          border: isValidInput
-                            ? "1px solid #D6D9DE"
-                            : "1px solid red",
-                        }}
-                      />
-                      {!isValidInput && (
-                        <p style={{ color: "red", marginTop: "10px" }}>
-                          Only numeric characters are allowed.
-                        </p>
-                      )}
-                    </div>
+              <div className="flex flex-col justify-start items-start h-full m-4 w-full lg:w-1/2">
+                {/* Min Price Input */}
+                <div className="flex ">
+                  <div className="relative inline-block my-3 text-lg w-full mr-4">
+                    <TextField
+                      fullWidth
+                      label="Min Price"
+                      variant="outlined"
+                      size="small"
+                      value={inputValue}
+                      onChange={handleInputChange}
+                      error={!isValidInput}
+                      helperText={
+                        !isValidInput
+                          ? "Only numeric characters are allowed."
+                          : ""
+                      }
+                    />
                   </div>
-                  {/* input box */}
-                  <div className="relative inline-block my-3 text-lg w-full  ">
-                    <label className="absolute -top-2 left-3 text-sm bg-white px-1  text-gray-500">
-                      Max Price
-                    </label>
-                    <div className="border  border-gray-400 rounded-md bg-white">
-                      <input
-                        id="textBox"
-                        type="text"
-                        value={inputValue}
-                        onChange={handleInputChange}
-                        placeholder="Type here..."
-                        style={{
-                          padding: "10px",
-                          width: "100%",
-                          border: isValidInput
-                            ? "1px solid #D6D9DE"
-                            : "1px solid red",
-                        }}
-                      />
-                      {!isValidInput && (
-                        <p style={{ color: "red", marginTop: "10px" }}>
-                          Only numeric characters are allowed.
-                        </p>
-                      )}
-                    </div>
+
+                  {/* Max Price Input */}
+                  <div className="relative inline-block my-3 text-lg w-full">
+                    <TextField
+                      fullWidth
+                      label="Max Price"
+                      variant="outlined"
+                      size="small"
+                      value={inputValue}
+                      onChange={handleInputChange}
+                      error={!isValidInput}
+                      helperText={
+                        !isValidInput
+                          ? "Only numeric characters are allowed."
+                          : ""
+                      }
+                    />
                   </div>
                 </div>
 
+                {/* Category Dropdown */}
                 <div className="relative inline-block my-3 text-lg w-full">
-                  <FormControl fullWidth>
-                    <label className="absolute -top-2 left-3 text-sm bg-white px-1  text-gray-500">
-                      Category
-                    </label>
-                    <Select
-                      labelId="demo-simple-select-label"
-                      id="demo-simple-select"
-                      value={category}
-                      label="Age"
-                      onChange={handleCategoryChange}
+                  <FormControl fullWidth size="small">
+                    <InputLabel
+                      id="category-label"
+                      className="bg-white px-1 text-gray-500"
                     >
-                      <MenuItem sx={{ fontSize: "16px" }} value="any">
-                        Any
-                      </MenuItem>
-                      {transmissionType.map((m) => {
-                        return (
-                          <MenuItem sx={{ fontSize: "16px" }} value={m}>
-                            {m}
-                          </MenuItem>
-                        );
-                      })}
+                      Category
+                    </InputLabel>
+                    <Select
+                      labelId="category-label"
+                      id="category"
+                      value={category}
+                      onChange={handleCategoryChange}
+                      label="Category"
+                    >
+                      <MenuItem value="any">Any</MenuItem>
+                      {transmissionType.map((m) => (
+                        <MenuItem key={m} value={m}>
+                          {m}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </div>
@@ -486,7 +416,7 @@ const Search = () => {
                   </div>
                 ) : filteredVehicles.length > 0 ? (
                   <div>
-                    <div className="text-3xl m-4 font-normal my-8">
+                    <div className="text-xl m-4 font-normal my-8">
                       Found{" "}
                       <span className="font-bold">
                         {" "}
@@ -509,7 +439,7 @@ const Search = () => {
           </div>
         </div>
 
-        <div className="flex flex-col w-1/2 pr-20">
+        <div className="flex flex-col lg:w-2/5  h-full items-start justify-start w-5/6  lg:pr-20">
           {error && <div>{error}</div>}
           {/* <div className="flex  bg-white my-10 w-full px-8 py-4 text-lg md:text-2xl justify-between  rounded-xl shadow-md shadow-gray-100  ">
             <div className=" flex  items-center ">
@@ -523,12 +453,10 @@ const Search = () => {
               Filter
             </button>
           </div> */}
-          <div></div>
-          <div>
-            <div className="flex  bg-white  w-full p-8 text-lg md:text-2xl justify-between  rounded-xl shadow-md shadow-gray-100  ">
-              {" "}
-              <MapComponent />{" "}
-            </div>
+
+          <div className="flex  bg-white w-full  p-2 text-lg md:text-2xl   rounded-xl shadow-md shadow-gray-100  ">
+            {" "}
+            <MapComponent />{" "}
           </div>
         </div>
       </div>

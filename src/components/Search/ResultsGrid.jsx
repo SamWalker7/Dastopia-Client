@@ -99,18 +99,13 @@ const ResultsGrid = ({
             >
               <div className="px-6 py-8 w-full justify-between flex">
                 <div>
-                  <h3 className="text-2xl font-semibold">
+                  <h3 className="text-lg font-semibold">
                     {vehicle.make || "Unknown"}{" "}
-                    <span className="text-gray-400">
-                      {vehicle.model || "Unknown"}
-                    </span>
+                    <span className="">{vehicle.model || "Unknown"}</span>
                   </h3>
-                  <p className="text-xl font-extralight text-gray-400">
+                  <p className="text-base  text-gray-400">
                     {vehicle.category || "Unknown"}
                   </p>
-                </div>
-                <div className="flex justify-end p-2">
-                  <GoHeart />
                 </div>
               </div>
 
@@ -140,23 +135,23 @@ const ResultsGrid = ({
 
               <div className="flex justify-between items-center px-6 pb-4">
                 <div>
-                  <p className="text-sm text-gray-400">Total Price</p>
-                  <p className="text-xl font-semibold">1,490 Birr</p>
+                  <p className="text-base text-gray-400">Total Price</p>
+                  <p className="text-lg font-semibold">1,490 Birr</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-400">Daily Rent</p>
-                  <p className="text-xl font-semibold">190 Birr</p>
+                  <p className="text-base text-gray-400">Daily Rent</p>
+                  <p className="text-lg font-semibold">190 Birr</p>
                 </div>
               </div>
 
               <div className="flex justify-between items-center px-6 py-4 ">
                 <div className="flex items-center mr-8 ">
                   <FaStar className="text-yellow-400" />
-                  <span className="text-xl font-medium">4.5</span>
+                  <span className="text-base font-medium">4.5</span>
                 </div>
                 <Link
                   to="/details"
-                  className="bg-sky-950 w-full text-white rounded-full px-4 py-3 text-base font-normal"
+                  className="bg-blue-950 w-full flex items-center justify-center text-white rounded-full px-3 py-2 text-base "
                 >
                   Rent Now
                 </Link>

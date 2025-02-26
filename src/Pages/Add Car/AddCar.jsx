@@ -4,6 +4,7 @@ import Step2 from "./Step2";
 import Step3 from "./Step3";
 import Step4 from "./Step4";
 import Step5 from "./Step5";
+import Footer from "../../components/Footer";
 
 const AddCar = () => {
   const [step, setStep] = useState(1);
@@ -12,13 +13,16 @@ const AddCar = () => {
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
   return (
-    <div className="bg-[#F8F8FF] md:p-40">
-      {step === 1 && <Step1 nextStep={nextStep} />}
-      {step === 2 && <Step2 nextStep={nextStep} prevStep={prevStep} />}
-      {step === 3 && <Step3 nextStep={nextStep} prevStep={prevStep} />}
-      {step === 4 && <Step4 nextStep={nextStep} prevStep={prevStep} />}
-      {step === 5 && <Step5 prevStep={prevStep} />}
-    </div>
+    <>
+      <div className="bg-[#F8F8FF] md:px-14 pt-32 md:pb-32 pb-8 px-4">
+        {step === 1 && <Step1 nextStep={nextStep} />}
+        {step === 2 && <Step2 nextStep={nextStep} prevStep={prevStep} />}
+        {step === 3 && <Step3 nextStep={nextStep} prevStep={prevStep} />}
+        {step === 4 && <Step4 nextStep={nextStep} prevStep={prevStep} />}
+        {step === 5 && <Step5 prevStep={prevStep} />}
+      </div>
+      <Footer />
+    </>
   );
 };
 
