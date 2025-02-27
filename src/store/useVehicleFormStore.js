@@ -31,11 +31,11 @@ const useVehicleFormStore = create(
   persist(
     (set) => ({
       vehicleData: {
-        advanceNoticePeriod:"",
-        calendar:"",
-        carFeatures:[],
-        instantBooking:"",
-        price:"",
+        advanceNoticePeriod: "",
+        calendar: "",
+        carFeatures: [],
+        instantBooking: false, // Updated to boolean
+        price: "",
         city: "",
         category: "",
         make: "",
@@ -57,6 +57,10 @@ const useVehicleFormStore = create(
         vehicleImageKeys: [],
         adminDocumentKeys: [],
         id: "",
+        location: [], // Already an array
+        mileage: "", // Added
+        pickUpLocation: "", // Added
+        dropOffLocation: "", // Added
       },
       uploadedPhotos: {
         front: null,
@@ -71,7 +75,7 @@ const useVehicleFormStore = create(
         license: null,
         insurance: null,
       },
-        
+
       // Update general vehicle data
       updateVehicleData: (newData) => {
         set((state) => ({
@@ -87,7 +91,10 @@ const useVehicleFormStore = create(
           set((state) => ({
             vehicleData: {
               ...state.vehicleData,
-              vehicleImageKeys: [...state.vehicleData.vehicleImageKeys, imageKey],
+              vehicleImageKeys: [
+                ...state.vehicleData.vehicleImageKeys,
+                imageKey,
+              ],
             },
             uploadedPhotos: {
               ...state.uploadedPhotos,
@@ -132,9 +139,8 @@ const useVehicleFormStore = create(
       deleteVehicleImage: (key, imageKey) => {
         set((state) => {
           const updatedPhotos = { ...state.uploadedPhotos };
-          const updatedVehicleImageKeys = state.vehicleData.vehicleImageKeys.filter(
-            (k) => k !== imageKey
-          );
+          const updatedVehicleImageKeys =
+            state.vehicleData.vehicleImageKeys.filter((k) => k !== imageKey);
 
           if (key === "additional") {
             updatedPhotos.additional = updatedPhotos.additional.filter(
@@ -159,7 +165,9 @@ const useVehicleFormStore = create(
         set((state) => {
           const updatedDocuments = { ...state.uploadedDocuments };
           const updatedAdminDocumentKeys =
-            state.vehicleData.adminDocumentKeys.filter((k) => k !== documentKey);
+            state.vehicleData.adminDocumentKeys.filter(
+              (k) => k !== documentKey
+            );
 
           updatedDocuments[key] = null;
 
@@ -181,7 +189,9 @@ const useVehicleFormStore = create(
           set((state) => {
             const updatedPhotos = { ...state.uploadedPhotos };
             const updatedVehicleImageKeys =
-              state.vehicleData.vehicleImageKeys.filter((k) => k !== oldImageKey);
+              state.vehicleData.vehicleImageKeys.filter(
+                (k) => k !== oldImageKey
+              );
 
             if (key === "additional") {
               updatedPhotos.additional = updatedPhotos.additional.map((img) =>
@@ -218,12 +228,19 @@ const useVehicleFormStore = create(
                 (k) => k !== oldDocumentKey
               );
 
-            updatedDocuments[key] = { name: file.name, key: newDocumentKey, url: newDocumentBase64 }; // Store base64 URL
+            updatedDocuments[key] = {
+              name: file.name,
+              key: newDocumentKey,
+              url: newDocumentBase64,
+            }; // Store base64 URL
 
             return {
               vehicleData: {
                 ...state.vehicleData,
-                adminDocumentKeys: [...updatedAdminDocumentKeys, newDocumentKey],
+                adminDocumentKeys: [
+                  ...updatedAdminDocumentKeys,
+                  newDocumentKey,
+                ],
               },
               uploadedDocuments: updatedDocuments,
             };

@@ -1,54 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
-import {
-  FaLocationArrow,
-  FaMapMarkerAlt,
-  FaPlus,
-  FaSearch,
-  FaTrash,
-} from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { FaMapMarkerAlt, FaPlus, FaSearch, FaTrash } from "react-icons/fa";
 import { IoIosCloseCircleOutline, IoMdClose } from "react-icons/io";
+import useVehicleFormStore from "../../store/useVehicleFormStore";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4";
 const libraries = ["places"];
 
 const Step4 = ({ nextStep, prevStep }) => {
-  const handleMyLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const myLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          setCurrentLocation(myLocation);
-          if (map) {
-            map.panTo(myLocation);
-            map.setZoom(15);
-          }
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          alert("Unable to retrieve your location");
-        }
-      );
-    } else {
-      alert("Geolocation is not supported by your browser");
-    }
-  };
-  // State management
-  const [showModal, setShowModal] = useState(false);
+  const { vehicleData, updateVehicleData } = useVehicleFormStore();
+
+  // Initialize state from store with proper fallbacks
   const [markers, setMarkers] = useState({
-    pickup: [],
-    dropoff: [],
+    pickup: vehicleData.pickUpLocation || [],
+    dropoff: vehicleData.dropOffLocation || [],
   });
+
   const [currentLocation, setCurrentLocation] = useState(null);
   const [locationType, setLocationType] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [map, setMap] = useState(null);
   const [placesService, setPlacesService] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
+  // Sync with store on any changes
+  useEffect(() => {
+    updateVehicleData({
+      pickUpLocation: markers.pickup,
+      dropOffLocation: markers.dropoff,
+    });
+  }, [markers, updateVehicleData]);
 
   const mapStyles = {
     height: "30vh",
@@ -66,99 +48,73 @@ const Step4 = ({ nextStep, prevStep }) => {
     "Pickup and Drop-off",
   ];
 
-  // Get current location on component mount
+  // Geolocation setup
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCurrentLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-        }
-      );
-    }
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCurrentLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      (error) => console.error("Geolocation error:", error)
+    );
   }, []);
 
-  // Initialize places service when map is loaded
   const onMapLoad = (mapInstance) => {
     setMap(mapInstance);
-    if (window.google) {
-      setPlacesService(
-        new window.google.maps.places.PlacesService(mapInstance)
-      );
-    }
+    setPlacesService(new window.google.maps.places.PlacesService(mapInstance));
   };
 
-  // Handle map click event
   const handleMapClick = (event) => {
     if (!locationType) return;
 
     const newLocation = {
-      position: {
-        lat: event.latLng.lat(),
-        lng: event.latLng.lng(),
-      },
+      position: { lat: event.latLng.lat(), lng: event.latLng.lng() },
     };
 
-    // Get address for clicked location
-    const geocoder = new window.google.maps.Geocoder();
-    geocoder.geocode({ location: newLocation.position }, (results, status) => {
-      if (status === "OK" && results[0]) {
-        newLocation.address = results[0].formatted_address;
-
-        if (
-          locationType === "Pickup Location" ||
-          locationType === "Pickup and Drop-off"
-        ) {
-          setMarkers((prev) => ({
-            ...prev,
-            pickup: [...prev.pickup, newLocation],
-          }));
-        }
-        if (
-          locationType === "Drop-off Location" ||
-          locationType === "Pickup and Drop-off"
-        ) {
-          setMarkers((prev) => ({
-            ...prev,
-            dropoff: [...prev.dropoff, newLocation],
-          }));
-        }
-      }
-    });
-  };
-
-  // Handle search input
-  useEffect(() => {
-    if (!searchQuery || !map) return;
-
-    const service = new window.google.maps.places.AutocompleteService();
-    service.getPlacePredictions(
-      {
-        input: searchQuery,
-        componentRestrictions: { country: "ET" },
-      },
-      (predictions, status) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-          setSuggestions(predictions);
+    new window.google.maps.Geocoder().geocode(
+      { location: newLocation.position },
+      (results, status) => {
+        if (status === "OK" && results[0]) {
+          newLocation.address = results[0].formatted_address;
+          updateMarkers(newLocation);
         }
       }
     );
-  }, [searchQuery, map]);
+  };
 
-  // Handle search selection
+  const updateMarkers = (newLocation) => {
+    const types = [];
+    if (locationType.includes("Pickup")) types.push("pickup");
+    if (locationType.includes("Drop-off")) types.push("dropoff");
+
+    setMarkers((prev) => ({
+      pickup: types.includes("pickup")
+        ? [...prev.pickup, newLocation]
+        : prev.pickup,
+      dropoff: types.includes("dropoff")
+        ? [...prev.dropoff, newLocation]
+        : prev.dropoff,
+    }));
+  };
+
+  // Search handling
+  useEffect(() => {
+    if (!searchQuery || !window.google) return;
+
+    const service = new window.google.maps.places.AutocompleteService();
+    service.getPlacePredictions(
+      { input: searchQuery, componentRestrictions: { country: "ET" } },
+      (predictions) => setSuggestions(predictions || [])
+    );
+  }, [searchQuery]);
+
   const handleSearchSelect = (placeId) => {
-    if (!placesService) return;
-
     placesService.getDetails(
-      {
-        placeId: placeId,
-        fields: ["geometry", "formatted_address", "name"],
-      },
+      { placeId, fields: ["geometry", "formatted_address", "name"] },
       (place, status) => {
         if (status === window.google.maps.places.PlacesServiceStatus.OK) {
           const newLocation = {
@@ -170,34 +126,16 @@ const Step4 = ({ nextStep, prevStep }) => {
             name: place.name,
           };
 
-          if (
-            locationType === "Pickup Location" ||
-            locationType === "Pickup and Drop-off"
-          ) {
-            setMarkers((prev) => ({
-              ...prev,
-              pickup: [...prev.pickup, newLocation],
-            }));
-          }
-          if (
-            locationType === "Drop-off Location" ||
-            locationType === "Pickup and Drop-off"
-          ) {
-            setMarkers((prev) => ({
-              ...prev,
-              dropoff: [...prev.dropoff, newLocation],
-            }));
-          }
-
+          updateMarkers(newLocation);
+          map.panTo(newLocation.position);
           setSearchQuery("");
           setSuggestions([]);
-          map.panTo(newLocation.position);
         }
       }
     );
   };
 
-  // Remove location
+  // Location actions
   const removeLocation = (type, index) => {
     setMarkers((prev) => ({
       ...prev,
@@ -205,17 +143,27 @@ const Step4 = ({ nextStep, prevStep }) => {
     }));
   };
 
-  // Clear all locations of a type
   const clearLocations = (type) => {
-    setMarkers((prev) => ({
-      ...prev,
-      [type]: [],
-    }));
+    setMarkers((prev) => ({ ...prev, [type]: [] }));
   };
 
-  // Location list component
+  const handleMyLocation = () => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const myLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setCurrentLocation(myLocation);
+        map?.panTo(myLocation);
+        map?.setZoom(15);
+      },
+      (error) => alert("Location access failed: " + error.message)
+    );
+  };
+
   const LocationList = ({ title, locations, type }) => (
-    <div className="mt-4  border border-blue-200 p-4 rounded-2xl">
+    <div className="mt-4 border border-blue-200 p-4 rounded-2xl">
       <div className="flex justify-between items-center">
         <h3 className="text-2xl my-4 font-semibold">{title}</h3>
         {locations.length > 0 && (
@@ -247,8 +195,9 @@ const Step4 = ({ nextStep, prevStep }) => {
   );
 
   return (
-    <div className="flex bg-[#F8F8FF]  gap-10">
+    <div className="flex bg-[#F8F8FF] gap-10">
       <div className="mx-auto md:p-16 p-6 w-full bg-white rounded-2xl shadow-sm text-sm">
+        {/* Progress Header */}
         <div className="flex items-center justify-center">
           <div className="w-4/5 border-b-4 border-[#00113D] mr-2"></div>
           <div className="w-1/5 border-b-4 border-blue-200"></div>
@@ -260,15 +209,16 @@ const Step4 = ({ nextStep, prevStep }) => {
             </p>
           </div>
         </div>
+
         <h1 className="text-3xl font-semibold my-8">Car Details</h1>
         <button
           onClick={() => setShowModal(true)}
-          className=" py-1 bg-[#F8F8FF] gap-4 w-full justify-center text-gray-700 border border-blue-200 shadow-sm items-center rounded-lg text-base hover:bg-blue-200 flex transition-colors"
+          className="py-1 bg-[#F8F8FF] gap-4 w-full justify-center text-gray-700 border border-blue-200 shadow-sm items-center rounded-lg text-base hover:bg-blue-200 flex transition-colors"
         >
-          <FaPlus size={12} />
-          Add Location
+          <FaPlus size={12} /> Add Location
         </button>
-        {/* Display Selected Locations */}
+
+        {/* Selected Locations */}
         <div className="mt-8">
           <h2 className="text-lg font-semibold mb-6">Selected Locations</h2>
           <div className="gap-8 grid grid-cols-1 w-full md:grid-cols-2">
@@ -293,11 +243,11 @@ const Step4 = ({ nextStep, prevStep }) => {
             )}
           </div>
         </div>
+
         {/* Location Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl w-full md:max-w-xl max-h-[80vh] overflow-y-auto relative">
-              {/* Add close button */}
               <button
                 onClick={() => setShowModal(false)}
                 className="absolute right-4 top-4 text-gray-500 hover:text-gray-700 z-10"
@@ -334,7 +284,7 @@ const Step4 = ({ nextStep, prevStep }) => {
                   />
                   <input
                     type="text"
-                    className="w-full p-2  border rounded-lg text-base"
+                    className="w-full p-2 border rounded-lg text-base"
                     placeholder="Search location"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -387,7 +337,7 @@ const Step4 = ({ nextStep, prevStep }) => {
                     ))}
                   </GoogleMap>
                 </LoadScript>
-                {/* Add My Location button */}
+
                 <button
                   onClick={handleMyLocation}
                   className="w-full p-2 border h-fit flex justify-center gap-4 mt-4 items-center border-gray-300 rounded-full text-sm hover:bg-gray-50"

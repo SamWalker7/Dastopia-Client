@@ -51,35 +51,35 @@ const Details = () => {
   const Status = ["Active", "Inactive"];
 
   return (
-    <div className="w-3/5">
+    <div className="lg:w-3/5 w-full">
       <div className="p-10 bg-white w-full  shadow-lg rounded-lg">
-        <h1 className="text-4xl my-4 mb-8 font-semibold">Detail Listing</h1>
-        <div className="flex space-x-4 w-full">
+        <h1 className="text-2xl my-4 mb-8 font-semibold">Detail Listing</h1>
+        <div className="flex lg:flex-row flex-col space-x-4 w-full">
           {" "}
           <img
             src={audia1}
             alt="Tesla Model Y"
-            className="w-2/3 h-2/3 rounded-2xl mb-4"
+            className="w-1/2 h-2/3 rounded-md mb-4"
           />
-          <div className="flex justify-start  space-x-3  ">
+          <div className="grid md:grid-cols-3 grid-cols-2 justify-start  gap-2 ">
             {carDetails.thumbnails.map((thumb, index) => (
               <img
                 key={index}
                 src={audia1}
                 alt={`Thumbnail ${index + 1}`}
                 onClick={() => setSelectedImage(thumb)}
-                className="w-1/4 h-24 cursor-pointer rounded-2xl"
+                className="w-full max-w-32 h-20 cursor-pointer rounded-md"
               />
             ))}
           </div>
         </div>
         {/* Pickup and Drop-off */}
-        <div className="relative inline-block my-8 text-lg w-[200px] ">
+        <div className="relative inline-block my-8 text-base w-[200px] ">
           <label className="absolute -top-2 left-3 text-sm bg-white px-1  text-gray-500">
             Status
           </label>
           <select
-            className="border  border-gray-400 flex justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400 "
+            className="border  border-gray-400 flex justify-between w-full p-3 py-2 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400 "
             value={status}
             onChange={handleStatus}
           >
@@ -96,10 +96,10 @@ const Details = () => {
           </select>
         </div>
         <div className="flex   items-center">
-          <h3 className="text-3xl font-semibold">Toyota Corolla</h3>
+          <h3 className="text-xl font-semibold">Toyota Corolla</h3>
         </div>
-        <div className="flex justify-between  space-x-6 items-center  my-8 w-fit text-gray-800 text-base">
-          <div className="bg-blue-100 flex text-blue-700 py-2 px-4 rounded-lg text-center ">
+        <div className="grid lg:grid-cols-4 grid-cols-2 justify-between  space-x-6 items-center  my-8 w-fit text-gray-800 text-sm">
+          <div className="bg-blue-100 flex text-blue-700 py-2 items-center px-3 rounded-lg text-center ">
             <FaTag size={12} className="mx-2" /> 900 Birr
           </div>
           <div className="flex items-center space-x-2">
@@ -117,8 +117,8 @@ const Details = () => {
         </div>
 
         {/* Car Specification */}
-        <h4 className="mt-8 text-3xl font-semibold">Car Specification</h4>
-        <div className="grid grid-cols-3 gap-4 mt-4">
+        <h4 className="mt-8 text-xl font-semibold">Car Specification</h4>
+        <div className="grid lg:grid-cols-3 grid-cols-2 gap-4 mt-4">
           <div>
             <span className="text-gray-500">Car Brand</span>
             <p className="font-medium">Toyota</p>
@@ -135,7 +135,7 @@ const Details = () => {
         <div className="  text-[#000000]">
           {/* Features */}
           <section className="my-16">
-            <h2 className="font-semibold text-2xl mb-4">Features</h2>
+            <h2 className="font-semibold text-lg mb-4">Features</h2>
             <div className="flex flex-wrap gap-2">
               {[
                 "Air Conditioning",
@@ -156,15 +156,15 @@ const Details = () => {
 
           {/* Booking & Notice Period For Rent */}
           <section className="flex flex-col my-16 gap-4">
-            <div className="flex space-x-4 items-center text-2xl ">
+            <div className="flex space-x-4 items-center text-lg ">
               <h3 className="font-semibold mb-1">Booking</h3>
-              <span className="border border-gray-400 text-base px-4 py-2 rounded-xl">
+              <span className="border border-gray-400 text-sm px-4 py-2 rounded-xl">
                 Instant
               </span>
             </div>
-            <div className="flex space-x-4 items-center text-2xl">
+            <div className="flex space-x-4 items-center text-lg">
               <h3 className="font-semibold mb-1">Notice Period For Rent</h3>
-              <span className="border border-gray-400 text-base px-4 py-2 rounded-xl">
+              <span className="border border-gray-400 text-sm px-4 py-2 rounded-xl">
                 2 Days before pick up
               </span>
             </div>
@@ -172,13 +172,13 @@ const Details = () => {
 
           {/* Pick up Locations */}
           <section className="my-16">
-            <h2 className="font-semibold text-2xl mb-4">Pick up Locations</h2>
+            <h2 className="font-semibold text-lg mb-4">Pick up Locations</h2>
             <div className="flex flex-wrap gap-2">
               {["Cmc", "Cmc", "Bole Airport", "Bole Medhaniallim"].map(
                 (location, index) => (
                   <span
                     key={index}
-                    className="border border-gray-400 text-base px-3 py-1 rounded-xl"
+                    className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
                   >
                     {location}
                   </span>
@@ -208,7 +208,7 @@ const Details = () => {
 
           {/* Available Rental Dates */}
           <section className="my-16">
-            <h2 className="font-semibold text-2xl mb-4">
+            <h2 className="font-semibold text-lg mb-4">
               Available Rental Dates
             </h2>
             <div className="space-y-4">
@@ -219,7 +219,7 @@ const Details = () => {
               ].map((dateRange, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <FaCalendar size={16} />
-                  <span className="text-base">{dateRange}</span>
+                  <span className="text-sm">{dateRange}</span>
                 </div>
               ))}
             </div>

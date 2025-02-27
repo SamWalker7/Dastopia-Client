@@ -191,9 +191,9 @@ export default function Details(props) {
 
   const locations = ["Addis Ababa", "Adama", "Hawassa", "Bahir Dar"];
   return (
-    <div className="py-32 bg-[#FAF9FE] px-32 flex flex-col">
-      <div className="bg-white md:mt-24 mb-8 w-full px-10 py-4 justify-between text-lg md:text-2xl  rounded-xl shadow-sm shadow-blue-300 border border-blue-300  flex">
-        <div className="flex w-2/3 justify-between items-center">
+    <div className="md:py-16 py-32 bg-[#FAF9FE] px-4 md:px-16 flex flex-col">
+      <div className="bg-white md:flex-row flex-col md:mt-24 mb-8 w-full px-10 py-4 justify-between text-lg md:text-lg  rounded-xl shadow-sm shadow-blue-300 border border-blue-300  flex">
+        <div className="flex md:flex-row flex-col w-full  md:w-2/3 justify-between items-center">
           {" "}
           <div className="flex flex-col ">
             <div>Bole International Airport</div>
@@ -217,18 +217,18 @@ export default function Details(props) {
             <div>Wed, Aug 28,2024 , 10:00</div>
           </div>
         </div>
-        <button className=" border border-blue-950 text-lg text-black hover:bg-blue-200 hover:border-none rounded-full px-12 ml-8 my-2  py-2">
+        <button className="text-sm border border-blue-950 text-black hover:bg-blue-200 hover:border-none rounded-full px-6 ml-8 my-2  py-1">
           Edit
         </button>
       </div>
 
       {/* Car Details Section */}
-      <div className="flex gap-10 ">
+      <div className="flex lg:flex-row flex-col gap-10 ">
         {/* Left Side - Car Info */}
-        <div className="p-6 bg-white w-1/3 shadow-lg rounded-lg">
+        <div className="p-6 bg-white lg:w-2/5 w-full h-fit shadow-lg rounded-lg">
           <div className="flex px-2  flex-col">
             {" "}
-            <button className="mb-4 flex self-start text-black text-xl font-normal items-center">
+            <button className="mb-4 flex self-start text-black text-base font-normal items-center">
               <span className="mr-6">
                 {" "}
                 <FaArrowLeft className="text-gray-700" size={12} />
@@ -236,10 +236,10 @@ export default function Details(props) {
               Car Details
             </button>{" "}
           </div>
-          <div className="flex justify-between items-center  py-4 ">
+          <div className="flex justify-between  items-center  py-4 ">
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-blue-950 w-full text-white rounded-full px-4 py-3 text-base font-normal"
+              className="bg-blue-950 w-full text-white rounded-full px-2 py-2 text-sm font-normal"
             >
               Confirm Availability
             </button>
@@ -248,7 +248,7 @@ export default function Details(props) {
               onClose={() => setIsModalOpen(false)}
             />
           </div>
-          <h1 className=" text-3xl font-semibold px-2 mb-8 my-4">
+          <h1 className=" text-base font-semibold px-2 mb-8 my-4">
             Tesla Model Y
           </h1>
           {/* Back Button */}
@@ -269,7 +269,7 @@ export default function Details(props) {
             ))}
           </div>
           <div className="flex   mt-4">
-            <div className="flex justify-between w-full items-center px-2 py-4 my-2 text-gray-700 text-xl">
+            <div className="flex justify-between w-full items-center px-2 py-4 my-2 text-gray-700 text-base">
               <div className="flex items-center space-x-2">
                 <FaGasPump size={16} /> <span>Benzene</span>
               </div>
@@ -288,8 +288,10 @@ export default function Details(props) {
         {/* Right Side - Specifications and Reviews */}
         <div className="p-10 bg-white w-full  shadow-lg rounded-lg">
           <div className="flex justify-between  items-center">
-            <h3 className="text-xl font-semibold">Total Rent Price (3 Days)</h3>
-            <span className="text-3xl font-bold">
+            <h3 className="text-base font-semibold">
+              Total Rent Price (3 Days)
+            </h3>
+            <span className="text-base font-bold">
               {carDetails.rentPrice.total}
             </span>
           </div>
@@ -298,8 +300,8 @@ export default function Details(props) {
           </div>
 
           {/* Car Specification */}
-          <h4 className="mt-8 text-2xl font-semibold">Car Specification</h4>
-          <div className="grid grid-cols-3 text-xl gap-4 mt-4">
+          <h4 className="mt-8 text-lg font-semibold">Car Specification</h4>
+          <div className="grid grid-cols-3 text-base gap-4 mt-4">
             <div>
               <span className="font-medium ">Car Brand</span>
               <p className="text-gray-500">{carDetails.brand}</p>
@@ -316,7 +318,7 @@ export default function Details(props) {
           </div>
 
           <div className="my-8">
-            <h3 className="text-2xl font-semibold text-gray-800 mb-3">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">
               Features
             </h3>
             <div className="flex flex-wrap gap-3">
@@ -332,7 +334,7 @@ export default function Details(props) {
               ].map((feature, index) => (
                 <span
                   key={index}
-                  className=" text-gray-700 px-4 py-2 rounded-xl text-xl border border-gray-300"
+                  className=" text-gray-700 px-4 py-2 rounded-xl text-base border border-gray-300"
                 >
                   {feature}
                 </span>
@@ -343,10 +345,10 @@ export default function Details(props) {
           {/* Pickup and Drop-off Locations */}
           <div className="flex justify-between md:pr-52 mb-6">
             <div className="my-8">
-              <h3 className="text-2xl font-semibold text-gray-800 mb-3">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
                 Pick up Locations
               </h3>
-              <ul className=" text-xl space-y-6 text-gray-700">
+              <ul className=" text-base space-y-6 text-gray-700">
                 <li className="flex items-center gap-4">
                   <IoLocationOutline size={16} /> CMC roundabout
                 </li>
@@ -359,10 +361,10 @@ export default function Details(props) {
               </ul>
             </div>
             <div className="my-8">
-              <h3 className="text-2xl font-semibold text-gray-800 mb-3">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
                 Drop off Locations
               </h3>
-              <ul className=" text-xl space-y-6 text-gray-700">
+              <ul className=" text-base space-y-6 text-gray-700">
                 <li className="flex items-center gap-4">
                   <IoLocationOutline size={16} /> CMC roundabout
                 </li>
@@ -378,20 +380,20 @@ export default function Details(props) {
 
           {/* Insurance */}
           <div className="mb-6">
-            <h3 className="text-2xl font-semibold text-gray-800">Insurance</h3>
-            <p className="text-xl text-gray-700 mt-2">Full Coverage</p>
+            <h3 className="text-lg font-semibold text-gray-800">Insurance</h3>
+            <p className="text-base text-gray-700 mt-2">Full Coverage</p>
           </div>
 
           {/* Rating & Reviews */}
           <div>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-3">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">
               Rating & Reviews
             </h3>
             <div className="flex items-center">
-              <div className="text-yellow-500 text-3xl">⭐⭐⭐⭐⭐</div>
-              <p className="ml-3 text-xl text-gray-700">4/5</p>
+              <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
+              <p className="ml-3 text-base text-gray-700">4/5</p>
             </div>
-            <p className="text-xl text-gray-700 mt-1">Veronika</p>
+            <p className="text-base text-gray-700 mt-1">Veronika</p>
           </div>
         </div>
       </div>

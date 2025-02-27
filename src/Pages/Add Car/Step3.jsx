@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import { FiEdit2, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import useVehicleFormStore from "../../store/useVehicleFormStore";
 
-// CalendarModal Component
 const CalendarModal = ({
   showCalendar,
   setShowCalendar,
@@ -96,30 +96,45 @@ const CalendarModal = ({
   );
 };
 
-// Step3 Component
 const Step3 = ({ nextStep, prevStep }) => {
-  // State management
+  const { vehicleData, updateVehicleData } = useVehicleFormStore();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFeatures, setSelectedFeatures] = useState(["GPS"]);
-  const [advanceNotice, setAdvanceNotice] = useState("");
-  const [selectedRanges, setSelectedRanges] = useState([]);
   const [tempRange, setTempRange] = useState({ start: null, end: null });
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [instantBooking, setInstantBooking] = useState(false);
-  const [dailyPrice, setDailyPrice] = useState("");
 
-  // Prevent body scroll when calendar is open
-  useEffect(() => {
-    if (showCalendar) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+  const [selectedRanges, setSelectedRanges] = useState(() => {
+    try {
+      return vehicleData.calendar
+        ? JSON.parse(vehicleData.calendar).map((range) => ({
+            start: new Date(range.start),
+            end: new Date(range.end),
+          }))
+        : [];
+    } catch (e) {
+      console.error("Error parsing calendar:", e);
+      return [];
     }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [showCalendar]);
+  });
+
+  useEffect(() => {
+    const validRanges = selectedRanges.filter(
+      (range) =>
+        range.start instanceof Date &&
+        range.end instanceof Date &&
+        !isNaN(range.start) &&
+        !isNaN(range.end)
+    );
+
+    const calendarString = JSON.stringify(
+      validRanges.map((range) => ({
+        start: range.start.toISOString(),
+        end: range.end.toISOString(),
+      }))
+    );
+
+    updateVehicleData({ calendar: calendarString });
+  }, [selectedRanges, updateVehicleData]);
 
   const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"];
   const months = [
@@ -159,15 +174,12 @@ const Step3 = ({ nextStep, prevStep }) => {
     "3 days",
   ];
 
-  // Calendar functions
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDay = firstDay.getDay();
-    return { daysInMonth, startingDay };
+    return { daysInMonth: lastDay.getDate(), startingDay: firstDay.getDay() };
   };
 
   const formatDate = (date) => {
@@ -193,41 +205,33 @@ const Step3 = ({ nextStep, prevStep }) => {
       currentMonth.getMonth(),
       day
     );
-    const dateTime = selectedDate.getTime();
 
-    // Check if date is in existing ranges
     let rangeIndex = -1;
     let targetRange = null;
 
     selectedRanges.forEach((range, index) => {
       const start = range.start.getTime();
       const end = range.end.getTime();
-      if (dateTime >= start && dateTime <= end) {
+      if (selectedDate.getTime() >= start && selectedDate.getTime() <= end) {
         rangeIndex = index;
         targetRange = range;
       }
     });
 
     if (rangeIndex !== -1) {
-      // Split existing range
       const newRanges = [];
-      const splitDate = selectedDate;
+      const splitDate = new Date(selectedDate);
 
-      // Create ranges before and after split date
       if (targetRange.start < splitDate) {
-        const beforeDate = new Date(splitDate);
-        beforeDate.setDate(beforeDate.getDate() - 1);
         newRanges.push({
           start: new Date(targetRange.start),
-          end: beforeDate,
+          end: new Date(splitDate.setDate(splitDate.getDate() - 1)),
         });
       }
 
       if (splitDate < targetRange.end) {
-        const afterDate = new Date(splitDate);
-        afterDate.setDate(afterDate.getDate() + 1);
         newRanges.push({
-          start: afterDate,
+          start: new Date(splitDate.setDate(splitDate.getDate() + 1)),
           end: new Date(targetRange.end),
         });
       }
@@ -236,21 +240,15 @@ const Step3 = ({ nextStep, prevStep }) => {
       updatedRanges.splice(rangeIndex, 1, ...newRanges);
       setSelectedRanges(updatedRanges);
     } else {
-      // Handle range selection
       if (!tempRange.start) {
         setTempRange({ start: selectedDate, end: null });
       } else {
-        let startDate = tempRange.start;
-        let endDate = selectedDate;
-
-        // Ensure chronological order
-        if (startDate > endDate) {
-          [startDate, endDate] = [endDate, startDate];
-        }
+        let [startDate, endDate] = [tempRange.start, selectedDate];
+        if (startDate > endDate) [startDate, endDate] = [endDate, startDate];
 
         setSelectedRanges([
           ...selectedRanges,
-          { start: startDate, end: endDate },
+          { start: new Date(startDate), end: new Date(endDate) },
         ]);
         setTempRange({ start: null, end: null });
       }
@@ -258,34 +256,19 @@ const Step3 = ({ nextStep, prevStep }) => {
   };
 
   const removeDate = (indexToRemove) => {
-    const updatedRanges = [...selectedRanges];
-    updatedRanges.splice(indexToRemove, 1);
-    setSelectedRanges(updatedRanges);
-  };
-
-  // Format selected dates for display
-  const formatSelectedDates = () => {
-    const sortedRanges = [...selectedRanges].sort(
-      (a, b) => a.start.getTime() - b.start.getTime()
+    setSelectedRanges((prev) =>
+      prev.filter((_, index) => index !== indexToRemove)
     );
-    const formattedRanges = [];
-
-    sortedRanges.forEach((range) => {
-      if (range.start.getTime() === range.end.getTime()) {
-        // Single day
-        formattedRanges.push(formatDate(range.start));
-      } else {
-        // Range of days
-        formattedRanges.push(
-          `${formatDate(range.start)} - ${formatDate(range.end)}`
-        );
-      }
-    });
-
-    return formattedRanges;
   };
 
-  // Render calendar days
+  const formatSelectedDates = () => {
+    return selectedRanges.map((range) =>
+      range.start.toDateString() === range.end.toDateString()
+        ? formatDate(range.start)
+        : `${formatDate(range.start)} - ${formatDate(range.end)}`
+    );
+  };
+
   const renderCalendarDays = () => {
     const { daysInMonth, startingDay } = getDaysInMonth(currentMonth);
     const days = [];
@@ -302,22 +285,26 @@ const Step3 = ({ nextStep, prevStep }) => {
         day
       );
 
-      const isSelected = isDateSelected(currentDate);
-      const isToday = currentDate.toDateString() === today.toDateString();
-      const isPastDate = currentDate < today;
-
       days.push(
         <button
           key={day}
-          onClick={() => !isPastDate && handleDateSelect(day)}
+          onClick={() => handleDateSelect(day)}
           className={`
-            w-8 h-8 flex items-center justify-center focus:outline focus:outline-1 focus:outline-blue-400 rounded-full text-sm
-            transition-all duration-200  
-            ${isSelected ? "bg-navy-900 text-white" : "hover:bg-gray-100"}
-            ${isToday ? "border-2 border-navy-900" : ""}
-            ${isPastDate ? "text-gray-400 cursor-not-allowed" : ""}
+            w-8 h-8 flex items-center justify-center focus:outline focus:outline-1 
+            focus:outline-blue-400 rounded-full text-sm transition-all duration-200
+            ${
+              isDateSelected(currentDate)
+                ? "bg-navy-900 text-white"
+                : "hover:bg-gray-100"
+            }
+            ${
+              currentDate.toDateString() === today.toDateString()
+                ? "border-2 border-navy-900"
+                : ""
+            }
+            ${currentDate < today ? "text-gray-400 cursor-not-allowed" : ""}
           `}
-          disabled={isPastDate}
+          disabled={currentDate < today}
         >
           {day}
         </button>
@@ -327,16 +314,19 @@ const Step3 = ({ nextStep, prevStep }) => {
     return days;
   };
 
-  // Feature handling
   const addFeature = (feature) => {
-    if (!selectedFeatures.includes(feature)) {
-      setSelectedFeatures([...selectedFeatures, feature]);
+    if (!vehicleData.carFeatures?.includes(feature)) {
+      updateVehicleData({
+        carFeatures: [...(vehicleData.carFeatures || []), feature],
+      });
     }
     setSearchTerm("");
   };
 
   const removeFeature = (feature) => {
-    setSelectedFeatures(selectedFeatures.filter((f) => f !== feature));
+    updateVehicleData({
+      carFeatures: vehicleData.carFeatures?.filter((f) => f !== feature) || [],
+    });
   };
 
   const filteredFeatures = carFeatures.filter((feature) =>
@@ -353,7 +343,6 @@ const Step3 = ({ nextStep, prevStep }) => {
   return (
     <div className="flex gap-10 bg-[#F8F8FF]">
       <div className="mx-auto p-8 md:w-2/3 w-full bg-white rounded-2xl shadow-sm text-base">
-        {/* Progress Bar */}
         <div className="flex items-center justify-center">
           <div className="w-3/5 border-b-4 border-[#00113D] mr-2"></div>
           <div className="w-2/5 border-b-4 border-blue-200"></div>
@@ -361,19 +350,17 @@ const Step3 = ({ nextStep, prevStep }) => {
         <div className="flex justify-between w-full">
           <div className="flex flex-col w-1/2 items-start">
             <p className="text-xl text-gray-800 my-4 font-medium text-center mb-4">
-              Steps 3 of 5
+              Step 3 of 5
             </p>
           </div>
         </div>
 
-        {/* Car Features Section */}
         <section className="mb-12">
           <h1 className="text-3xl font-semibold mt-8">Car Features</h1>
           <p className="text-gray-600 text-base mt-2 mb-6">
             Please enter your car's basic information below
           </p>
 
-          {/* Search Features Input */}
           <div className="relative items-center justify-center flex mb-6">
             <input
               type="text"
@@ -399,9 +386,8 @@ const Step3 = ({ nextStep, prevStep }) => {
             )}
           </div>
 
-          {/* Selected Features */}
           <div className="flex flex-wrap items-center gap-3 mb-6">
-            {selectedFeatures.map((feature) => (
+            {vehicleData.carFeatures?.map((feature) => (
               <span
                 key={feature}
                 className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full flex items-center gap-2 text-sm"
@@ -416,13 +402,12 @@ const Step3 = ({ nextStep, prevStep }) => {
             ))}
           </div>
 
-          {/* Suggestions */}
           <div className="mt-6">
             <p className="text-gray-600 mb-3 text-lg">Suggestions</p>
             <div className="flex flex-wrap gap-3">
-              {suggestions.map((suggestion, index) => (
+              {suggestions.map((suggestion) => (
                 <button
-                  key={index}
+                  key={suggestion}
                   className="border rounded-full px-4 py-2 text-sm flex items-center gap-2 hover:bg-gray-50"
                   onClick={() => addFeature(suggestion)}
                 >
@@ -433,11 +418,9 @@ const Step3 = ({ nextStep, prevStep }) => {
           </div>
         </section>
 
-        {/* Car Availability Section */}
         <section className="my-8">
           <h2 className="text-3xl font-semibold my-8">Car Availability</h2>
 
-          {/* Advance Notice Period */}
           <div className="mb-8 text-xs">
             <h3 className="text-lg font-semibold mb-3">
               Advance Notice Period
@@ -448,21 +431,20 @@ const Step3 = ({ nextStep, prevStep }) => {
             </p>
             <select
               className="md:w-full w-4/6 p-2 border rounded-lg text-sm"
-              value={advanceNotice}
-              onChange={(e) => setAdvanceNotice(e.target.value)}
+              value={vehicleData.advanceNoticePeriod || ""}
+              onChange={(e) =>
+                updateVehicleData({ advanceNoticePeriod: e.target.value })
+              }
             >
-              <option className="w-2/3" value="">
-                Set period duration
-              </option>
+              <option value="">Set period duration</option>
               {noticePeriods.map((period) => (
-                <option className="w-2/3" key={period} value={period}>
+                <option key={period} value={period}>
                   {period}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Available Dates */}
           <div className="mb-8">
             <h3 className="text-lg font-semibold mb-3">
               Set Car Availability Dates
@@ -476,14 +458,13 @@ const Step3 = ({ nextStep, prevStep }) => {
               onClick={() => setShowCalendar(true)}
             >
               <span>
-                {selectedRanges.length
+                {selectedRanges.length > 0
                   ? `${selectedRanges.length} range(s) selected`
                   : "Select available dates"}
               </span>
               <FiEdit2 className="text-sm" />
             </button>
 
-            {/* Selected Dates Display */}
             {selectedRanges.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {formatSelectedDates().map((date, index) => (
@@ -502,7 +483,6 @@ const Step3 = ({ nextStep, prevStep }) => {
             )}
           </div>
 
-          {/* Calendar Modal */}
           <CalendarModal
             showCalendar={showCalendar}
             setShowCalendar={setShowCalendar}
@@ -513,24 +493,26 @@ const Step3 = ({ nextStep, prevStep }) => {
             months={months}
           />
 
-          {/* Instant Booking Toggle */}
           <div className="flex items-center gap-3 mb-8">
             <div
               className={`w-12 h-6 rounded-full p-1 cursor-pointer flex items-center transition-colors duration-300 ${
-                instantBooking ? "bg-sky-950" : "bg-gray-300"
+                vehicleData.instantBooking ? "bg-sky-950" : "bg-gray-300"
               }`}
-              onClick={() => setInstantBooking(!instantBooking)}
+              onClick={() =>
+                updateVehicleData({
+                  instantBooking: !vehicleData.instantBooking,
+                })
+              }
             >
               <div
                 className={`w-4 h-4 rounded-full bg-white transition-transform duration-300 ${
-                  instantBooking ? "transform translate-x-6" : ""
+                  vehicleData.instantBooking ? "transform translate-x-6" : ""
                 }`}
               />
             </div>
             <span className="text-base">Instant booking</span>
           </div>
 
-          {/* Pricing Section */}
           <div className="mb-8">
             <h3 className="text-lg font-semibold mb-3">Pricing</h3>
             <div className="bg-blue-50 p-4 rounded-lg mb-4">
@@ -550,14 +532,13 @@ const Step3 = ({ nextStep, prevStep }) => {
                 type="number"
                 className="w-full p-2 text-sm outline-none"
                 placeholder="Set Daily car rent price"
-                value={dailyPrice}
-                onChange={(e) => setDailyPrice(e.target.value)}
+                value={vehicleData.price || ""}
+                onChange={(e) => updateVehicleData({ price: e.target.value })}
               />
             </div>
           </div>
         </section>
 
-        {/* Navigation Buttons */}
         <div className="flex md:flex-row mt-4 gap-4 flex-col justify-between">
           <button
             onClick={prevStep}

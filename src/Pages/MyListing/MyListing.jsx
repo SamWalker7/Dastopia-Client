@@ -76,41 +76,40 @@ const MyListing = () => {
   ];
   const placeholderImage = "https://via.placeholder.com/300";
   return (
-    <div className="flex gap-10 py-10 bg-[#FAF9FE] px-32 md:pt-40  ">
+    <div className="flex lg:flex-row flex-col gap-10 py-10 bg-[#FAF9FE] md:px-20 md:pt-40  ">
       {" "}
-      <div className="p-6 bg-white w-2/5 shadow-lg rounded-lg">
-        <h1 className="text-4xl font-semibold my-8">My Listings</h1>
+      <div className="p-6 bg-white lg:w-2/4 w-full shadow-lg rounded-lg">
+        <h1 className="text-2xl font-semibold mt-4">My Listings</h1>
         <div className="flex flex-wrap justify-between">
           {currentVehicles.map((vehicle, index) => (
             <div
               key={index}
               className=" flex justify-between w-full h-fit my-4 bg-white rounded-xl shadow-md overflow-hidden"
-              style={{ minWidth: "275px" }}
             >
               {/* Car Image */}
-              <div className=" rounded-2xl mx-4 py-4">
+              <div className="w-2/6 flex rounded-2xl mx-4 py-4">
                 <img
                   className="w-full h-full rounded-2xl object-center object-cover "
                   src={vehicle.images}
                   alt={`Vehicle ${index}`}
                 />
               </div>
-              <div className="flex flex-col">
-                <div className="px-6 py-8 w-full justify-between flex">
+              <div className="flex  w-4/6 flex-col">
+                <div className="px-2 pt-8  w-full justify-between flex">
                   <div>
-                    <h3 className="text-3xl font-semibold">
+                    <h3 className="text-xl font-semibold">
                       {vehicle.make || "Unknown"}{" "}
-                      <span className="text-3xl font-semibold">
+                      <span className="text-xl font-semibold">
                         {vehicle.model || "Unknown"}
                       </span>
                     </h3>
-                    <p className="text-xl font-extralight mt-2 text-gray-400">
+                    <p className="text-base  mt-2 text-gray-400">
                       {vehicle.category || "Unknown"}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex justify-between space-x-6 items-center px-6 mb-8 w-fit text-gray-400 text-base">
+                <div className="grid lg:grid-cols-3 grid-cols-2 justify-between  items-center px-2 my-4 w-fit text-gray-400 text-base">
                   <div className="flex items-center space-x-2">
                     <FaGasPump size={12} />
                     <span>{vehicle.fuelType || "Unknown"}</span>
@@ -125,13 +124,13 @@ const MyListing = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center px-6 pb-4">
+                <div className="flex justify-between items-center px-2 pb-4">
                   <div>
-                    <p className="text-xl text-gray-400">Daily Rent</p>
-                    <p className="text-2xl font-semibold">{vehicle.price}</p>
+                    <p className="text-base text-gray-400">Daily Rent</p>
+                    <p className="text-lg font-semibold">{vehicle.price}</p>
                   </div>
                   <div
-                    className={`w-fit text-white rounded-full px-8 py-3 text-base font-normal ${
+                    className={`w-fit text-white rounded-full px-4 py-2 text-xs font-normal ${
                       vehicle.status === "Active"
                         ? "bg-[#00173C] "
                         : "bg-red-600"
@@ -141,8 +140,8 @@ const MyListing = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center px-6 py-4 ">
-                  <button className="bg-[#00173C] w-full text-white rounded-full px-4 py-3 text-base font-normal">
+                <div className="flex justify-between items-center px-2 pb-4 ">
+                  <button className="bg-[#00173C] w-full text-white rounded-full px-4 py-2 text-xs font-normal">
                     See Details
                   </button>
                 </div>
