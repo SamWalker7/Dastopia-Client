@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import audia1 from "../../images/cars-big/toyota-box.png";
 import {
   FaCalendar,
@@ -8,82 +8,168 @@ import {
   FaUserFriends,
 } from "react-icons/fa";
 import { FaCalendarAlt } from "react-icons/fa";
-const Details = () => {
-  const carDetails = {
-    name: "Tesla Model Y",
-    image: audia1,
-    thumbnails: [
-      "/path-to-thumb1.jpg",
-      "/path-to-thumb2.jpg",
-      "/path-to-thumb3.jpg",
-    ],
-    fuelType: "Benzene",
-    seating: "5 Seater",
-    transmission: "Manual",
-    rentPrice: {
-      total: "7,843 birr",
-      daily: "2,450 birr",
-    },
-    brand: "Tesla",
-    model: "Model Y",
-    manufactureDate: "2018",
-    features: ["Air Conditioning", "4WD", "Android system"],
-    pickupLocations: ["CMC Roundabout", "Bole Airport", "Ayat Zone 8"],
-    dropOffLocations: ["CMC Roundabout", "Bole Airport"],
-    insurance: "Full Coverage",
-    rating: 4,
-    reviews: [
-      {
-        name: "Veronika",
-        rating: 4,
-        reviewText: "Very comfortable and reliable car!",
-        avatar: audia1,
-      },
-    ],
-  };
+import useVehicleFormStore from "../../store/useVehicleFormStore"; // Import Zustand store
 
-  const [selectedImage, setSelectedImage] = useState(carDetails.image);
-
+const Details = ({ selectedVehicleId }) => {
+  // Destructure selectedVehicleId from props
+  const [vehicleDetails, setVehicleDetails] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [status, setStatus] = useState("");
-
-  const handleStatus = (e) => setStatus(e.target.value);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { apiCallWithRetry } = useVehicleFormStore();
 
   const Status = ["Active", "Inactive"];
 
+  useEffect(() => {
+    const fetchVehicleDetails = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (!selectedVehicleId) {
+          setError("Vehicle ID is missing.");
+          setLoading(false);
+          return;
+        }
+        const response = await apiCallWithRetry(
+          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/${selectedVehicleId}`,
+          {
+            method: "GET",
+          }
+        );
+        if (response && response.body) {
+          console.log("API Response for Vehicle Details:", response.body);
+          setVehicleDetails(response.body);
+          if (
+            response.body.vehicleImageKeys &&
+            response.body.vehicleImageKeys.length > 0
+          ) {
+            setSelectedImage(response.body.vehicleImageKeys[0]);
+          } else {
+            setSelectedImage(audia1);
+          }
+          setStatus(response.body.isActive ? "active" : "inactive"); // Ensure status is set from API response
+        } else {
+          setError(
+            "Failed to fetch vehicle details or invalid response format."
+          );
+        }
+      } catch (err) {
+        console.error("Error fetching vehicle details:", err);
+        setError("Error fetching vehicle details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicleDetails();
+  }, [selectedVehicleId, apiCallWithRetry]);
+
+  const handleStatus = async (e) => {
+    const newStatusValue = e.target.value;
+    setStatus(newStatusValue); // Optimistically update local state
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await apiCallWithRetry(
+        `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/activate_status/${selectedVehicleId}`,
+        {
+          method: "GET",
+        }
+      );
+      if (response.status === 200) {
+        console.log("Vehicle status updated successfully");
+        //fetchVehicleDetails(); // Refetch vehicle details to update status from backend
+      } else if (response.status === 404) {
+        setError("Vehicle not found.");
+      } else if (response.status === 401) {
+        setError("Unauthorized.");
+      } else {
+        setError(`Failed to update status. Status code: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error updating vehicle status:", error);
+      setError("Error updating vehicle status.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div>Loading vehicle details...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!vehicleDetails) {
+    return <div>Vehicle details not found.</div>;
+  }
+
+  const getImageUrl = (imageKey) => {
+    return `URL_TO_S3_BUCKET/${imageKey}`; // Replace with your actual URL
+  }; // Helper function to render locations, handles cases where pickUpLocation/dropOffLocation might not be arrays
+
+  const renderLocations = (locations) => {
+    if (Array.isArray(locations)) {
+      return locations.map((location, index) => (
+        <span
+          key={index}
+          className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
+        >
+          {location}
+        </span>
+      ));
+    } else if (typeof locations === "string" && locations) {
+      // If it's a string and not empty, display as single location
+      return (
+        <span className="border border-gray-400 text-sm px-3 py-1 rounded-xl">
+          {locations}
+        </span>
+      );
+    } else {
+      // If it's not an array and not a string (null, undefined, etc.), return "Not specified"
+      return <span className="text-gray-500">Not specified</span>;
+    }
+  };
+
   return (
     <div className="lg:w-3/5 w-full">
-      <div className="p-10 bg-white w-full  shadow-lg rounded-lg">
+      <div className="p-10 bg-white w-full shadow-lg rounded-lg">
         <h1 className="text-2xl my-4 mb-8 font-semibold">Detail Listing</h1>
+
         <div className="flex lg:flex-row flex-col space-x-4 w-full">
-          {" "}
           <img
-            src={audia1}
-            alt="Tesla Model Y"
+            src={selectedImage ? getImageUrl(selectedImage) : audia1}
+            alt={vehicleDetails.model || "Vehicle Image"}
             className="w-1/2 h-2/3 rounded-md mb-4"
           />
-          <div className="grid md:grid-cols-3 grid-cols-2 justify-start  gap-2 ">
-            {carDetails.thumbnails.map((thumb, index) => (
-              <img
-                key={index}
-                src={audia1}
-                alt={`Thumbnail ${index + 1}`}
-                onClick={() => setSelectedImage(thumb)}
-                className="w-full max-w-32 h-20 cursor-pointer rounded-md"
-              />
-            ))}
+
+          <div className="grid md:grid-cols-3 grid-cols-2 justify-start gap-2 ">
+            {vehicleDetails.vehicleImageKeys &&
+              vehicleDetails.vehicleImageKeys.map((imageKey, index) => (
+                <img
+                  key={index}
+                  src={getImageUrl(imageKey)}
+                  alt={`Thumbnail ${index + 1}`}
+                  onClick={() => setSelectedImage(imageKey)}
+                  className="w-full max-w-32 h-20 cursor-pointer rounded-md"
+                />
+              ))}
           </div>
         </div>
         {/* Pickup and Drop-off */}
         <div className="relative inline-block my-8 text-base w-[200px] ">
-          <label className="absolute -top-2 left-3 text-sm bg-white px-1  text-gray-500">
+          <label className="absolute -top-2 left-3 text-sm bg-white px-1 text-gray-500">
             Status
           </label>
+
           <select
-            className="border  border-gray-400 flex justify-between w-full p-3 py-2 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400 "
+            className="border border-gray-400 flex justify-between w-full p-3 py-2 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400 "
             value={status}
             onChange={handleStatus}
           >
-            <option value="">Select Status</option>
             {Status.map((stat, index) => (
               <option
                 className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md max-h-60 overflow-y-auto z-10"
@@ -95,133 +181,151 @@ const Details = () => {
             ))}
           </select>
         </div>
-        <div className="flex   items-center">
-          <h3 className="text-xl font-semibold">Toyota Corolla</h3>
-        </div>
-        <div className="grid lg:grid-cols-4 grid-cols-2 justify-between  space-x-6 items-center  my-8 w-fit text-gray-800 text-sm">
-          <div className="bg-blue-100 flex text-blue-700 py-2 items-center px-3 rounded-lg text-center ">
-            <FaTag size={12} className="mx-2" /> 900 Birr
-          </div>
-          <div className="flex items-center space-x-2">
-            <FaGasPump size={12} />
-            <span>{"Benzene" || "Unknown"}</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <FaCogs size={12} />
-            <span>{"Automatic" || "Unknown"}</span>
-          </div>
-          <div className="flex items-center w-28 space-x-2">
-            <FaUserFriends size={13} />
-            <span>{"5" || "Unknown"} People</span>
-          </div>
+
+        <div className="flex  items-center">
+          <h3 className="text-xl font-semibold">
+            {vehicleDetails.make} {vehicleDetails.model}
+          </h3>
         </div>
 
+        <div className="grid lg:grid-cols-4 grid-cols-2 justify-between space-x-6 items-center  my-8 w-fit text-gray-800 text-sm">
+          <div className="bg-blue-100 flex text-blue-700 py-2 items-center px-3 rounded-lg text-center ">
+            <FaTag size={12} className="mx-2" />
+            {vehicleDetails.price} Birr
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <FaGasPump size={12} />
+            <span>{vehicleDetails.fuelType || "Unknown"}</span>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <FaCogs size={12} />
+            <span>{vehicleDetails.transmission || "Unknown"}</span>
+          </div>
+
+          <div className="flex items-center w-28 space-x-2">
+            <FaUserFriends size={13} />
+            <span>{vehicleDetails.seats || "Unknown"} People</span>
+          </div>
+        </div>
         {/* Car Specification */}
         <h4 className="mt-8 text-xl font-semibold">Car Specification</h4>
         <div className="grid lg:grid-cols-3 grid-cols-2 gap-4 mt-4">
           <div>
             <span className="text-gray-500">Car Brand</span>
-            <p className="font-medium">Toyota</p>
+
+            <p className="font-medium">{vehicleDetails.make || "Unknown"}</p>
           </div>
+
           <div>
             <span className="text-gray-500">Car Model</span>
-            <p className="font-medium">Camry</p>
+
+            <p className="font-medium">{vehicleDetails.model || "Unknown"}</p>
           </div>
+
           <div>
             <span className="text-gray-500">Manufacture Date</span>
-            <p className="font-medium">2008</p>
+
+            <p className="font-medium">{vehicleDetails.year || "Unknown"}</p>
+          </div>
+
+          <div>
+            <span className="text-gray-500">Mileage</span>
+
+            <p className="font-medium">{vehicleDetails.mileage || "Unknown"}</p>
+          </div>
+
+          <div>
+            <span className="text-gray-500">Color</span>
+            <p className="font-medium">{vehicleDetails.color || "Unknown"}</p>
+          </div>
+
+          <div>
+            <span className="text-gray-500">Vehicle Number</span>
+
+            <p className="font-medium">
+              {vehicleDetails.vehicleNumber || "Unknown"}
+            </p>
           </div>
         </div>
-        <div className="  text-[#000000]">
+
+        <div className=" text-[#000000]">
           {/* Features */}
           <section className="my-16">
             <h2 className="font-semibold text-lg mb-4">Features</h2>
+
             <div className="flex flex-wrap gap-2">
-              {[
-                "Air Conditioning",
-                "4WD",
-                "Android system",
-                "Android system",
-                "Android system",
-              ].map((feature, index) => (
-                <span
-                  key={index}
-                  className="border border-gray-400 text-base px-3 py-1 rounded-xl"
-                >
-                  {feature}
-                </span>
-              ))}
+              {vehicleDetails.carFeatures &&
+                vehicleDetails.carFeatures.map((feature, index) => (
+                  <span
+                    key={index}
+                    className="border border-gray-400 text-base px-3 py-1 rounded-xl"
+                  >
+                    {feature}
+                  </span>
+                ))}
             </div>
           </section>
-
           {/* Booking & Notice Period For Rent */}
           <section className="flex flex-col my-16 gap-4">
             <div className="flex space-x-4 items-center text-lg ">
               <h3 className="font-semibold mb-1">Booking</h3>
+
               <span className="border border-gray-400 text-sm px-4 py-2 rounded-xl">
-                Instant
+                {vehicleDetails.instantBooking
+                  ? "Instant"
+                  : "Requires Approval"}
               </span>
             </div>
+
             <div className="flex space-x-4 items-center text-lg">
               <h3 className="font-semibold mb-1">Notice Period For Rent</h3>
+
               <span className="border border-gray-400 text-sm px-4 py-2 rounded-xl">
-                2 Days before pick up
+                {vehicleDetails.advanceNoticePeriod || "Not specified"}
               </span>
             </div>
           </section>
-
           {/* Pick up Locations */}
           <section className="my-16">
             <h2 className="font-semibold text-lg mb-4">Pick up Locations</h2>
+
             <div className="flex flex-wrap gap-2">
-              {["Cmc", "Cmc", "Bole Airport", "Bole Medhaniallim"].map(
-                (location, index) => (
-                  <span
-                    key={index}
-                    className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
-                  >
-                    {location}
-                  </span>
-                )
-              )}
+              {renderLocations(vehicleDetails.pickUpLocation)}
+              {/* Use renderLocations helper function */}
             </div>
           </section>
-
           {/* Drop off Locations */}
           <section className="my-16">
             <h2 className="font-semibold text-2xl my-4 mb-4">
               Drop off Locations
             </h2>
+
             <div className="flex flex-wrap gap-2">
-              {["Cmc", "Cmc", "Bole Airport", "Bole Medhaniallim"].map(
-                (location, index) => (
-                  <span
-                    key={index}
-                    className="border border-gray-400 text-base px-3 py-1 rounded-xl"
-                  >
-                    {location}
-                  </span>
-                )
-              )}
+              {renderLocations(vehicleDetails.dropOffLocation)}
+              {/* Use renderLocations helper function */}
             </div>
           </section>
-
           {/* Available Rental Dates */}
           <section className="my-16">
             <h2 className="font-semibold text-lg mb-4">
               Available Rental Dates
             </h2>
+
             <div className="space-y-4">
-              {[
-                "August 28 - September 28, 2024",
-                "May 2 - September 21, 2024",
-                "August 28 - September 28, 2024",
-              ].map((dateRange, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <FaCalendar size={16} />
-                  <span className="text-sm">{dateRange}</span>
-                </div>
-              ))}
+              {vehicleDetails.calendar &&
+                JSON.parse(vehicleDetails.calendar).map((dateRange, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <FaCalendar size={16} />
+
+                    <span className="text-sm">{`${new Date(
+                      dateRange.start
+                    ).toLocaleDateString()} - ${new Date(
+                      dateRange.end
+                    ).toLocaleDateString()}`}</span>
+                  </div>
+                ))}
             </div>
           </section>
         </div>

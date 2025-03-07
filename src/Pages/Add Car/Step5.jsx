@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaCalendarAlt,
   FaCogs,
@@ -10,8 +10,7 @@ import { IoLocationOutline } from "react-icons/io5";
 import useVehicleFormStore from "../../store/useVehicleFormStore";
 
 const Step5 = ({ prevStep }) => {
-  const { vehicleData, uploadedPhotos } = useVehicleFormStore();
-
+  const { vehicleData, uploadedPhotos, resetStore } = useVehicleFormStore(); // Include resetStore action
   // Get all uploaded images
   const getAllImages = () => {
     const mainImages = [
@@ -27,7 +26,7 @@ const Step5 = ({ prevStep }) => {
 
   const allImages = getAllImages();
   const [selectedImage, setSelectedImage] = useState(
-    allImages[0]?.url || "/default-car.jpg"
+    allImages[0]?.base64 || "/default-car.jpg" // Use base64 here, default image path is fine
   );
 
   // Helper function to format dates
@@ -36,7 +35,12 @@ const Step5 = ({ prevStep }) => {
     const date = new Date(dateString);
     return isNaN(date) ? "Invalid date" : date.toLocaleDateString();
   };
-
+  useEffect(() => {
+    return () => {
+      console.log("Step5 unmounting, resetting store...");
+      resetStore();
+    };
+  }, [resetStore]); // Dependency array includes resetStore
   // Parse calendar data
   const calendarDates = vehicleData.calendar
     ? JSON.parse(vehicleData.calendar)
@@ -67,9 +71,10 @@ const Step5 = ({ prevStep }) => {
               {allImages.map((img, index) => (
                 <img
                   key={index}
-                  src={img.url}
+                  // Use img.base64 here instead of img.url
+                  src={img.base64}
                   alt={`Thumbnail ${index + 1}`}
-                  onClick={() => setSelectedImage(img.url)}
+                  onClick={() => setSelectedImage(img.base64)} // Update selected image with base64
                   className="w-20 h-20 cursor-pointer object-cover rounded-lg"
                 />
               ))}
@@ -135,13 +140,13 @@ const Step5 = ({ prevStep }) => {
       <div className="flex flex-col w-[350px] gap-4">
         <div className="mx-auto p-8 h-fit w-full bg-white rounded-xl shadow-sm">
           <div className="flex items-center gap-20 text-sm">
-            Booking{" "}
+            Booking
             <span className="text-gray-700 px-4 py-1 rounded-xl text-sm border border-gray-300">
               {vehicleData.instantBooking ? "Instant" : "Scheduled"}
             </span>
           </div>
           <div className="flex items-center my-4 gap-4 text-sm">
-            Notice Period{" "}
+            Notice Period
             <span className="text-gray-700 px-4 py-1 rounded-xl text-sm border border-gray-300">
               {vehicleData.advanceNoticePeriod || "Not specified"}
             </span>

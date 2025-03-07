@@ -3,12 +3,14 @@ import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import { FaMapMarkerAlt, FaPlus, FaSearch, FaTrash } from "react-icons/fa";
 import { IoIosCloseCircleOutline, IoMdClose } from "react-icons/io";
 import useVehicleFormStore from "../../store/useVehicleFormStore";
+import { v4 as uuidv4 } from "uuid"; // Import UUID generator
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4";
+const GOOGLE_MAPS_API_KEY = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4"; // Replace with your actual API key
 const libraries = ["places"];
 
 const Step4 = ({ nextStep, prevStep }) => {
-  const { vehicleData, updateVehicleData } = useVehicleFormStore();
+  const { vehicleData, updateVehicleData, submitVehicleListing } =
+    useVehicleFormStore();
 
   // Initialize state from store with proper fallbacks
   const [markers, setMarkers] = useState({
@@ -194,6 +196,13 @@ const Step4 = ({ nextStep, prevStep }) => {
     </div>
   );
 
+  const handleNext = () => {
+    // Generate UUID before submitting
+    const vehicleId = uuidv4();
+    updateVehicleData({ id: vehicleId }); // Update store with the generated ID
+    submitVehicleListing(); // Call submitVehicleListing after updating the ID
+  };
+
   return (
     <div className="flex bg-[#F8F8FF] gap-10">
       <div className="mx-auto md:p-16 p-6 w-full bg-white rounded-2xl shadow-sm text-sm">
@@ -365,7 +374,10 @@ const Step4 = ({ nextStep, prevStep }) => {
             Back
           </button>
           <button
-            onClick={nextStep}
+            onClick={() => {
+              handleNext();
+              nextStep();
+            }}
             className="px-12 py-3 bg-navy-900 text-white rounded-full text-sm"
           >
             Submit Listing

@@ -136,7 +136,7 @@ const Step3 = ({ nextStep, prevStep }) => {
     updateVehicleData({ calendar: calendarString });
   }, [selectedRanges, updateVehicleData]);
 
-  const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"];
+  const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   const months = [
     "January",
     "February",

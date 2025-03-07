@@ -1,23 +1,18 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware"; // Import the persist middleware
+import { createJSONStorage, persist } from "zustand/middleware";
+import imageCompression from "browser-image-compression";
 
-// Helper function to generate a unique key
-const generateUniqueKey = (file, context) => {
-  const timestamp = Date.now();
-  const randomString = Math.random().toString(36).substring(2, 8);
-  return `mock-key-${context}-${file.name}-${timestamp}-${randomString}`;
+// Helper function to compress images
+const compressImage = async (file) => {
+  const options = {
+    maxSizeMB: 0.5, // Maximum size in MB
+    maxWidthOrHeight: 1024, // Maximum width or height
+    useWebWorker: true, // Use a web worker for better performance
+  };
+  return await imageCompression(file, options);
 };
 
-// Simulating an image/document upload function
-const uploadFile = async (file, context) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(generateUniqueKey(file, context));
-    }, 1000);
-  });
-};
-
-// Helper function to convert a file to a base64 string
+// Helper function to convert file to base64
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -26,74 +21,265 @@ const fileToBase64 = (file) => {
     reader.onerror = (error) => reject(error);
   });
 };
+// Define the initial state of the vehicle data form
+const initialVehicleData = {
+  advanceNoticePeriod: "",
+  calendar: "",
+  carFeatures: [],
+  instantBooking: false,
+  price: "",
+  city: "",
+  category: "",
+  make: "",
+  otherMake: "",
+  model: "",
+  year: "",
+  vehichleNumber: "",
+  doors: "",
+  fuelType: "",
+  seats: "",
+  color: "",
+  transmission: "",
+  modelSpecification: "",
+  isPostedByOwner: "",
+  representativeFirstName: "",
+  representativeLastName: "",
+  representativePhone: "",
+  representativeEmail: "",
+  vehicleImageKeys: [], // Store filenames as keys for vehicle images - PERSISTED
+  adminDocumentKeys: [], // Store filenames as keys for admin documents - PERSISTED
+  id: "",
+  location: [],
+  mileage: "",
+  pickUpLocation: [],
+  dropOffLocation: [],
+};
+
+// Define the initial state for uploaded photos (temporary previews)
+const initialUploadedPhotos = {
+  // Store preview URLs (Object URLs) and keys for uploaded photos - NOT PERSISTED (TEMPORARY PREVIEWS ONLY)
+  front: null,
+  back: null,
+  left: null,
+  right: null,
+  interior: null,
+  additional: [],
+};
+
+// Define the initial state for uploaded documents (temporary previews)
+const initialUploadedDocuments = {
+  // Store preview URLs (Object URLs) and keys for uploaded documents - NOT PERSISTED (TEMPORARY PREVIEWS ONLY)
+  libre: null,
+  license: null,
+  insurance: null,
+};
+const generateUniqueId = () => {
+  return `vehicle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
 
 const useVehicleFormStore = create(
   persist(
-    (set) => ({
-      vehicleData: {
-        advanceNoticePeriod: "",
-        calendar: "",
-        carFeatures: [],
-        instantBooking: false, // Updated to boolean
-        price: "",
-        city: "",
-        category: "",
-        make: "",
-        otherMake: "",
-        model: "",
-        year: "",
-        vehichleNumber: "",
-        doors: "",
-        fuelType: "",
-        seats: "",
-        color: "",
-        transmission: "",
-        modelSpecification: "",
-        isPostedByOwner: "",
-        representativeFirstName: "",
-        representativeLastName: "",
-        representativePhone: "",
-        representativeEmail: "",
-        vehicleImageKeys: [],
-        adminDocumentKeys: [],
-        id: "",
-        location: [], // Already an array
-        mileage: "", // Added
-        pickUpLocation: "", // Added
-        dropOffLocation: "", // Added
-      },
-      uploadedPhotos: {
-        front: null,
-        back: null,
-        left: null,
-        right: null,
-        interior: null,
-        additional: [],
-      },
-      uploadedDocuments: {
-        libre: null,
-        license: null,
-        insurance: null,
+    (set, get) => ({
+      vehicleData: { ...initialVehicleData, id: generateUniqueId() }, // Initialize with a unique ID
+      uploadedPhotos: { ...initialUploadedPhotos },
+      uploadedDocuments: { ...initialUploadedDocuments },
+
+      // --- Token Refresh Logic ---
+      refreshAccessToken: async () => {
+        const storedUser = localStorage.getItem("customer");
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        const refreshToken = user?.RefreshToken;
+
+        if (!refreshToken) {
+          console.error("No refresh token available.");
+          // Handle case where refresh token is missing (e.g., user needs to re-login)
+          throw new Error("Refresh token is missing"); // Or handle differently, maybe redirect to login
+        }
+
+        try {
+          const refreshResponse = await fetch(
+            "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/update_refresh_token", // Refresh token endpoint
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ refreshToken: refreshToken }),
+            }
+          );
+
+          if (!refreshResponse.ok) {
+            console.error(
+              "Failed to refresh access token:",
+              refreshResponse.status,
+              await refreshResponse.text()
+            );
+            localStorage.removeItem("customer"); // Clear stored user data on refresh failure as refresh token might be invalid too
+            throw new Error("Failed to refresh access token"); // Or handle differently, maybe redirect to login
+          }
+
+          const refreshedTokens = await refreshResponse.json();
+
+          // Update tokens in localStorage and Zustand store
+          const updatedUser = { ...user, ...refreshedTokens };
+          localStorage.setItem("customer", JSON.stringify(updatedUser));
+          return refreshedTokens.accessToken; // Return the new access token
+        } catch (error) {
+          console.error("Error during token refresh:", error);
+          throw error; // Re-throw to be caught by the original API call
+        }
       },
 
-      // Update general vehicle data
+      // Function to make API calls with automatic token refresh
+      apiCallWithRetry: async (url, options, retryCount = 0) => {
+        const storedUser = localStorage.getItem("customer");
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        let accessToken = user?.AccessToken;
+
+        if (!accessToken) {
+          throw new Error(
+            "Access token is missing. User might not be logged in."
+          ); // Handle no access token
+        }
+
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          ...options.headers, // Include any additional headers from options
+        };
+
+        try {
+          const response = await fetch(url, { ...options, headers });
+
+          if (response.status === 401 || response.status === 403) {
+            if (retryCount < 1) {
+              // Limit retry to prevent infinite loops
+              const newAccessToken = await get().refreshAccessToken();
+              if (newAccessToken) {
+                return get().apiCallWithRetry(url, options, retryCount + 1); // Retry with new token
+              }
+            }
+            // If refresh fails or retries are exhausted, propagate the error
+            throw new Error("Unauthorized or token expired and refresh failed");
+          }
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(
+              "API Error:",
+              response.status,
+              errorText,
+              `URL: ${url}`,
+              `Options: ${JSON.stringify(options)}`
+            );
+            throw new Error(
+              `HTTP error! status: ${response.status}, message: ${errorText}`
+            );
+          }
+
+          return await response.json(); // Or response, depending on what you need
+        } catch (error) {
+          console.error(
+            "API call failed:",
+            error,
+            `URL: ${url}`,
+            `Options: ${JSON.stringify(options)}`
+          );
+          throw error;
+        }
+      },
+
+      // --- Actions using apiCallWithRetry ---
+
+      // Action to update vehicle data
       updateVehicleData: (newData) => {
         set((state) => ({
           vehicleData: { ...state.vehicleData, ...newData },
         }));
       },
 
-      // Upload a new vehicle image
+      // Action to get a pre-signed URL for vehicle image upload
+      getVehicleImagePreSignedUrl: async (vehicleId, filename, contentType) => {
+        const url = `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/get_presigned_url/${vehicleId}`;
+        const options = {
+          method: "POST",
+          body: JSON.stringify({ filename, contentType }),
+        };
+        try {
+          const data = await get().apiCallWithRetry(url, options);
+          return data.body.url;
+        } catch (error) {
+          console.error("Error fetching presigned URL:", error);
+          throw error;
+        }
+      },
+
+      // Action to get a pre-signed URL for admin document upload
+      getAdminDocumentPreSignedUrl: async (
+        vehicleId,
+        filename,
+        contentType
+      ) => {
+        const url = `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/get_admin_presigned_url/${vehicleId}`;
+        const options = {
+          method: "POST",
+          body: JSON.stringify({ filename, contentType }),
+        };
+        try {
+          const data = await get().apiCallWithRetry(url, options);
+          return data.body.url;
+        } catch (error) {
+          console.error("Error fetching presigned URL:", error);
+          throw error;
+        }
+      },
+
+      // Action to upload file to pre-signed URL (No token needed here, direct S3 upload)
+      uploadToPreSignedUrl: async (preSignedUrl, file, contentType) => {
+        try {
+          const response = await fetch(preSignedUrl, {
+            method: "PUT",
+            headers: { "Content-Type": contentType },
+            body: file,
+          });
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(
+              "Error uploading file to presigned URL:",
+              response.status,
+              errorText
+            );
+            throw new Error(
+              `File upload failed: ${response.status} ${errorText}`
+            );
+          }
+          return true; // Upload successful
+        } catch (error) {
+          console.error("Error uploading to presigned URL:", error);
+          throw error;
+        }
+      },
+
+      // Action to upload a vehicle image
       uploadVehicleImage: async (file, key) => {
         try {
-          const imageKey = await uploadFile(file, `image-${key}`);
-          const imageBase64 = await fileToBase64(file); // Convert file to base64
+          const vehicleId = get().vehicleData.id;
+          if (!vehicleId) {
+            throw new Error("Vehicle ID is not set. Cannot upload image.");
+          }
+
+          // Compress the image
+          const compressedFile = await compressImage(file);
+
+          // Convert the compressed file to a base64 string
+          const base64 = await fileToBase64(compressedFile);
+
           set((state) => ({
             vehicleData: {
               ...state.vehicleData,
               vehicleImageKeys: [
                 ...state.vehicleData.vehicleImageKeys,
-                imageKey,
+                file.name,
               ],
             },
             uploadedPhotos: {
@@ -102,40 +288,43 @@ const useVehicleFormStore = create(
                 key === "additional"
                   ? [
                       ...state.uploadedPhotos.additional,
-                      { url: imageBase64, key: imageKey }, // Store base64 URL
+                      { base64: base64, key: file.name },
                     ]
-                  : { url: imageBase64, key: imageKey }, // Store base64 URL
+                  : { base64: base64, key: file.name },
             },
           }));
         } catch (error) {
-          console.error("Error uploading image:", error);
+          console.error("Error uploading vehicle image:", error);
         }
       },
 
-      // Upload a new admin document
+      // Action to upload an admin document
       uploadAdminDocument: async (file, key) => {
         try {
-          const documentKey = await uploadFile(file, `doc-${key}`);
-          const documentBase64 = await fileToBase64(file); // Convert file to base64
+          const vehicleId = get().vehicleData.id;
+          if (!vehicleId) {
+            throw new Error("Vehicle ID is not set. Cannot upload document.");
+          }
+
+          // For documents, store only metadata (name and size)
           set((state) => ({
             vehicleData: {
               ...state.vehicleData,
               adminDocumentKeys: [
                 ...state.vehicleData.adminDocumentKeys,
-                documentKey,
+                file.name,
               ],
             },
             uploadedDocuments: {
               ...state.uploadedDocuments,
-              [key]: { name: file.name, key: documentKey, url: documentBase64 }, // Store base64 URL
+              [key]: { name: file.name, size: file.size, key: file.name },
             },
           }));
         } catch (error) {
-          console.error("Error uploading document:", error);
+          console.error("Error uploading admin document:", error);
         }
       },
-
-      // Delete a specific vehicle image
+      // Action to delete a vehicle image (removes from store, not from S3 in this version)
       deleteVehicleImage: (key, imageKey) => {
         set((state) => {
           const updatedPhotos = { ...state.uploadedPhotos };
@@ -160,7 +349,7 @@ const useVehicleFormStore = create(
         });
       },
 
-      // Delete a specific admin document
+      // Action to delete an admin document (removes from store, not from S3 in this version)
       deleteAdminDocument: (key, documentKey) => {
         set((state) => {
           const updatedDocuments = { ...state.uploadedDocuments };
@@ -168,7 +357,6 @@ const useVehicleFormStore = create(
             state.vehicleData.adminDocumentKeys.filter(
               (k) => k !== documentKey
             );
-
           updatedDocuments[key] = null;
 
           return {
@@ -181,11 +369,23 @@ const useVehicleFormStore = create(
         });
       },
 
-      // Update a specific vehicle image
+      // Action to update a vehicle image (replaces existing one in store and S3)
       updateVehicleImage: async (file, key, oldImageKey) => {
         try {
-          const newImageKey = await uploadFile(file, `image-${key}`);
-          const newImageBase64 = await fileToBase64(file); // Convert file to base64
+          const vehicleId = get().vehicleData.id;
+          if (!vehicleId)
+            throw new Error("Vehicle ID is not set. Cannot update image.");
+          const filename = file.name;
+          const contentType = file.type;
+          const preSignedUrl = await get().getVehicleImagePreSignedUrl(
+            vehicleId,
+            filename,
+            contentType
+          );
+          await get().uploadToPreSignedUrl(preSignedUrl, file, contentType);
+
+          const previewUrl = URL.createObjectURL(file); // Create Object URL for preview (TEMPORARY)
+
           set((state) => {
             const updatedPhotos = { ...state.uploadedPhotos };
             const updatedVehicleImageKeys =
@@ -196,31 +396,43 @@ const useVehicleFormStore = create(
             if (key === "additional") {
               updatedPhotos.additional = updatedPhotos.additional.map((img) =>
                 img.key === oldImageKey
-                  ? { url: newImageBase64, key: newImageKey } // Store base64 URL
+                  ? { previewUrl: previewUrl, key: filename }
                   : img
               );
             } else {
-              updatedPhotos[key] = { url: newImageBase64, key: newImageKey }; // Store base64 URL
+              updatedPhotos[key] = { previewUrl: previewUrl, key: filename };
             }
 
             return {
               vehicleData: {
                 ...state.vehicleData,
-                vehicleImageKeys: [...updatedVehicleImageKeys, newImageKey],
+                vehicleImageKeys: [...updatedVehicleImageKeys, filename], // Add new filename
               },
               uploadedPhotos: updatedPhotos,
             };
           });
         } catch (error) {
-          console.error("Error updating image:", error);
+          console.error("Error updating vehicle image:", error);
         }
       },
 
-      // Update a specific admin document
+      // Action to update an admin document (replaces existing one in store and S3)
       updateAdminDocument: async (file, key, oldDocumentKey) => {
         try {
-          const newDocumentKey = await uploadFile(file, `doc-${key}`);
-          const newDocumentBase64 = await fileToBase64(file); // Convert file to base64
+          const vehicleId = get().vehicleData.id;
+          if (!vehicleId)
+            throw new Error("Vehicle ID is not set. Cannot update document.");
+          const filename = file.name;
+          const contentType = file.type;
+          const preSignedUrl = await get().getAdminDocumentPreSignedUrl(
+            vehicleId,
+            filename,
+            contentType
+          );
+          await get().uploadToPreSignedUrl(preSignedUrl, file, contentType);
+
+          const previewUrl = URL.createObjectURL(file); // Create Object URL for preview (TEMPORARY)
+
           set((state) => {
             const updatedDocuments = { ...state.uploadedDocuments };
             const updatedAdminDocumentKeys =
@@ -230,29 +442,121 @@ const useVehicleFormStore = create(
 
             updatedDocuments[key] = {
               name: file.name,
-              key: newDocumentKey,
-              url: newDocumentBase64,
-            }; // Store base64 URL
+              key: filename,
+              previewUrl: previewUrl,
+            }; // Store temporary preview URL
 
             return {
               vehicleData: {
                 ...state.vehicleData,
-                adminDocumentKeys: [
-                  ...updatedAdminDocumentKeys,
-                  newDocumentKey,
-                ],
+                adminDocumentKeys: [...updatedAdminDocumentKeys, filename], // Add new filename
               },
               uploadedDocuments: updatedDocuments,
             };
           });
         } catch (error) {
-          console.error("Error updating document:", error);
+          console.error("Error updating admin document:", error);
         }
+      },
+
+      // Action to submit the vehicle listing to the API
+      submitVehicleListing: async () => {
+        const vehicleData = get().vehicleData;
+
+        // ... (Calendar parsing - remain the same) ...
+        let parsedCalendar = vehicleData.calendar;
+        if (typeof vehicleData.calendar === "string" && vehicleData.calendar) {
+          try {
+            parsedCalendar = JSON.parse(vehicleData.calendar);
+          } catch (e) {
+            console.error("Error parsing calendar string:", e);
+            parsedCalendar = [];
+          }
+        } else if (!vehicleData.calendar) {
+          parsedCalendar = [];
+        }
+
+        // ... (Location transformation - remain the same) ...
+        const transformedPickUpLocation = vehicleData.pickUpLocation.map(
+          (loc) => [loc.position.lat, loc.position.lng]
+        );
+        const transformedDropOffLocation = vehicleData.dropOffLocation.map(
+          (loc) => [loc.position.lat, loc.position.lng]
+        );
+
+        // Prepare incoming data for the API request
+        const incomingData = {
+          city: vehicleData.city || "string",
+          category: vehicleData.category || "string",
+          make: vehicleData.make || "string",
+          mileage: vehicleData.mileage
+            ? parseInt(vehicleData.mileage)
+            : "string",
+          calendar: "parsedCalendar" || "", // Use parsed calendar array
+          carFeatures: vehicleData.carFeatures || [],
+          advanceNoticePeriod: vehicleData.advanceNoticePeriod || "string",
+          instantBooking: vehicleData.instantBooking || false,
+          price: vehicleData.price || "string",
+          pickUpLocation: "transformedPickUpLocation", // Use transformed locations
+          dropOffLocation: "transformedDropOffLocation", // Use transformed locations
+          otherMake: vehicleData.otherMake || "string",
+          model: vehicleData.model || "string",
+          year: vehicleData.year || "string",
+          vehichleNumber: vehicleData.vehichleNumber || "string",
+          doors: vehicleData.doors || "4", // Ensure integer or default 0
+          fuelType: vehicleData.fuelType || "string",
+          seats: vehicleData.seats || "0", // Ensure integer or default 0
+          color: vehicleData.color || "string",
+          id: vehicleData.id || "string",
+          transmission: vehicleData.transmission || "string",
+          modelSpecification: vehicleData.modelSpecification || "string",
+          isPostedByOwner: vehicleData.isPostedByOwner.toString || "false", // Ensure boolean or default false
+          representativeFirstName:
+            vehicleData.representativeFirstName || "string",
+          representativeLastName:
+            vehicleData.representativeLastName || "string",
+          representativePhone: vehicleData.representativePhone || "string",
+          representativeEmail: vehicleData.representativeEmail || "string",
+          vehicleImageKeys: vehicleData.vehicleImageKeys || [],
+          adminDocumentKeys: vehicleData.adminDocumentKeys || [],
+          location: vehicleData.location || [0, 0], // Ensure location array or default [0,0]
+        };
+
+        try {
+          const responseData = await get().apiCallWithRetry(
+            "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle", // Replace with your actual API endpoint
+            {
+              method: "POST",
+              body: JSON.stringify(incomingData),
+            }
+          );
+
+          console.log("Vehicle listing submitted successfully:", responseData);
+
+          return responseData;
+        } catch (error) {
+          console.error("Failed to submit vehicle listing:", error);
+          throw error;
+        }
+      },
+
+      // Action to reset the store to its initial state
+      resetStore: () => {
+        set({
+          vehicleData: { ...initialVehicleData },
+          uploadedPhotos: { ...initialUploadedPhotos },
+          uploadedDocuments: { ...initialUploadedDocuments },
+        });
       },
     }),
     {
-      name: "vehicle-form-store", // Unique name for the storage key
-      getStorage: () => localStorage, // Use localStorage (or sessionStorage)
+      name: "vehicle-form-storage",
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({
+        vehicleData: state.vehicleData,
+        uploadedPhotos: state.uploadedPhotos,
+        uploadedDocuments: state.uploadedDocuments,
+      }),
     }
   )
 );

@@ -43,8 +43,8 @@ import Step4 from "./Pages/Add Car/Step4";
 import Details2 from "./Pages/Details/Details2";
 import Step5 from "./Pages/Add Car/Step5";
 import { useState } from "react";
-import { useSelector } from "react-redux";
-
+import { useDispatch, useSelector } from "react-redux";
+import { refreshToken } from "./store/auth/authThunks";
 AWS.config.region = "us-east-1";
 
 function App() {
@@ -53,7 +53,20 @@ function App() {
     const storedUser = localStorage.getItem("customer");
     return storedUser ? JSON.parse(storedUser) : null;
   });
+  const dispatch = useDispatch();
 
+  useEffect(() => {
+    // Check if token is expired
+    const tokenExpiry = localStorage.getItem("tokenExpiry");
+
+    if (tokenExpiry && Date.now() > tokenExpiry) {
+      // If the token is expired, refresh it
+      console.log("Token expired. Attempting to refresh...");
+      dispatch(refreshToken());
+    } else {
+      console.log("Token not expired. ");
+    }
+  }, [dispatch]);
   useEffect(() => {
     // Listen for changes in localStorage and update the user state
     const handleStorageChange = () => {

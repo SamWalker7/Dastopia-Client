@@ -113,6 +113,8 @@ const Step1 = ({ nextStep }) => {
             >
               <MenuItem value="Petrol">Petrol(Benzene)</MenuItem>
               <MenuItem value="Diesel">Diesel(Nafta)</MenuItem>
+              <MenuItem value="Electric">Electric</MenuItem>
+              <MenuItem value="Hybrid">Hybrid</MenuItem>
             </Select>
           </FormControl>
           {/* <div className="relative inline-block my-3 text-xl w-full">
@@ -134,6 +136,25 @@ const Step1 = ({ nextStep }) => {
             variant="outlined"
             name="seats"
             value={vehicleData.seats}
+            onChange={handleChange}
+            type="number"
+            size="small"
+            fullWidth
+          />{" "}
+          <TextField
+            label="Plate Number"
+            variant="outlined"
+            name="vehichleNumber"
+            value={vehicleData.vehichleNumber}
+            onChange={handleChange}
+            size="small"
+            fullWidth
+          />{" "}
+          <TextField
+            label="Mileage"
+            variant="outlined"
+            name="mileage"
+            value={vehicleData.mileage}
             onChange={handleChange}
             type="number"
             size="small"

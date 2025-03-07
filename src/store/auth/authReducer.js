@@ -1,10 +1,10 @@
-// src/redux/reducers/authReducer.js
-
 import {
   LOGIN_REQUEST,
   LOGIN_SUCCESS,
   LOGIN_FAILURE,
   LOGOUT,
+  REFRESH_TOKEN_SUCCESS,
+  REFRESH_TOKEN_FAILURE,
 } from "./authActions";
 
 const initialState = {
@@ -28,6 +28,10 @@ const authReducer = (state = initialState, action) => {
       };
     case LOGIN_FAILURE:
       return { ...state, loading: false, error: action.payload };
+    case REFRESH_TOKEN_SUCCESS:
+      return { ...state, user: action.payload, error: null };
+    case REFRESH_TOKEN_FAILURE:
+      return { ...state, error: action.payload };
     case LOGOUT:
       return { ...initialState };
     default:
