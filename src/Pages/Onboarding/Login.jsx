@@ -4,6 +4,7 @@ import flag from "../../images/hero/image.png";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../../store/auth/authThunks";
+
 const Login = () => {
   const [phone_number, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +23,10 @@ const Login = () => {
         window.location.reload();
       }, 100); // Small delay ensures navigation happens before reload
     });
+  };
+
+  const handleForgotClick = () => {
+    navigate('/forgot'); 
   };
 
   useEffect(() => {
@@ -123,6 +128,13 @@ const Login = () => {
                 placeholder="Enter Your Password"
                 className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
               />{" "}
+                <a href="/forgot"
+                onClick={handleForgotClick}
+                className="flex flex-row items-end justify-end underline text-sm "
+                >
+      Forgot password?
+    </a>
+                            
             </div>
           </div>
 

@@ -33,6 +33,7 @@ import MyRequests from "./Pages/My Request/myRequest";
 import ActivBooking from "./Pages/My Bookings/ActiveBooking";
 import SignupForm from "./Pages/Onboarding/SignUp";
 import Login from "./Pages/Onboarding/Login";
+import ForgotPassword, { Resetpassword } from "./Pages/Onboarding/ForgotPassword";
 import Verification from "./Pages/Onboarding/Verification";
 import OTP from "./Pages/Onboarding/OTP";
 import ChatApp from "./Pages/chat";
@@ -119,6 +120,9 @@ function App() {
         <Route path="/booking/:id" element={<Booking />} />
         <Route path="/booking-confirmation" element={<BookingConfirmation />} />
         <Route path="login" element={<Login />} />
+        <Route path="/forgot" element={<ForgotPassword/>}/>
+        <Route path="/resetpassword" element={<Resetpassword/>}/>
+
         <Route path="verification" element={<Verification />} />
         <Route path="otp" element={<OTP />} />
 
