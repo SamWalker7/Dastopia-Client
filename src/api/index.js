@@ -74,13 +74,17 @@ export const fetchVehicles1 = async () => {
     const response = await axios.get(
       "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/search",
       {
-          params: { attribute: "make", value: "Toyota" }, // Matches cURL parameters
+        params: { attribute: "make", value: "Toyota" }, // Matches cURL parameters
         headers: { Accept: "*/*" }, // Optional, but matches the cURL request
       }
     );
 
     console.log("API Response:", response.data);
   } catch (error) {
-    console.error("Error fetching vehicles:", error.response ? error.response.data : error.message);
+    console.error(
+      "Error fetching vehicles:",
+      error.response ? error.response.data : error.message
+    );
   }
 };
+// src/api.js

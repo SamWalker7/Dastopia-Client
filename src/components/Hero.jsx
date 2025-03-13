@@ -44,7 +44,7 @@ function Hero({ user }) {
         <h1 className="text-6xl md:w-full w-[80vw] lg:text-[120px] text-[#FBBC05] font-semibold mb-4">
           DasGuzo
         </h1>
-        <p className="text-md md:text-lg mb-12 md:w-full w-[80vw]">
+        <p className="text-md md:text-lg mb-6 md:w-full w-[80vw]">
           Choose from a wide range of vehicles at affordable rates. Rent from
           trusted local car owners.
         </p>

@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { getDownloadUrl } from "../../api"; // Import getDownloadUrl
 import { FaGasPump, FaCogs, FaUserFriends } from "react-icons/fa";
 import audia1 from "../../images/cars-big/toyota-box.png";
 import Details from "./Details";
 
 const MyListing = () => {
-  const [vehicles, setVehicles] = useState([]); // State to store vehicle data
-  const [selectedVehicleId, setSelectedVehicleId] = useState(null); // State to store selected vehicle ID
-  const [vehicleImages, setVehicleImages] = useState({}); // State to store images with keys
+  const [vehicles, setVehicles] = useState([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+  const [vehicleImages, setVehicleImages] = useState({});
+  const [loadingImages, setLoadingImages] = useState(true);
   const customer = JSON.parse(localStorage.getItem("customer"));
+  const placeholderImage = "https://via.placeholder.com/300"; // Placeholder image URL
 
-  // Fetch vehicles from the API
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
@@ -17,7 +19,7 @@ const MyListing = () => {
           "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/owner_car",
           {
             headers: {
-              Authorization: `Bearer ${customer.AccessToken}`, // Add Authorization header
+              Authorization: `Bearer ${customer.AccessToken}`,
             },
           }
         );
@@ -27,7 +29,7 @@ const MyListing = () => {
           const vehiclesData = data.body?.Items || [];
           setVehicles(vehiclesData);
           console.log("Fetched vehicles", vehiclesData);
-          fetchVehicleImages(vehiclesData);
+          await fetchVehicleImages(vehiclesData);
         } else {
           console.error("Failed to fetch vehicles", data.body?.message);
         }
@@ -36,54 +38,46 @@ const MyListing = () => {
       }
     };
 
-    // Function to fetch presigned URLs for images
     const fetchVehicleImages = async (vehiclesData) => {
+      setLoadingImages(true);
       try {
         const imageUrls = {};
-
         for (const vehicle of vehiclesData) {
           if (vehicle.vehicleImageKeys && vehicle.vehicleImageKeys.length > 0) {
-            const imagePromises = vehicle.vehicleImageKeys.map(async (key) => {
-              const response = await fetch(
-                "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/get_presign_download_url",
-                {
-                  method: "POST",
-                  headers: {
-                    Authorization: `Bearer ${customer.AccessToken}`,
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ key }),
+            const fetchedUrls = await Promise.all(
+              vehicle.vehicleImageKeys.map(async (imageKey) => {
+                try {
+                  const path = await getDownloadUrl(imageKey); // Use getDownloadUrl here
+                  console.log("getDownloadUrl path:", path.body); // Log the path response
+                  return path?.body || null; // Return the URL from path.body, or null if it's not valid
+                } catch (error) {
+                  console.error(
+                    "Error in getDownloadUrl for key:",
+                    imageKey,
+                    error
+                  );
+                  return null; // Return null in case of error
                 }
-              );
-              const data = await response.json();
-
-              if (response.ok) {
-                console.log(`Fetched presigned URL for ${key}`, data.url);
-                return data.url;
-              } else {
-                console.error(
-                  `Failed to fetch presigned URL for ${key}`,
-                  data.message
-                );
-                return null;
-              }
-            });
-
-            const urls = await Promise.all(imagePromises);
-            imageUrls[vehicle.id] = urls.filter((url) => url !== null); // Filter out null URLs
+              })
+            );
+            imageUrls[vehicle.id] = fetchedUrls.filter((url) => url !== null); // Filter out null URLs
+          } else {
+            imageUrls[vehicle.id] = [placeholderImage]; // Use placeholder if no image keys
           }
         }
-
-        setVehicleImages(imageUrls); // Store all fetched image URLs
+        setVehicleImages(imageUrls);
       } catch (error) {
         console.error("Error fetching vehicle images:", error);
+      } finally {
+        setLoadingImages(false);
       }
     };
 
     fetchVehicles();
   }, []);
+
   const handleSeeDetails = (vehicleId) => {
-    setSelectedVehicleId(vehicleId); // Set the selected vehicle ID
+    setSelectedVehicleId(vehicleId);
   };
 
   return (
@@ -99,13 +93,15 @@ const MyListing = () => {
               >
                 {/* Car Image */}
                 <div className="w-2/6 flex rounded-2xl mx-4 py-4">
-                  <img
-                    className="w-full h-full rounded-2xl object-center object-cover"
-                    src={
-                      vehicleImages[vehicle.id]?.[0] || audia1 // Use the first presigned URL or fallback to default
-                    }
-                    alt={`Vehicle ${index}`}
-                  />
+                  {loadingImages ? (
+                    <div>Loading Image...</div>
+                  ) : (
+                    <img
+                      className="w-full h-full rounded-2xl object-center object-cover"
+                      src={vehicleImages[vehicle.id]?.[0] || audia1}
+                      alt={`Vehicle ${index}`}
+                    />
+                  )}
                 </div>
                 <div className="flex w-4/6 flex-col">
                   <div className="px-2 pt-8 w-full justify-between flex">
@@ -156,7 +152,7 @@ const MyListing = () => {
                   <div className="flex justify-between items-center px-2 pb-4">
                     <button
                       className="bg-[#00173C] w-full text-white rounded-full px-4 py-2 text-xs font-normal"
-                      onClick={() => handleSeeDetails(vehicle.id)} // Pass the vehicle ID
+                      onClick={() => handleSeeDetails(vehicle.id)}
                     >
                       See Details
                     </button>
@@ -165,7 +161,7 @@ const MyListing = () => {
               </div>
             ))
           ) : (
-            <p>No vehicles available.</p> // Fallback in case no vehicles are available
+            <p>No vehicles available.</p>
           )}
         </div>
       </div>

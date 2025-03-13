@@ -6,6 +6,7 @@ import Step4 from "./Step4";
 import Step5 from "./Step5";
 import Footer from "../../components/Footer";
 import useVehicleFormStore from "../../store/useVehicleFormStore";
+import { v4 as uuidv4 } from "uuid"; // Import UUID generator
 
 const AddCar = () => {
   const [step, setStep] = useState(1);
@@ -14,7 +15,7 @@ const AddCar = () => {
 
   useEffect(() => {
     console.log("AddCar mounted - Setting vehicleId...");
-    const tempVehicleId = "vehicle-id-from-step1-123"; // Replace with actual vehicleId from API response
+    const tempVehicleId = uuidv4(); // Replace with actual vehicleId from API response
     setVehicleId(tempVehicleId);
     updateVehicleData({ id: tempVehicleId }); // Update only once on mount
   }, []); // Empty dependency array ensures it runs only once when mounted

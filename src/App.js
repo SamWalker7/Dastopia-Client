@@ -57,16 +57,12 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Check if token is expired
-    const tokenExpiry = localStorage.getItem("tokenExpiry");
-
-    if (tokenExpiry && Date.now() > tokenExpiry) {
-      // If the token is expired, refresh it
-      console.log("Token expired. Attempting to refresh...");
+    const interval = setInterval(() => {
+      console.log("Refreshing token...");
       dispatch(refreshToken());
-    } else {
-      console.log("Token not expired. ");
-    }
+    }, 600000); // Runs every 60 seconds
+
+    return () => clearInterval(interval); // Cleanup on unmount
   }, [dispatch]);
   useEffect(() => {
     // Listen for changes in localStorage and update the user state
@@ -98,7 +94,6 @@ function App() {
         <Route path="step3" element={<Step3 />} />
         <Route path="step4" element={<Step4 />} />
         <Route path="step5" element={<Step5 />} />
-
         <Route
           path="profile"
           element={<Profile user2={user} setUser={setUser} />}
@@ -114,8 +109,8 @@ function App() {
         <Route path="testimonials" element={<TestimonialsPage />} />
         <Route path="team" element={<Team />} />
         <Route path="contact" element={<Contact />} />
-        <Route path="/details" element={<Details />} />
-        <Route path="/details2" element={<Details2 />} />
+        <Route path="/details/:id" element={<Details />} />
+        <Route path="/details2/:id" element={<Details2 />} />
         <Route path="search" element={<Search />} />
         <Route path="/booking/:id" element={<Booking />} />
         <Route path="/booking-confirmation" element={<BookingConfirmation />} />

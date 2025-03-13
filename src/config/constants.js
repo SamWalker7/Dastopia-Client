@@ -1,1 +1,2 @@
-export const dastopiaAPI = 'https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/';
+export const dastopiaAPI =
+  "https://xo55y7ogyj.execute-api.us-east-1.amazonaws.com/prod/";

@@ -69,7 +69,7 @@ function BookCar() {
       <section>
         <div className="">
           <div
-            className="  relative h-fit md:justify-start justify-center py-8 md:py-4 w-[80vw] lg:w-[60vw] px-6 md:items-start items-center rounded-lg bg-[#FAF9FE] "
+            className="  relative h-fit md:justify-start justify-center py-8 md:py-4 w-fit md:w-fit px-6 md:items-start items-center rounded-lg bg-[#FAF9FE] "
             style={{
               backgroundImage: `url(${BackgroundImage})`,
               backgroundSize: "cover",
@@ -83,9 +83,9 @@ function BookCar() {
                   {error}
                 </div>
               )}
-              <form className="flex flex-col lg:flex-row justify-center md:items-center w-full">
-                <div className=" flex flex-col lg:flex-row lg:space-x-4 md:space-y-0 space-y-6">
-                  <div className="relative inline-block  text-xs w-full ">
+              <form className="flex flex-col md:flex-row gap-3 justify-center md:items-center w-full">
+                <div className=" flex flex-col md:flex-row md:space-x-4 gap-3">
+                  {/* <div className="relative inline-block  text-xs w-full ">
                     <label className="absolute -top-2 left-3 text-xs bg-white px-1  text-gray-500">
                       Pick-up Location <b>*</b>
                     </label>
@@ -126,7 +126,7 @@ function BookCar() {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div> */}
 
                   <div className="relative inline-block my-3 text-xs w-full md:w-[200px]">
                     <label
@@ -173,7 +173,7 @@ function BookCar() {
                 </button>
               </form>
             </div>
-            <div className="relative hidden md:flex pb-0 text-sm w-full">
+            {/* <div className="relative hidden md:flex pb-0 text-sm w-full">
               <label className="flex items-center space-x-3 text-gray-500">
                 <input
                   type="checkbox"
@@ -186,7 +186,7 @@ function BookCar() {
                   Drop off in a different location
                 </span>
               </label>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>

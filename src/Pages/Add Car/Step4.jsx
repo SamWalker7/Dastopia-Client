@@ -29,11 +29,10 @@ const Step4 = ({ nextStep, prevStep }) => {
   // Sync with store on any changes
   useEffect(() => {
     updateVehicleData({
-      pickUpLocation: markers.pickup,
-      dropOffLocation: markers.dropoff,
+      pickUp: markers.pickup, // Use pickUp here
+      dropOff: markers.dropoff, // Use dropOff here
     });
   }, [markers, updateVehicleData]);
-
   const mapStyles = {
     height: "30vh",
     width: "100%",
@@ -198,8 +197,8 @@ const Step4 = ({ nextStep, prevStep }) => {
 
   const handleNext = () => {
     // Generate UUID before submitting
-    const vehicleId = uuidv4();
-    updateVehicleData({ id: vehicleId }); // Update store with the generated ID
+    // const vehicleId = uuidv4();
+    //updateVehicleData({ id: vehicleId }); // Update store with the generated ID
     submitVehicleListing(); // Call submitVehicleListing after updating the ID
   };
 

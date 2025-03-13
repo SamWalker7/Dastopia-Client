@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   CircularProgress,
@@ -24,7 +24,6 @@ const Search = () => {
 
   const [vehicles, setVehicles] = useState([]);
   const [lastEvaluated, setLastEvaluated] = useState(null);
-
   const [isLoading, setIsLoading] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
@@ -39,43 +38,120 @@ const Search = () => {
     "Hawassa",
   ];
 
-  const fetchPagination = async () => {
+  const fetchVehiclesByAttribute = async (attributeName, attributeValue) => {
     setIsLoading(true);
-    const response = await paginatedSearch(10);
-    if (response.statusCode === 200) {
-      setLastEvaluated(response.body.lastEvaluatedKey);
+    if (attributeName === "make" && attributeValue === "any") {
+      setVehicles([]);
+    } else if (!(attributeName === "make" && attributeValue === "any")) {
+      setVehicles([]);
+    }
 
-      const data = response.body.items.map((item) => {
-        return {
+    const baseUrl =
+      "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/search"; // Updated base URL to the new backend endpoint
+    let url = baseUrl;
+    let queryParams = [];
+
+    if (attributeName && attributeValue && attributeValue !== "any") {
+      queryParams.push(`${attributeName}=${attributeValue}`);
+    } // Add other filters based on the current state
+
+    if (make && make !== "any" && attributeName !== "make") {
+      queryParams.push(`make=${make}`);
+    }
+    if (selectedModel && selectedModel !== "any" && attributeName !== "model") {
+      queryParams.push(`model=${selectedModel}`);
+    }
+    if (
+      transmission &&
+      transmission !== "any" &&
+      attributeName !== "transmission"
+    ) {
+      queryParams.push(`transmission=${transmission}`);
+    }
+    if (category && category !== "any" && attributeName !== "category") {
+      queryParams.push(`category=${category}`);
+    }
+    if (minPrice) {
+      queryParams.push(`price[gte]=${minPrice}`); // Assuming backend supports price ranges, adjust if needed
+    }
+    if (maxPrice) {
+      queryParams.push(`price[lte]=${maxPrice}`); // Assuming backend supports price ranges, adjust if needed
+    }
+
+    queryParams.push(`isActive=active`);
+    queryParams.push(`isApproved=approved`);
+
+    if (queryParams.length > 0) {
+      url += `?${queryParams.join("&")}`;
+    }
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.log("response:", response);
+        console.error(`HTTP error! status: ${response.status}`);
+        setIsLoading(false);
+        return;
+      }
+      const responseData = await response.json();
+
+      if (responseData.body && Array.isArray(responseData.body)) {
+        const data = responseData.body.map((item) => ({
           ...item,
           images: [],
           imageLoading: true,
-        };
-      });
-      setVehicles(data);
+        }));
+        setVehicles(data);
 
-      let fetched = [];
-
-      for (let d of data) {
-        let urls = [];
-        for (let image of d.vehicleImageKeys) {
-          const path = await getDownloadUrl(image.key);
-          urls.push(path.body || "https://via.placeholder.com/300");
+        let fetchedWithImages = [];
+        for (let d of data) {
+          let urls = [];
+          if (d.vehicleImageKeys && Array.isArray(d.vehicleImageKeys)) {
+            //Added check for vehicleImageKeys
+            for (let image of d.vehicleImageKeys) {
+              const imageKey = image.key;
+              console.log("image.key before getDownloadUrl:", imageKey);
+              const path = await getDownloadUrl(imageKey);
+              console.log("path:", path);
+              if (path && path.body) {
+                urls.push(path.body || "https://via.placeholder.com/300");
+              } else {
+                console.warn(
+                  "getDownloadUrl did not return a valid path.body for key:",
+                  imageKey,
+                  ". Using placeholder image."
+                );
+                urls.push("https://via.placeholder.com/300");
+              }
+            }
+          } else {
+            urls = ["https://via.placeholder.com/300"]; // Use placeholder if no image keys
+          }
+          fetchedWithImages.push({
+            ...d,
+            images: urls,
+            imageLoading: false,
+          });
         }
-        fetched.push({
-          ...d,
-          images: urls,
-          imageLoading: false,
-        });
+        setVehicles(fetchedWithImages);
+      } else {
+        console.error(
+          "API response was not successful: Unexpected response format",
+          responseData
+        );
+        if (!(attributeName === "make" && attributeValue === "any")) {
+          setVehicles([]);
+        }
       }
-      setVehicles(fetched);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      if (!(attributeName === "make" && attributeValue === "any")) {
+        setVehicles([]);
+      }
+    } finally {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchPagination();
-  }, []);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -88,12 +164,17 @@ const Search = () => {
   const [selectedModel, setSelectedModel] = useState("any");
   const [transmission, setTransmission] = useState("any");
   const [category, setCategory] = useState("any");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // Fetch initial vehicles when component mounts, showing "Any" make
+    fetchVehiclesByAttribute("make", "any");
+
     const getQueryParam = (name) => {
       const params = new URLSearchParams(window.location.search);
       return params.get(name);
@@ -171,9 +252,13 @@ const Search = () => {
     }
   };
 
-  const handleMakeChange = (event) => {
+  const handleMakeChange = async (event) => {
     const value = event.target.value;
     setMake(value);
+    setModel([]);
+    setSelectedModel("any");
+
+    await fetchVehiclesByAttribute("make", value);
 
     const filteredModels = modelData.filter((model) => {
       return Object.keys(model)[0] === value;
@@ -185,7 +270,6 @@ const Search = () => {
     }
 
     setModel(newModel);
-    setSelectedModel(newModel.length > 0 ? newModel[0] : "any");
   };
 
   const handleModelChange = (event) => {
@@ -200,45 +284,183 @@ const Search = () => {
     setCategory(event.target.value);
   };
 
-  const filteredVehicles = vehicles.filter((vehicle) => {
-    return (
-      (make === "any" || vehicle.make === make) &&
-      (selectedModel === "any" || vehicle.model === selectedModel) &&
-      (transmission === "any" || vehicle.transmission === transmission) &&
-      (category === "any" || vehicle.category === category) &&
-      (!selectedCity || vehicle.city === selectedCity)
-    );
-  });
-  console.log("filteredVehicles ", filteredVehicles);
-  // State to hold the input value
-  const [inputValue, setInputValue] = useState("");
+  const handleMinPriceChange = (e) => {
+    setMinPrice(e.target.value);
+  };
 
-  // Function to handle input change
+  const handleMaxPriceChange = (e) => {
+    setMaxPrice(e.target.value);
+  }; // useCallback to memoize the filtering logic
+
+  const getFilteredVehicles = useCallback(
+    (
+      currentVehicles,
+      currentMake,
+      currentModel,
+      currentTransmission,
+      currentCategory,
+      currentMinPrice,
+      currentMaxPrice
+    ) => {
+      let initiallyFilteredVehicles = [...currentVehicles];
+
+      if (currentModel !== "any") {
+        initiallyFilteredVehicles = initiallyFilteredVehicles.filter(
+          (vehicle) => vehicle.model === currentModel
+        );
+      }
+
+      if (currentTransmission !== "any") {
+        initiallyFilteredVehicles = initiallyFilteredVehicles.filter(
+          (vehicle) => vehicle.transmission === currentTransmission
+        );
+      }
+
+      if (currentCategory !== "any") {
+        initiallyFilteredVehicles = initiallyFilteredVehicles.filter(
+          (vehicle) => vehicle.category === currentCategory
+        );
+      } // Price filtering - Convert prices to numbers using parseFloat
+
+      const minPriceFilter = parseFloat(currentMinPrice) || 0;
+      const maxPriceFilter = parseFloat(currentMaxPrice) || Infinity;
+
+      initiallyFilteredVehicles = initiallyFilteredVehicles.filter(
+        (vehicle) => {
+          const vehiclePrice = parseFloat(vehicle.price) || 0;
+          return (
+            vehiclePrice >= minPriceFilter && vehiclePrice <= maxPriceFilter
+          );
+        }
+      );
+      return initiallyFilteredVehicles;
+    },
+    []
+  );
+
+  const [inputValue, setInputValue] = useState("");
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
   };
-  const transmissionType = ["Any", "Automatic", "Manual"];
-  const Category = ["Any", "Sedan", "SUV", "Convertable"];
+  const transmissionType = ["Automatic", "Manual"];
+  const Category = ["Sedan", "SUV", "Convertable"];
+  const isValidInput = /^[0-9 ]*$/.test(inputValue); // Get filtered vehicles right before rendering ResultsGrid
 
-  // Optional: Validation Example (disallow special characters)
-  const isValidInput = /^[0-9 ]*$/.test(inputValue);
+  const currentFilteredVehicles = getFilteredVehicles(
+    vehicles,
+    make,
+    selectedModel,
+    transmission,
+    category,
+    minPrice,
+    maxPrice
+  ); // useEffect to trigger filtering whenever filter states change
+
+  useEffect(() => {
+    // Fetch vehicles based on filters
+    const fetchFiltered = async () => {
+      setIsLoading(true);
+      setVehicles([]); // Clear existing vehicles before fetching new ones
+
+      const baseUrl =
+        "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/search";
+      let url = baseUrl;
+      let queryParams = [];
+
+      if (make && make !== "any") {
+        queryParams.push(`make=${make}`);
+      }
+      if (selectedModel && selectedModel !== "any") {
+        queryParams.push(`model=${selectedModel}`);
+      }
+      if (transmission && transmission !== "any") {
+        queryParams.push(`transmission=${transmission}`);
+      }
+      if (category && category !== "any") {
+        queryParams.push(`category=${category}`);
+      }
+      if (minPrice) {
+        queryParams.push(`price[gte]=${minPrice}`);
+      }
+      if (maxPrice) {
+        queryParams.push(`price[lte]=${maxPrice}`);
+      }
+
+      queryParams.push(`isActive=active`);
+      queryParams.push(`isApproved=approved`);
+
+      if (queryParams.length > 0) {
+        url += `?${queryParams.join("&")}`;
+      }
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          console.error(`HTTP error! status: ${response.status}`);
+        }
+        const responseData = await response.json();
+        if (responseData.body && Array.isArray(responseData.body)) {
+          const data = responseData.body.map((item) => ({
+            ...item,
+            images: [],
+            imageLoading: true,
+          }));
+          setVehicles(data);
+
+          let fetchedWithImages = [];
+          for (let d of data) {
+            let urls = [];
+            if (d.vehicleImageKeys && Array.isArray(d.vehicleImageKeys)) {
+              for (let image of d.vehicleImageKeys) {
+                const imageKey = image.key;
+                const path = await getDownloadUrl(imageKey);
+                if (path && path.body) {
+                  urls.push(path.body || "https://via.placeholder.com/300");
+                } else {
+                  console.warn(
+                    "getDownloadUrl did not return a valid path.body for key:",
+                    imageKey,
+                    ". Using placeholder image."
+                  );
+                  urls.push("https://via.placeholder.com/300");
+                }
+              }
+            } else {
+              urls = ["https://via.placeholder.com/300"];
+            }
+            fetchedWithImages.push({
+              ...d,
+              images: urls,
+              imageLoading: false,
+            });
+          }
+          setVehicles(fetchedWithImages);
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFiltered();
+  }, [make, selectedModel, transmission, category, minPrice, maxPrice]);
 
   return (
     <div>
-      <div className=" bg-[#FAF9FE]  py-32 flex lg:flex-row flex-col items-center lg:items-start w-full">
-        <div className="  flex flex-col  px-8 lg:pl-12 py-2  items-center ">
-          <div className="bg-white w-full px-10 py-4 justify-between text-lg  md:flex-row flex-col  rounded-xl shadow-sm shadow-blue-300 border border-blue-300  flex">
+      <div className=" bg-[#FAF9FE] py-32 flex lg:flex-row flex-col items-center lg:items-start w-full">
+        <div className=" flex flex-col px-8 lg:pl-12 py-2 items-center ">
+          <div className="bg-white w-full px-10 py-4 justify-between text-lg md:flex-row flex-col rounded-xl shadow-sm shadow-blue-300 border border-blue-300 flex">
             <div className="flex md:flex-row flex-col items-center text-base">
-              {" "}
               <div className="flex flex-col ">
                 <div>Bole International Airport</div>
                 <div>Wed, Aug 28,2024 , 10:00</div>
               </div>
+
               <div className="mx-4">
-                {" "}
                 <svg
-                  className=" text-gray-800 w-8 h-8 transform transition-transform duration-200 
-                -rotate-90"
+                  className=" text-gray-800 w-8 h-8 transform transition-transform duration-200
+         -rotate-90"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -247,17 +469,21 @@ const Search = () => {
                   <path d="M5.23 7.21a.75.75 0 011.06 0L10 10.92l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0l-4.25-4.25a.75.75 0 010-1.06z" />
                 </svg>
               </div>
+
               <div className="flex flex-col ">
                 <div>Bole International Airport</div>
                 <div>Wed, Aug 28,2024 , 10:00</div>
               </div>
             </div>
-            <button className=" bg-blue-950 text-sm text-white rounded-full px-4 ml-8 my-2  py-2">
+
+            <button className=" bg-blue-950 text-sm text-white rounded-full px-4 ml-8 my-2 py-2">
               Edit
             </button>
           </div>
-          <div className="flex flex-col bg-white my-12 w-full px-4 py-4 text-lg   rounded-xl shadow-md shadow-gray-100  ">
+
+          <div className="flex flex-col bg-white my-12 w-full px-4 py-4 text-lg  rounded-xl shadow-md shadow-gray-100 ">
             <div className="text-xl mx-4 font-semibold mt-4">Filters</div>
+
             <div className="flex md:flex-row flex-col justify-center lg:items-start items-center">
               <div className="flex flex-col m-4 w-full lg:w-1/2">
                 {/* Make Dropdown */}
@@ -269,6 +495,7 @@ const Search = () => {
                     >
                       Make
                     </InputLabel>
+
                     <Select
                       labelId="make-label"
                       id="make"
@@ -277,6 +504,7 @@ const Search = () => {
                       label="Make"
                     >
                       <MenuItem value="any">Any</MenuItem>
+
                       {makesData.Makes.map((m) => (
                         <MenuItem key={m.make_display} value={m.make_display}>
                           {m.make_display}
@@ -285,7 +513,6 @@ const Search = () => {
                     </Select>
                   </FormControl>
                 </div>
-
                 {/* Model Dropdown */}
                 <div className="relative inline-block my-3 text-lg w-full">
                   <FormControl fullWidth size="small">
@@ -295,6 +522,7 @@ const Search = () => {
                     >
                       Model
                     </InputLabel>
+
                     <Select
                       labelId="model-label"
                       id="model"
@@ -303,6 +531,7 @@ const Search = () => {
                       label="Model"
                     >
                       <MenuItem value="any">Any</MenuItem>
+
                       {model.map((m) => (
                         <MenuItem key={m} value={m}>
                           {m}
@@ -311,7 +540,6 @@ const Search = () => {
                     </Select>
                   </FormControl>
                 </div>
-
                 {/* Transmission Dropdown */}
                 <div className="relative inline-block mt-3 text-lg w-full">
                   <FormControl fullWidth size="small">
@@ -321,6 +549,7 @@ const Search = () => {
                     >
                       Transmission
                     </InputLabel>
+
                     <Select
                       labelId="transmission-label"
                       id="transmission"
@@ -329,6 +558,7 @@ const Search = () => {
                       label="Transmission"
                     >
                       <MenuItem value="any">Any</MenuItem>
+
                       {transmissionType.map((m) => (
                         <MenuItem key={m} value={m}>
                           {m}
@@ -348,8 +578,8 @@ const Search = () => {
                       label="Min Price"
                       variant="outlined"
                       size="small"
-                      value={inputValue}
-                      onChange={handleInputChange}
+                      value={minPrice}
+                      onChange={handleMinPriceChange}
                       error={!isValidInput}
                       helperText={
                         !isValidInput
@@ -358,7 +588,6 @@ const Search = () => {
                       }
                     />
                   </div>
-
                   {/* Max Price Input */}
                   <div className="relative inline-block my-3 text-lg w-full">
                     <TextField
@@ -366,8 +595,8 @@ const Search = () => {
                       label="Max Price"
                       variant="outlined"
                       size="small"
-                      value={inputValue}
-                      onChange={handleInputChange}
+                      value={maxPrice}
+                      onChange={handleMaxPriceChange}
                       error={!isValidInput}
                       helperText={
                         !isValidInput
@@ -377,7 +606,6 @@ const Search = () => {
                     />
                   </div>
                 </div>
-
                 {/* Category Dropdown */}
                 <div className="relative inline-block my-3 text-lg w-full">
                   <FormControl fullWidth size="small">
@@ -387,6 +615,7 @@ const Search = () => {
                     >
                       Category
                     </InputLabel>
+
                     <Select
                       labelId="category-label"
                       id="category"
@@ -395,7 +624,8 @@ const Search = () => {
                       label="Category"
                     >
                       <MenuItem value="any">Any</MenuItem>
-                      {transmissionType.map((m) => (
+
+                      {Category.map((m) => (
                         <MenuItem key={m} value={m}>
                           {m}
                         </MenuItem>
@@ -405,58 +635,46 @@ const Search = () => {
                 </div>
               </div>
             </div>
+            {/* Search Button Removed */}
           </div>
 
-          <div className=" flex flex-col w-full  items-center ">
-            <div className="flex flex-col bg-white my-4 w-full px-8 py-4 text-lg md:text-2xl  rounded-xl shadow-md shadow-gray-100  ">
+          <div className=" flex flex-col w-full items-center ">
+            <div className="flex flex-col bg-white my-4 w-full px-8 py-4 text-lg md:text-2xl  rounded-xl shadow-md shadow-gray-100 ">
               <div className="flex flex-wrap">
                 {isLoading ? (
                   <div>
                     <CircularProgress />
                   </div>
-                ) : filteredVehicles.length > 0 ? (
+                ) : currentFilteredVehicles.length > 0 ? (
                   <div>
                     <div className="text-xl m-4 font-normal my-8">
-                      Found{" "}
+                      Found
                       <span className="font-bold">
-                        {" "}
-                        ({filteredVehicles.length})
-                      </span>{" "}
+                        ({currentFilteredVehicles.length})
+                      </span>
                       Cars
                     </div>
+
                     <ResultsGrid
-                      vehicles={filteredVehicles}
+                      key={`${make}-${selectedModel}-${transmission}-${category}-${minPrice}-${maxPrice}`}
+                      vehicles={currentFilteredVehicles}
                       pickUpTime={startDate}
                       DropOffTime={endDate}
                       lastEvaluatedKey={lastEvaluated}
                     />
                   </div>
                 ) : (
-                  <div>No vehicles found.</div>
+                  <div>No vehicles found. Adjust filters to search.</div>
                 )}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col lg:w-2/5  h-full items-start justify-start w-5/6  lg:pr-20">
+        <div className="flex flex-col lg:w-2/5 h-full items-start justify-start w-5/6 lg:pr-20">
           {error && <div>{error}</div>}
-          {/* <div className="flex  bg-white my-10 w-full px-8 py-4 text-lg md:text-2xl justify-between  rounded-xl shadow-md shadow-gray-100  ">
-            <div className=" flex  items-center ">
-              <div className=" flex space-x-6 ">
-                <Dropdown label="Make" options={makeDisplayArray} />{" "}
-                <Dropdown label="Make" options={makeDisplayArray} />{" "}
-                <Dropdown label="Make" options={makeDisplayArray} />
-              </div>
-            </div>
-            <button className=" bg-blue-950 text-lg text-white rounded-full px-12 ml-8  py-2 my-4">
-              Filter
-            </button>
-          </div> */}
-
-          <div className="flex  bg-white w-full  p-2 text-lg md:text-2xl   rounded-xl shadow-md shadow-gray-100  ">
-            {" "}
-            <MapComponent />{" "}
+          <div className="flex bg-white w-full p-2 text-lg md:text-2xl  rounded-xl shadow-md shadow-gray-100  ">
+            <MapComponent />
           </div>
         </div>
       </div>

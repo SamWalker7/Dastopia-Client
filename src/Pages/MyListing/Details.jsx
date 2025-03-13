@@ -8,16 +8,18 @@ import {
   FaUserFriends,
 } from "react-icons/fa";
 import { FaCalendarAlt } from "react-icons/fa";
-import useVehicleFormStore from "../../store/useVehicleFormStore"; // Import Zustand store
+import useVehicleFormStore from "../../store/useVehicleFormStore";
+import { getDownloadUrl } from "../../api";
 
 const Details = ({ selectedVehicleId }) => {
-  // Destructure selectedVehicleId from props
   const [vehicleDetails, setVehicleDetails] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { apiCallWithRetry } = useVehicleFormStore();
+  const [imageUrls, setImageUrls] = useState({});
+  const [parsedCalendar, setParsedCalendar] = useState([]);
 
   const Status = ["Active", "Inactive"];
 
@@ -40,15 +42,50 @@ const Details = ({ selectedVehicleId }) => {
         if (response && response.body) {
           console.log("API Response for Vehicle Details:", response.body);
           setVehicleDetails(response.body);
+          setStatus(response.body.isActive ? "Active" : "Inactive");
+
           if (
             response.body.vehicleImageKeys &&
             response.body.vehicleImageKeys.length > 0
           ) {
-            setSelectedImage(response.body.vehicleImageKeys[0]);
+            const urls = {};
+            for (const imageKey of response.body.vehicleImageKeys) {
+              try {
+                const downloadURL = await getDownloadUrl(imageKey);
+                urls[imageKey] = downloadURL?.body;
+                console.log(
+                  "Download URL for",
+                  imageKey,
+                  ":",
+                  downloadURL.body
+                );
+                if (!selectedImage) {
+                  setSelectedImage(imageKey);
+                }
+              } catch (downloadUrlError) {
+                console.error(
+                  `Failed to fetch download URL for ${imageKey}:`,
+                  downloadUrlError
+                );
+                urls[imageKey] = audia1;
+                if (!selectedImage) {
+                  setSelectedImage(audia1);
+                }
+              }
+            }
+            setImageUrls(urls);
+            if (!selectedImage && response.body.vehicleImageKeys.length > 0) {
+              setSelectedImage(response.body.vehicleImageKeys[0]);
+            }
           } else {
             setSelectedImage(audia1);
           }
-          setStatus(response.body.isActive ? "active" : "inactive"); // Ensure status is set from API response
+          // Use vehicleDetails.events directly for calendar data
+          if (vehicleDetails?.events) {
+            setParsedCalendar(vehicleDetails.events);
+          } else {
+            setParsedCalendar([]); // Ensure parsedCalendar is always an array, even if no events
+          }
         } else {
           setError(
             "Failed to fetch vehicle details or invalid response format."
@@ -63,11 +100,11 @@ const Details = ({ selectedVehicleId }) => {
     };
 
     fetchVehicleDetails();
-  }, [selectedVehicleId, apiCallWithRetry]);
+  }, [selectedVehicleId, apiCallWithRetry, selectedImage]);
 
   const handleStatus = async (e) => {
     const newStatusValue = e.target.value;
-    setStatus(newStatusValue); // Optimistically update local state
+    setStatus(newStatusValue);
     setLoading(true);
     setError(null);
     try {
@@ -79,7 +116,6 @@ const Details = ({ selectedVehicleId }) => {
       );
       if (response.status === 200) {
         console.log("Vehicle status updated successfully");
-        //fetchVehicleDetails(); // Refetch vehicle details to update status from backend
       } else if (response.status === 404) {
         setError("Vehicle not found.");
       } else if (response.status === 401) {
@@ -108,29 +144,44 @@ const Details = ({ selectedVehicleId }) => {
   }
 
   const getImageUrl = (imageKey) => {
-    return `URL_TO_S3_BUCKET/${imageKey}`; // Replace with your actual URL
-  }; // Helper function to render locations, handles cases where pickUpLocation/dropOffLocation might not be arrays
+    return imageUrls[imageKey] || audia1;
+  };
 
   const renderLocations = (locations) => {
     if (Array.isArray(locations)) {
-      return locations.map((location, index) => (
-        <span
-          key={index}
-          className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
-        >
-          {location}
-        </span>
-      ));
+      return locations.map((location, index) => {
+        // Location is now an array of coordinates [lat, lng]
+        const locationName = `Lat: ${location[0]}, Lng: ${location[1]}`; // Display coordinates as location name
+        return (
+          <span
+            key={index}
+            className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
+          >
+            {locationName}
+          </span>
+        );
+      });
     } else if (typeof locations === "string" && locations) {
-      // If it's a string and not empty, display as single location
       return (
         <span className="border border-gray-400 text-sm px-3 py-1 rounded-xl">
           {locations}
         </span>
       );
     } else {
-      // If it's not an array and not a string (null, undefined, etc.), return "Not specified"
       return <span className="text-gray-500">Not specified</span>;
+    }
+  };
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Unknown Date";
     }
   };
 
@@ -159,12 +210,11 @@ const Details = ({ selectedVehicleId }) => {
               ))}
           </div>
         </div>
-        {/* Pickup and Drop-off */}
+
         <div className="relative inline-block my-8 text-base w-[200px] ">
           <label className="absolute -top-2 left-3 text-sm bg-white px-1 text-gray-500">
             Status
           </label>
-
           <select
             className="border border-gray-400 flex justify-between w-full p-3 py-2 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400 "
             value={status}
@@ -174,7 +224,7 @@ const Details = ({ selectedVehicleId }) => {
               <option
                 className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md max-h-60 overflow-y-auto z-10"
                 key={index}
-                value={stat.toLowerCase().replace(/\s+/g, "-")}
+                value={stat}
               >
                 {stat}
               </option>
@@ -182,13 +232,13 @@ const Details = ({ selectedVehicleId }) => {
           </select>
         </div>
 
-        <div className="flex  items-center">
+        <div className="flex  items-center">
           <h3 className="text-xl font-semibold">
             {vehicleDetails.make} {vehicleDetails.model}
           </h3>
         </div>
 
-        <div className="grid lg:grid-cols-4 grid-cols-2 justify-between space-x-6 items-center  my-8 w-fit text-gray-800 text-sm">
+        <div className="grid lg:grid-cols-4 grid-cols-2 justify-between space-x-6 items-center  my-8 w-fit text-gray-800 text-sm">
           <div className="bg-blue-100 flex text-blue-700 py-2 items-center px-3 rounded-lg text-center ">
             <FaTag size={12} className="mx-2" />
             {vehicleDetails.price} Birr
@@ -209,41 +259,31 @@ const Details = ({ selectedVehicleId }) => {
             <span>{vehicleDetails.seats || "Unknown"} People</span>
           </div>
         </div>
-        {/* Car Specification */}
+
         <h4 className="mt-8 text-xl font-semibold">Car Specification</h4>
         <div className="grid lg:grid-cols-3 grid-cols-2 gap-4 mt-4">
           <div>
             <span className="text-gray-500">Car Brand</span>
-
             <p className="font-medium">{vehicleDetails.make || "Unknown"}</p>
           </div>
-
           <div>
             <span className="text-gray-500">Car Model</span>
-
             <p className="font-medium">{vehicleDetails.model || "Unknown"}</p>
           </div>
-
           <div>
             <span className="text-gray-500">Manufacture Date</span>
-
             <p className="font-medium">{vehicleDetails.year || "Unknown"}</p>
           </div>
-
           <div>
             <span className="text-gray-500">Mileage</span>
-
             <p className="font-medium">{vehicleDetails.mileage || "Unknown"}</p>
           </div>
-
           <div>
             <span className="text-gray-500">Color</span>
             <p className="font-medium">{vehicleDetails.color || "Unknown"}</p>
           </div>
-
           <div>
             <span className="text-gray-500">Vehicle Number</span>
-
             <p className="font-medium">
               {vehicleDetails.vehicleNumber || "Unknown"}
             </p>
@@ -251,10 +291,8 @@ const Details = ({ selectedVehicleId }) => {
         </div>
 
         <div className=" text-[#000000]">
-          {/* Features */}
           <section className="my-16">
             <h2 className="font-semibold text-lg mb-4">Features</h2>
-
             <div className="flex flex-wrap gap-2">
               {vehicleDetails.carFeatures &&
                 vehicleDetails.carFeatures.map((feature, index) => (
@@ -267,11 +305,10 @@ const Details = ({ selectedVehicleId }) => {
                 ))}
             </div>
           </section>
-          {/* Booking & Notice Period For Rent */}
+
           <section className="flex flex-col my-16 gap-4">
             <div className="flex space-x-4 items-center text-lg ">
               <h3 className="font-semibold mb-1">Booking</h3>
-
               <span className="border border-gray-400 text-sm px-4 py-2 rounded-xl">
                 {vehicleDetails.instantBooking
                   ? "Instant"
@@ -281,49 +318,40 @@ const Details = ({ selectedVehicleId }) => {
 
             <div className="flex space-x-4 items-center text-lg">
               <h3 className="font-semibold mb-1">Notice Period For Rent</h3>
-
               <span className="border border-gray-400 text-sm px-4 py-2 rounded-xl">
                 {vehicleDetails.advanceNoticePeriod || "Not specified"}
               </span>
             </div>
           </section>
-          {/* Pick up Locations */}
+
           <section className="my-16">
             <h2 className="font-semibold text-lg mb-4">Pick up Locations</h2>
-
             <div className="flex flex-wrap gap-2">
-              {renderLocations(vehicleDetails.pickUpLocation)}
-              {/* Use renderLocations helper function */}
+              {renderLocations(vehicleDetails.pickUp)}
             </div>
           </section>
-          {/* Drop off Locations */}
+
           <section className="my-16">
             <h2 className="font-semibold text-2xl my-4 mb-4">
               Drop off Locations
             </h2>
-
             <div className="flex flex-wrap gap-2">
-              {renderLocations(vehicleDetails.dropOffLocation)}
-              {/* Use renderLocations helper function */}
+              {renderLocations(vehicleDetails.dropOff)}
             </div>
           </section>
-          {/* Available Rental Dates */}
+
           <section className="my-16">
             <h2 className="font-semibold text-lg mb-4">
               Available Rental Dates
             </h2>
-
             <div className="space-y-4">
-              {vehicleDetails.calendar &&
-                JSON.parse(vehicleDetails.calendar).map((dateRange, index) => (
+              {status === "Active" &&
+                parsedCalendar.map((dateRange, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <FaCalendar size={16} />
-
-                    <span className="text-sm">{`${new Date(
-                      dateRange.start
-                    ).toLocaleDateString()} - ${new Date(
-                      dateRange.end
-                    ).toLocaleDateString()}`}</span>
+                    <FaCalendarAlt size={16} />
+                    <span className="text-sm">{`${formatDate(
+                      dateRange.startDate
+                    )} - ${formatDate(dateRange.endDate)}`}</span>
                   </div>
                 ))}
             </div>

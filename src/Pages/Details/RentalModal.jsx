@@ -1,7 +1,8 @@
 // Modal.jsx
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Dropdown from "../../components/Search/Dropdown";
 import { useNavigate } from "react-router-dom";
+import { FaTimes } from "react-icons/fa"; // Import FaTimes icon
 
 const locations = [
   "Addis Ababa",
@@ -31,12 +32,14 @@ const insurancePlans = [
   },
 ];
 
-const RentalModal = ({ isOpen, onClose }) => {
+const RentalModal = ({ isOpen, onClose, vehicleId }) => {
   const [approved, setApproved] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const navigate = useNavigate();
+  const modalRef = useRef(null); // Ref for modal content
+
   const handleRedirect = () => {
-    navigate("/details2");
+    navigate(`/details2/${vehicleId}`);
   };
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);
@@ -48,35 +51,66 @@ const RentalModal = ({ isOpen, onClose }) => {
   const [needDriver, setNeedDriver] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("Basic Insurance Plan");
 
+  useEffect(() => {
+    // Function to handle clicks outside the modal
+    function handleClickOutside(event) {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        onClose(); // Close modal when clicking outside
+      }
+    }
+
+    // Add event listener when modal is open
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    // Remove event listener when component unmounts or modal is closed
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose]); // Re-run effect when isOpen or onClose changes
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white scale-75 rounded-2xl h-fit w-full max-w-2xl p-6">
-        {/* Tabs */}
-        <div className="flex w-full bg-[#FAF9FE] border-b mb-6">
-          <button
-            className={`text-xl w-1/2 px-6 py-3 ${
-              activeTab === "availability"
-                ? "border-b-2 border-blue-900 text-blue-900"
-                : "text-gray-500"
-            }`}
-            onClick={() => setActiveTab("availability")}
-          >
-            Availiablity
+      <div
+        className="bg-white scale-75 rounded-2xl  h-fit w-full max-w-2xl p-6"
+        ref={modalRef}
+      >
+        {" "}
+        {/* Ref added to the modal content div */}
+        {/* Header with Close Icon */}
+        <div className="justify-end items-end flex flex-col">
+          <button onClick={onClose} className="mb-4 ">
+            <FaTimes size={24} className="text-gray-500 hover:text-gray-700" />{" "}
+            {/* Close icon */}
           </button>
-          <button
-            className={`text-xl w-1/2 px-6 py-3 ${
-              activeTab === "payment"
-                ? "border-b-2 border-sky-950 text-sky-950"
-                : "text-gray-500"
-            }`}
-            onClick={() => setActiveTab("payment")}
-          >
-            Payment
-          </button>
+        </div>{" "}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex w-full bg-[#FAF9FE] border-b mb-6">
+            <button
+              className={`text-xl w-1/2 px-6 py-3 ${
+                activeTab === "availability"
+                  ? "border-b-2 border-blue-900 text-blue-900"
+                  : "text-gray-500"
+              }`}
+              onClick={() => setActiveTab("availability")}
+            >
+              Availiablity
+            </button>
+            <button
+              className={`text-xl w-1/2 px-6 py-3 ${
+                activeTab === "payment"
+                  ? "border-b-2 border-sky-950 text-sky-950"
+                  : "text-gray-500"
+              }`}
+              onClick={() => setActiveTab("payment")}
+            >
+              Payment
+            </button>
+          </div>
         </div>
-
         {/* Content */}
         {activeTab === "availability" ? (
           <div className="space-y-6">
@@ -176,7 +210,6 @@ const RentalModal = ({ isOpen, onClose }) => {
             </div>
           </div>
         )}
-
         {/* Footer */}
         <div className="mt-8">
           <button
@@ -185,8 +218,6 @@ const RentalModal = ({ isOpen, onClose }) => {
                 setActiveTab("payment");
               } else {
                 setApproved(true);
-
-                // onClose();
               }
             }}
             className="w-full bg-sky-950 text-white text-xl py-4 rounded-full hover:bg-blue-800"
@@ -199,7 +230,7 @@ const RentalModal = ({ isOpen, onClose }) => {
             {/* Overlay background */}
             <div className="fixed inset-0 bg-black opacity-50 z-20"></div>
             {/* Modal content */}
-            <div className=" fixed inset-0 flex self-center  justify-center z-30 flex-col items-start p-6 gap-4 w-[55vw] h-fit  mx-auto bg-white rounded-lg shadow-md">
+            <div className=" fixed inset-0 flex self-center  justify-center z-30 flex-col items-start p-6 gap-4 w-[55vw] h-fit  mx-auto bg-white rounded-lg shadow-md">
               {/* Header */}
               <div className="flex items-center w-full mb-4">
                 <button
@@ -309,7 +340,7 @@ const RentalModal = ({ isOpen, onClose }) => {
                   setApproved(false);
                   handleRedirect();
                 }}
-                className={`w-full py-3 mt-4 text-white  text-lg rounded-full ${
+                className={`w-full py-3 mt-4 text-white  text-lg rounded-full ${
                   isChecked
                     ? "bg-blue-950 hover:bg-blue-900"
                     : "bg-gray-400 cursor-not-allowed"

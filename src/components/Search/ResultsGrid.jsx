@@ -14,7 +14,7 @@ const ResultsGrid = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [lastEvaluated, setLastEvaluated] = useState(lastEvaluatedKey || null);
   const [isLoading, setIsLoading] = useState(false);
-  const itemsPerPage = 4;
+  const itemsPerPage = 100;
   const placeholderImage = "https://via.placeholder.com/300";
 
   const fetchPagination = async (page) => {
@@ -100,15 +100,16 @@ const ResultsGrid = ({
               <div className="px-6 py-8 w-full justify-between flex">
                 <div>
                   <h3 className="text-lg font-semibold">
-                    {vehicle.make || "Unknown"}{" "}
+                    {vehicle.make || "Unknown"}
+
                     <span className="">{vehicle.model || "Unknown"}</span>
                   </h3>
-                  <p className="text-base  text-gray-400">
+
+                  <p className="text-base text-gray-400">
                     {vehicle.category || "Unknown"}
                   </p>
                 </div>
               </div>
-
               {/* Car Image */}
               <div className="">
                 <img
@@ -123,10 +124,12 @@ const ResultsGrid = ({
                   <FaGasPump size={12} />
                   <span>{vehicle.fuelType || "Unknown"}</span>
                 </div>
+
                 <div className="flex items-center space-x-2">
                   <FaCogs size={12} />
                   <span>{vehicle.transmission || "Unknown"}</span>
                 </div>
+
                 <div className="flex items-center space-x-2">
                   <FaUserFriends size={13} />
                   <span>{vehicle.seats || "Unknown"} People</span>
@@ -135,9 +138,10 @@ const ResultsGrid = ({
 
               <div className="flex justify-between items-center px-6 pb-4">
                 <div>
-                  <p className="text-base text-gray-400">Total Price</p>
-                  <p className="text-lg font-semibold">1,490 Birr</p>
+                  <p className="text-base text-gray-400"> Price</p>
+                  <p className="text-lg font-semibold"> {vehicle.price}</p>
                 </div>
+
                 <div>
                   <p className="text-base text-gray-400">Daily Rent</p>
                   <p className="text-lg font-semibold">190 Birr</p>
@@ -149,8 +153,9 @@ const ResultsGrid = ({
                   <FaStar className="text-yellow-400" />
                   <span className="text-base font-medium">4.5</span>
                 </div>
+
                 <Link
-                  to="/details"
+                  to={`/details/${vehicle.id}`}
                   className="bg-blue-950 w-full flex items-center justify-center text-white rounded-full px-3 py-2 text-base "
                 >
                   Rent Now
