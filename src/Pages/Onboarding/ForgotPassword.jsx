@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import flag from "../../images/hero/image.png";
+import { IconButton, InputAdornment, TextField } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const ForgotPassword = () => {
   const [phone_number, setPhoneNumber] = useState("");
@@ -51,7 +53,7 @@ const ForgotPassword = () => {
 
   return (
     <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 z-50">
-      <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE] relative">
+      <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE] relative scale-75">
         <h1 className="text-3xl font-bold my-8">Forgot Password</h1>
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-2 mb-4">
@@ -100,23 +102,32 @@ const ForgotPassword = () => {
   );
 };
 
+export { ForgotPassword };
 const Resetpassword = () => {
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
   const phone_number = location.state?.phone_number;
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log(phone_number);
 
     try {
-      const resetResponse = await fetch("https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/reset_password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ "phone_number": phone_number, "otp":otp, "new_password":password }),
-      });
+      const resetResponse = await fetch(
+        "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/reset_password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone_number: phone_number,
+            otp: otp,
+            new_password: password,
+          }),
+        }
+      );
 
       if (!resetResponse.ok) {
         alert("Failed to reset password");
@@ -131,62 +142,76 @@ const Resetpassword = () => {
     }
   };
 
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
   return (
     <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 z-50">
-  <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE] relative">
-    <h1 className="text-3xl font-bold my-8">Reset Password</h1>
-    <form onSubmit={handleSubmit}>
-      <div className="flex flex-col gap-4 mb-6">
-        {/* OTP Input */}
-        <div className="relative inline-block text-lg w-full">
-          <label
-            className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
-            htmlFor="otp"
-          >
-            OTP
-          </label>
-          <input
-            type="text"
-            id="otp"
-            name="otp"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            className="w-full p-3 py-4 border border-gray-400 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
-            placeholder="Enter OTP"
-          />
-        </div>
+      <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE] relative scale-75">
+        <h1 className="text-3xl font-bold my-8">Reset Password</h1>
+        <form onSubmit={handleSubmit}>
+          <div className="flex flex-col gap-4 mb-6">
+            {/* OTP Input */}
+            <div className="relative inline-block text-lg w-full">
+              <label
+                className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
+                htmlFor="otp"
+              >
+                OTP
+              </label>
+              <input
+                type="text"
+                id="otp"
+                name="otp"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="w-full p-3 py-4 border border-gray-400 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
+                placeholder="Enter OTP"
+              />
+            </div>
 
-        {/* New Password Input */}
-        <div className="relative inline-block text-lg w-full">
-          <label
-            className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
-            htmlFor="password"
+            {/* New Password Input */}
+            <TextField
+              label="New Password"
+              variant="outlined"
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      onMouseDown={handleMouseDownPassword}
+                      edge="end"
+                    >
+                      {showPassword ? <Visibility /> : <VisibilityOff />  }
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              className="w-full"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full text-white text-lg rounded-full py-3 transition bg-[#00113D] hover:bg-blue-900"
           >
-            New Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 py-4 border border-gray-400 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
-            placeholder="Enter new password"
-          />
-        </div>
+            Reset Password
+          </button>
+        </form>
       </div>
-
-      <button
-        type="submit"
-        className="w-full text-white text-lg rounded-full py-3 transition bg-[#00113D] hover:bg-blue-900"
-      >
-        Reset Password
-      </button>
-    </form>
-  </div>
-</div>
+    </div>
   );
 };
 
 export { Resetpassword };
-export default ForgotPassword;
+export default Resetpassword;

@@ -10,6 +10,8 @@ import {
 import { FaCalendarAlt } from "react-icons/fa";
 import useVehicleFormStore from "../../store/useVehicleFormStore";
 import { getDownloadUrl } from "../../api";
+const customer = JSON.parse(localStorage.getItem("customer"));
+
 
 const Details = ({ selectedVehicleId }) => {
   const [vehicleDetails, setVehicleDetails] = useState(null);
@@ -37,6 +39,7 @@ const Details = ({ selectedVehicleId }) => {
           `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/${selectedVehicleId}`,
           {
             method: "GET",
+            
           }
         );
         if (response && response.body) {
@@ -100,7 +103,7 @@ const Details = ({ selectedVehicleId }) => {
     };
 
     fetchVehicleDetails();
-  }, [selectedVehicleId, apiCallWithRetry, selectedImage]);
+  }, [selectedVehicleId, apiCallWithRetry, selectedImage,customer.AccessToken]);
 
   const handleStatus = async (e) => {
     const newStatusValue = e.target.value;
@@ -108,20 +111,39 @@ const Details = ({ selectedVehicleId }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiCallWithRetry(
-        `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/activate_status/${selectedVehicleId}`,
-        {
-          method: "GET",
-        }
-      );
-      if (response.status === 200) {
+      let response;
+      if (newStatusValue === "Active") {
+        response = await apiCallWithRetry(
+          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/activate_status/${selectedVehicleId}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${customer.AccessToken}`,
+            },
+          }
+        );
+      } else if (newStatusValue === "Inactive") {
+        response = await apiCallWithRetry(
+          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/deactivate_status/${selectedVehicleId}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${customer.AccessToken}`,
+            },
+          }
+        );
+      }
+
+      if (response && response.status === 200) {
         console.log("Vehicle status updated successfully");
-      } else if (response.status === 404) {
+      } else if (response && response.status === 404) {
         setError("Vehicle not found.");
-      } else if (response.status === 401) {
+      } else if (response && response.status === 401) {
         setError("Unauthorized.");
-      } else {
+      } else if(response){
         setError(`Failed to update status. Status code: ${response.status}`);
+      } else {
+        setError("Failed to update status. No response received.");
       }
     } catch (error) {
       console.error("Error updating vehicle status:", error);
@@ -132,15 +154,16 @@ const Details = ({ selectedVehicleId }) => {
   };
 
   if (loading) {
-    return <div>Loading vehicle details...</div>;
+    return console.log("Loading...");
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    console.log("Error:", error);
+    return <div> <h3 className="text-base  mt-4"> Click "See Details" To See more information </h3></div>;
   }
 
   if (!vehicleDetails) {
-    return <div>Vehicle details not found.</div>;
+    return  console.log("Vehicle Details not found");
   }
 
   const getImageUrl = (imageKey) => {

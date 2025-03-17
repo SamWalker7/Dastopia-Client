@@ -4,11 +4,15 @@ import flag from "../../images/hero/image.png";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../../store/auth/authThunks";
+import { IconButton, InputAdornment, TextField } from "@mui/material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 const Login = () => {
   const [phone_number, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -21,12 +25,12 @@ const Login = () => {
       navigate("/");
       setTimeout(() => {
         window.location.reload();
-      }, 100); // Small delay ensures navigation happens before reload
+      }, 100);
     });
   };
 
   const handleForgotClick = () => {
-    navigate('/forgot'); 
+    navigate("/forgot");
   };
 
   useEffect(() => {
@@ -47,31 +51,6 @@ const Login = () => {
     validatePhoneNumber();
   }, [phone_number]);
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   const response = await fetch(
-  //     `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/signin`,
-  //     {
-  //       headers: { "Content-Type": "application/json" },
-  //       method: "POST",
-  //       body: JSON.stringify({
-  //         phone_number,
-  //         password,
-  //       }),
-  //     }
-  //   );
-  //   const json = await response.json();
-  //   if (response.ok) {
-  //     localStorage.setItem("customer", JSON.stringify(json));
-  //     console.log("yes", json);
-  //     alert("You have successfully logged in");
-  //     navigate("/");
-  //   }
-  //   if (!response.ok) {
-  //     console.log("no ", json.body.message);
-  //   }
-  // };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "phone_number") {
@@ -79,10 +58,18 @@ const Login = () => {
     }
   };
 
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
   return (
-    <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 z-50">
-      <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE] relative">
-        <h1 className="text-5xl font-bold my-8">Login</h1>
+    <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 z-50 ">
+      <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE] scale-75 relative">
+        <h1 className="text-3xl font-bold my-8">Login</h1>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
@@ -115,27 +102,38 @@ const Login = () => {
                 <p className="text-red-500 mb-4">{errors.phone_number}</p>
               )}
             </div>
-            <div className="relative inline-block my-3 text-lg w-full">
-              {/* Label inside box */}
-              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
-                Password
-              </label>
-              <input
-                type="text"
-                name="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter Your Password"
-                className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
-              />{" "}
-                <a href="/forgot"
+
+            <TextField
+              label="Password"
+              variant="outlined"
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      onMouseDown={handleMouseDownPassword}
+                      edge="end"
+                    >
+                      {showPassword ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              className="w-full my-3"
+            >
+            </TextField>
+              <a
+                href="/forgot"
                 onClick={handleForgotClick}
                 className="flex flex-row items-end justify-end underline text-sm "
-                >
-      Forgot password?
-    </a>
-                            
-            </div>
+              >
+                Forgot password?
+              </a>
           </div>
 
           {/* Submit Button */}
@@ -148,7 +146,6 @@ const Login = () => {
                 : "bg-gray-300 cursor-not-allowed"
             }`}
           >
-            {" "}
             {loading ? "Logging in..." : "Login"}
           </button>
           {error && <p>{error}</p>}

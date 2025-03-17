@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { getDownloadUrl } from "../../api"; // Import getDownloadUrl
-import { FaGasPump, FaCogs, FaUserFriends } from "react-icons/fa";
+import { getDownloadUrl } from "../../api";
+import { FaGasPump, FaCogs, FaUserFriends, FaSpinner } from "react-icons/fa";
 import audia1 from "../../images/cars-big/toyota-box.png";
 import Details from "./Details";
 
@@ -9,11 +9,14 @@ const MyListing = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [vehicleImages, setVehicleImages] = useState({});
   const [loadingImages, setLoadingImages] = useState(true);
+  const [loadingVehicles, setLoadingVehicles] = useState(true);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const customer = JSON.parse(localStorage.getItem("customer"));
-  const placeholderImage = "https://via.placeholder.com/300"; // Placeholder image URL
+  const placeholderImage = "https://via.placeholder.com/300";
 
   useEffect(() => {
     const fetchVehicles = async () => {
+      setLoadingVehicles(true);
       try {
         const response = await fetch(
           "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/owner_car",
@@ -28,13 +31,14 @@ const MyListing = () => {
         if (response.ok) {
           const vehiclesData = data.body?.Items || [];
           setVehicles(vehiclesData);
-          console.log("Fetched vehicles", vehiclesData);
           await fetchVehicleImages(vehiclesData);
         } else {
           console.error("Failed to fetch vehicles", data.body?.message);
         }
       } catch (error) {
         console.error("Error fetching vehicles:", error);
+      } finally {
+        setLoadingVehicles(false);
       }
     };
 
@@ -47,22 +51,21 @@ const MyListing = () => {
             const fetchedUrls = await Promise.all(
               vehicle.vehicleImageKeys.map(async (imageKey) => {
                 try {
-                  const path = await getDownloadUrl(imageKey); // Use getDownloadUrl here
-                  console.log("getDownloadUrl path:", path.body); // Log the path response
-                  return path?.body || null; // Return the URL from path.body, or null if it's not valid
+                  const path = await getDownloadUrl(imageKey);
+                  return path?.body || null;
                 } catch (error) {
                   console.error(
                     "Error in getDownloadUrl for key:",
                     imageKey,
                     error
                   );
-                  return null; // Return null in case of error
+                  return null;
                 }
               })
             );
-            imageUrls[vehicle.id] = fetchedUrls.filter((url) => url !== null); // Filter out null URLs
+            imageUrls[vehicle.id] = fetchedUrls.filter((url) => url !== null);
           } else {
-            imageUrls[vehicle.id] = [placeholderImage]; // Use placeholder if no image keys
+            imageUrls[vehicle.id] = [placeholderImage];
           }
         }
         setVehicleImages(imageUrls);
@@ -77,7 +80,11 @@ const MyListing = () => {
   }, []);
 
   const handleSeeDetails = (vehicleId) => {
+    setLoadingDetails(true);
     setSelectedVehicleId(vehicleId);
+    setTimeout(() => {
+      setLoadingDetails(false);
+    }, 500);
   };
 
   return (
@@ -85,16 +92,21 @@ const MyListing = () => {
       <div className="p-6 bg-white lg:w-2/4 w-full shadow-lg rounded-lg">
         <h1 className="text-2xl font-semibold mt-4">My Listings</h1>
         <div className="flex flex-wrap justify-between">
-          {vehicles.length > 0 ? (
+          {loadingVehicles ? (
+            <div className="flex justify-center w-full">
+              <FaSpinner className="animate-spin text-3xl" />
+            </div>
+          ) : vehicles.length > 0 ? (
             vehicles.map((vehicle, index) => (
               <div
                 key={index}
                 className="flex justify-between w-full h-fit my-4 bg-white rounded-xl shadow-md overflow-hidden"
               >
-                {/* Car Image */}
                 <div className="w-2/6 flex rounded-2xl mx-4 py-4">
                   {loadingImages ? (
-                    <div>Loading Image...</div>
+                    <div className="flex justify-center w-full">
+                    <FaSpinner className="animate-spin text-xl" />
+                    </div>
                   ) : (
                     <img
                       className="w-full h-full rounded-2xl object-center object-cover"
@@ -117,7 +129,6 @@ const MyListing = () => {
                       </p>
                     </div>
                   </div>
-
                   <div className="grid lg:grid-cols-3 grid-cols-2 justify-between items-center px-2 my-4 w-fit text-gray-400 text-base">
                     <div className="flex items-center space-x-2">
                       <FaGasPump size={12} />
@@ -132,7 +143,6 @@ const MyListing = () => {
                       <span>{vehicle.seats || "Unknown"} People</span>
                     </div>
                   </div>
-
                   <div className="flex justify-between items-center px-2 pb-4">
                     <div>
                       <p className="text-base text-gray-400">Daily Rent</p>
@@ -148,7 +158,6 @@ const MyListing = () => {
                       {vehicle.status}
                     </div>
                   </div>
-
                   <div className="flex justify-between items-center px-2 pb-4">
                     <button
                       className="bg-[#00173C] w-full text-white rounded-full px-4 py-2 text-xs font-normal"
@@ -165,9 +174,13 @@ const MyListing = () => {
           )}
         </div>
       </div>
-
-      {/* Pass selected vehicle ID to Details component */}
-      <Details selectedVehicleId={selectedVehicleId} />
+      {loadingDetails ? (
+        <div className="flex justify-center items-center">
+          <FaSpinner className="animate-spin text-3xl" />
+        </div>
+      ) : (
+        <Details selectedVehicleId={selectedVehicleId} />
+      )}
     </div>
   );
 };
