@@ -2,7 +2,7 @@ import image from "../images/testimonials/avatar.png";
 import edit from "../images/hero/editIcon.png";
 import { HiEllipsisVertical } from "react-icons/hi2";
 import { HiMiniArrowsUpDown } from "react-icons/hi2";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import flag from "../images/hero/image.png";
 import { MdOutlinePerson } from "react-icons/md";
 import { MdOutlinePersonOff } from "react-icons/md";
@@ -10,59 +10,25 @@ import { IoFileTray } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { TextField } from "@mui/material";
+
 const Profile = ({ user2, setUser }) => {
-  const [rentals, setRentals] = useState([
-    {
-      startDate: "23/3/2022",
-      endDate: "24/3/2022",
-      carName: "Bekele Mamo",
-      carOwner: "Bekele Mamo",
-      phone: "+251 93432124",
-      status: "Completed",
-    },
-    {
-      startDate: "24/3/2022",
-      endDate: "23/3/2022",
-      carName: "Addis Ababa",
-      carOwner: "Bekele Mamo",
-      phone: "+251 93432124",
-      status: "Active",
-    },
-    {
-      startDate: "25/3/2022",
-      endDate: "22/3/2022",
-      carName: "Zeina Haile",
-      carOwner: "Bekele Mamo",
-      phone: "+251 93432124",
-      status: "Canceled",
-    },
-    {
-      startDate: "26/3/2022",
-      endDate: "NA",
-      carName: "Teddy Worku",
-      carOwner: "Bekele Mamo",
-      phone: "+251 93432124",
-      status: "Completed",
-    },
-    {
-      startDate: "27/3/2022",
-      endDate: "21/3/2022",
-      carName: "Biruk Tadesse",
-      carOwner: "Bekele Mamo",
-      phone: "+251 93432124",
-      status: "Completed",
-    },
-  ]);
+  const [rentals, setRentals] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
-  //const { user2 } = location.state || {};
   console.log("in profile ", user2);
   const [profile, setProfile] = useState({
-    firstName: user2.userAttributes[5].Value,
-    lastName: user2.userAttributes[4].Value,
-    email: user2.userAttributes[0].Value,
-    phoneNumber: user2.userAttributes[2].Value,
-    location: "Addis Ababa",
+    firstName:
+      user2?.userAttributes?.find((attr) => attr.Name === "given_name")
+        ?.Value || "",
+    lastName:
+      user2?.userAttributes?.find((attr) => attr.Name === "family_name")
+        ?.Value || "",
+    email:
+      user2?.userAttributes?.find((attr) => attr.Name === "email")?.Value || "",
+    phoneNumber:
+      user2?.userAttributes?.find((attr) => attr.Name === "phone_number")
+        ?.Value || "",
+    location: "Addis Ababa", // You might want to fetch this from user data if available
   });
 
   // Validation error state
@@ -216,6 +182,63 @@ const Profile = ({ user2, setUser }) => {
       reader.readAsDataURL(file);
     }
   };
+
+  useEffect(() => {
+    const fetchRentalHistory = async () => {
+      const token = JSON.parse(localStorage.getItem("customer"));
+      if (token) {
+        try {
+          const response = await fetch(
+            "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/get_all_rentee_booking",
+            {
+              headers: {
+                Authorization: `Bearer ${token.AccessToken}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+
+            if (data && data.body && Array.isArray(data.body)) {
+              setRentals(data.body);
+            } else {
+              console.error("API response body is not a valid array:", data);
+              setRentals([]); // Ensure rentals is an empty array
+            }
+          } else if (response.status === 401) {
+            console.error("Unauthorized access to rental history");
+            setRentals([]); // Ensure rentals is an empty array
+          } else {
+            console.error("Failed to fetch rental history:", response.status);
+            setRentals([]); // Ensure rentals is an empty array
+          }
+        } catch (error) {
+          console.error("Error fetching rental history:", error);
+          setRentals([]); // Ensure rentals is an empty array
+        }
+      } else {
+        console.warn("No customer token found, cannot fetch rental history.");
+        setRentals([]); // Ensure rentals is an empty array
+      }
+    };
+
+    fetchRentalHistory();
+  });
+
+  // Early return if rentals is not an array
+  if (!Array.isArray(rentals)) {
+    console.error("Rentals is not an array:", rentals);
+    return (
+      <div className="py-10 bg-[#FAF9FE] md:px-20 px-6 space-y-8 md:pt-32 pt-28 flex flex-col">
+        <div className="bg-white p-6 shadow-lg rounded-lg">
+          <p className="text-red-500 font-semibold">
+            Error: Could not load rental history. Please try again later.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-10 bg-[#FAF9FE] md:px-20 px-6 space-y-8 md:pt-32 pt-28  flex flex-col">
@@ -440,7 +463,7 @@ const Profile = ({ user2, setUser }) => {
                       </button>
                       <button
                         onClick={handleConfirmDelete}
-                        className=" bg-red-100 text-sm flex items-center justify-center w-fit text-red-600 hover:bg-red-600 hover:text-white  rounded-full px-8  my-2  py-2"
+                        className=" bg-red-100 text-sm flex items-center justify-center w-fit text-red-600 hover:bg-red-600 hover:text-white   rounded-full px-8  my-2  py-2"
                       >
                         Delete Account
                       </button>
@@ -455,7 +478,7 @@ const Profile = ({ user2, setUser }) => {
         {/* Payment Details */}
         <div className="p-6 bg-white md:w-1/3 flex flex-col   shadow-lg rounded-lg">
           <div className=" text-lg font-semibold mb-8">Payment Details</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2  text-sm gap-4 ">
+          <div className="grid grid-cols-1 sm:grid-cols-2   text-sm gap-4 ">
             <div className="flex items-center">
               Full Name{" "}
               <span className="mx-2 bg-blue-100 rounded-md p-2 ">
@@ -479,64 +502,76 @@ const Profile = ({ user2, setUser }) => {
       </div>
 
       {/* Table */}
-      <div className=" bg-white w-full  shadow-lg rounded-lg">
-        <div className="  p-6  rounded-lg ">
-          <h2 className="text-lg font-semibold pl-2  my-8">Rental History</h2>
+      <div className=" bg-white w-full   shadow-lg rounded-lg">
+        <div className="   p-6   rounded-lg ">
+          <h2 className="text-lg font-semibold pl-2   my-8">Rental History</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-x-0 border-t-0 border-gray-100 rounded-lg">
               <thead>
                 <tr className="bg-gray-50 font-semibold">
                   <th
-                    className="px-6 text-left  font-semibold py-4 text-gray-600"
+                    className="px-6 text-left   font-semibold py-4 text-gray-600"
                     onClick={() => handleSort("startDate")}
                   >
                     Rent start date{" "}
                     <HiMiniArrowsUpDown className="inline ml-1 cursor-pointer" />
                   </th>
                   <th
-                    className="px-6 text-left  font-semibold py-4 text-gray-600"
+                    className="px-6 text-left   font-semibold py-4 text-gray-600"
                     onClick={() => handleSort("endDate")}
                   >
                     Rent end date{" "}
                     <HiMiniArrowsUpDown className="inline ml-1 cursor-pointer" />
                   </th>
                   <th
-                    className="px-6 text-left  font-semibold py-4 text-gray-600"
+                    className="px-6 text-left   font-semibold py-4 text-gray-600"
                     onClick={() => handleSort("carName")}
                   >
                     Car Name{" "}
                     <HiMiniArrowsUpDown className="inline ml-1 cursor-pointer" />
                   </th>
-                  <th className="px-6 text-left  font-semibold py-4 text-gray-600">
+                  <th className="px-6 text-left   font-semibold py-4 text-gray-600">
                     Car Owner
                   </th>
-                  <th className="px-6 text-left  font-semibold py-4 text-gray-600">
+                  <th className="px-6 text-left   font-semibold py-4 text-gray-600">
                     Phone Number
                   </th>
-                  <th className="px-6 text-left  font-semibold py-4 text-gray-600">
+                  <th className="px-6 text-left   font-semibold py-4 text-gray-600">
                     Status
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {sortedRentals.map((rental, index) => (
-                  <tr key={index} className="border-t border-gray-200">
-                    <td className="px-6   text-gray-700">{rental.startDate}</td>
-                    <td className="px-6   text-gray-700">{rental.endDate}</td>
-                    <td className="px-6   text-gray-700">{rental.carName}</td>
-                    <td className="px-6   text-gray-700">{rental.carOwner}</td>
-                    <td className="px-6   text-gray-700">{rental.phone}</td>
-                    <td className="p-8">
-                      <span
-                        className={`px-3 py-2 rounded-xl font-semibold text-xs  ${
-                          statusColors[rental.status]
-                        }`}
-                      >
-                        {rental.status}
-                      </span>
+                {Array.isArray(sortedRentals) && sortedRentals.length > 0 ? (
+                  sortedRentals.map((rental, index) => (
+                    <tr key={index} className="border-t border-gray-200">
+                      <td className="px-6   text-gray-700">
+                        {rental.startDate}
+                      </td>
+                      <td className="px-6   text-gray-700">{rental.endDate}</td>
+                      <td className="px-6   text-gray-700">{rental.carName}</td>
+                      <td className="px-6   text-gray-700">
+                        {rental.carOwner}
+                      </td>
+                      <td className="px-6   text-gray-700">{rental.phone}</td>
+                      <td className="p-8">
+                        <span
+                          className={`px-3 py-2 rounded-xl font-semibold text-xs   ${
+                            statusColors[rental.status]
+                          }`}
+                        >
+                          {rental.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="py-4 text-center text-gray-500">
+                      No history available.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

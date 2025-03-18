@@ -10,14 +10,14 @@ const Dropdown = ({ label, options, selectedOption, onSelect }) => {
   };
 
   return (
-    <div className="relative inline-block my-3 text-xl w-full">
-      <label className="absolute -top-2 left-3 text-lg bg-white px-1 text-gray-500">
+    <div className="relative inline-block my-3  text-sm w-full">
+      <label className="absolute -top-2 left-3 text-sm bg-white px-1 text-gray-500">
         {label}
       </label>
       <div className="border border-gray-400 rounded-md bg-white">
         <button
           onClick={handleToggle}
-          className="flex justify-between w-full p-3 py-6 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400"
+          className="flex justify-between w-full p-3 py-3 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400"
         >
           <span>{selectedOption || "Select an option"}</span>
           <svg

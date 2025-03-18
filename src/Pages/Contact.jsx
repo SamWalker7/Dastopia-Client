@@ -30,7 +30,7 @@ const ContactForm = () => {
               Contact Information
             </h2>
             <p className="relative text-lg text-[#00113D] mb-8">
-              Say something to start a live chat!
+              Say something to start a chat!
             </p>
             <div className="w-full flex justify-center items-center">
               {/* Placeholder for car image */}
@@ -44,15 +44,15 @@ const ContactForm = () => {
             {/* Contact Details */}
             <div className=" relative space-y-4 text-lg text-[#00113D]">
               <p className="flex items-center gap-2">
-                <i className="fas fa-phone-alt"></i> +1012 3456 789
+                <i className="fas fa-phone-alt"></i> +251946888444
               </p>
               <p className="flex items-center gap-2">
-                <i className="fas fa-envelope"></i> demo@gmail.com
+                <i className="fas fa-envelope"></i> contact@dastechnologies.org
               </p>
-              <p className="flex items-center gap-2">
+              {/* <p className="flex items-center gap-2">
                 <i className="fas fa-map-marker-alt"></i> 132 Dartmouth Street
                 Boston, Massachusetts 02156 United States
-              </p>
+              </p> */}
             </div>
           </div>
 

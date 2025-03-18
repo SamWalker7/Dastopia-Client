@@ -21,10 +21,21 @@ import {
 } from "react-icons/fa";
 import RentalModal from "./RentalModal";
 import PriceBreakdown from "./PriceBreakdown";
-
+import Dropdown from "../../components/Search/Dropdown";
+const locations = [
+  "Addis Ababa",
+  "Bole",
+  "Merkato",
+  "Piassa",
+  "CMC",
+  "Summit",
+  // Add more locations as needed
+];
 export default function Details2(props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate(); // useNavigate hook for navigation
+  const [pickupLocation, setPickupLocation] = useState("");
+  const [dropoffLocation, setDropoffLocation] = useState("");
 
   const { id } = useParams();
   const [selected, setSelected] = useState(null);
@@ -193,7 +204,6 @@ export default function Details2(props) {
             {" "}
             <div className="flex flex-col ">
               <div>Bole International Airport</div>
-              <div>Wed, Aug 28,2024 , 10:00</div>
             </div>
             <div className="mx-4">
               {" "}
@@ -210,7 +220,6 @@ export default function Details2(props) {
             </div>
             <div className="flex flex-col ">
               <div>Bole International Airport</div>
-              <div>Wed, Aug 28,2024 , 10:00</div>
             </div>
           </div>
           <button className=" border border-blue-950 text-sm text-black hover:bg-blue-200 hover:border-none rounded-full px-6 ml-8 my-2  py-1">
@@ -423,6 +432,21 @@ export default function Details2(props) {
                 </div>
               </div>
             </div>
+          </div>
+          <div className=" w-full">
+            <Dropdown
+              label="Select Pick up location"
+              options={locations}
+              selectedOption={pickupLocation}
+              onSelect={setPickupLocation}
+            />
+
+            <Dropdown
+              label="Select Drop off location"
+              options={locations}
+              selectedOption={dropoffLocation}
+              onSelect={setDropoffLocation}
+            />
           </div>
           <div className="mt-4 text-sm">
             <span className="font-medium text-black"> Driver request</span>

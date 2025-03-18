@@ -155,7 +155,7 @@ const ResultsGrid = ({
                 </div>
 
                 <Link
-                  to={`/details/${vehicle.id}`}
+                  to={`/details2/${vehicle.id}`}
                   className="bg-blue-950 w-full flex items-center justify-center text-white rounded-full px-3 py-2 text-base "
                 >
                   Rent Now
