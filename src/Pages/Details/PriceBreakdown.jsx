@@ -1,18 +1,197 @@
 import React, { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
-const PaymentDetailsModal = ({ onClose }) => {
+const PaymentDetailsModal = ({
+  totalPrice,
+  id, // carId
+  ownerId,
+  dropOffTime,
+  pickUpTime,
+  pickUpLocation,
+  dropOffLocation,
+  onClose,
+}) => {
   const [isChecked, setIsChecked] = useState(false);
-  // const [approved, setApproved] = useState(true); // Visibility is controlled by PriceBreakdown
-  // const [handleRedirect, setHandleRedirect] = useState(() => {}); // Assuming handleRedirect is passed as a prop or defined in the parent
+  const customer = JSON.parse(localStorage.getItem("customer"));
+  const USER_ID =
+    customer?.userAttributes?.find((attr) => attr.Name === "sub")?.Value || ""; //the current user's ID
 
   const handleCheckboxChange = (event) => {
     setIsChecked(event.target.checked);
   };
 
-  // Assuming handleRedirect is defined in the parent component and you might need to pass it down or handle the logic there
-  const handleRedirect = () => {
-    console.log("Redirecting after approval");
-    // Add your redirection logic here
+  const handleApproveBooking = async () => {
+    try {
+      console.log("ownerId before fetch:", USER_ID); // Add this line
+
+      const bookingResponse = await fetch(
+        "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${customer.AccessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ownerId: ownerId, // This is where the error says it's missing
+            renteeId: USER_ID,
+            carId: id,
+            startDate: pickUpTime,
+            endDate: dropOffTime,
+            price: totalPrice.toString(),
+            pickUp: pickUpLocation,
+            dropOff: dropOffLocation,
+            cancelUrl: "your_cancel_url",
+            returnUrl: "your_return_url",
+          }),
+        }
+      );
+
+      if (bookingResponse.ok) {
+        console.log("Booking created successfully");
+
+        // Fetch the existing vehicle data to get the events array
+        const vehicleResponse = await fetch(
+          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicles/${id}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${customer.AccessToken}`,
+            },
+          }
+        );
+
+        if (vehicleResponse.ok) {
+          const vehicleData = await vehicleResponse.json();
+          const events = vehicleData.body.events;
+
+          const updatedEvents = [];
+          const pickUpDateObj = new Date(pickUpTime);
+          const dropOffDateObj = new Date(dropOffTime);
+
+          events.forEach((event) => {
+            const eventStartDateObj = new Date(event.startDate);
+            const eventEndDateObj = new Date(event.endDate);
+
+            if (event.status === "available") {
+              if (
+                pickUpDateObj >= eventStartDateObj &&
+                dropOffDateObj <= eventEndDateObj
+              ) {
+                // The booking falls entirely within this event's range.
+                if (pickUpDateObj > eventStartDateObj) {
+                  updatedEvents.push({
+                    eventId: uuidv4(),
+                    startDate: event.startDate,
+                    endDate: pickUpTime,
+                    status: "available",
+                    source: "manual",
+                  });
+                }
+
+                updatedEvents.push({
+                  eventId: uuidv4(),
+                  startDate: pickUpTime,
+                  endDate: dropOffTime,
+                  status: "blocked",
+                  source: "manual",
+                });
+
+                if (dropOffDateObj < eventEndDateObj) {
+                  updatedEvents.push({
+                    eventId: uuidv4(),
+                    startDate: dropOffTime,
+                    endDate: event.endDate,
+                    status: "available",
+                    source: "manual",
+                  });
+                }
+              } else if (
+                pickUpDateObj < eventEndDateObj &&
+                dropOffDateObj > eventStartDateObj
+              ) {
+                if (
+                  pickUpDateObj >= eventStartDateObj &&
+                  pickUpDateObj <= eventEndDateObj
+                ) {
+                  updatedEvents.push({
+                    eventId: uuidv4(),
+                    startDate: event.startDate,
+                    endDate: pickUpTime,
+                    status: "available",
+                    source: "manual",
+                  });
+
+                  updatedEvents.push({
+                    eventId: uuidv4(),
+                    startDate: pickUpTime,
+                    endDate: event.endDate,
+                    status: "blocked",
+                    source: "manual",
+                  });
+                } else if (
+                  dropOffDateObj >= eventStartDateObj &&
+                  dropOffDateObj <= eventEndDateObj
+                ) {
+                  updatedEvents.push({
+                    eventId: uuidv4(),
+                    startDate: event.startDate,
+                    endDate: dropOffTime,
+                    status: "blocked",
+                    source: "manual",
+                  });
+
+                  updatedEvents.push({
+                    eventId: uuidv4(),
+                    startDate: dropOffTime,
+                    endDate: event.endDate,
+                    status: "available",
+                    source: "manual",
+                  });
+                }
+              } else {
+                updatedEvents.push(event);
+              }
+            } else {
+              updatedEvents.push(event);
+            }
+          });
+
+          // Update the vehicle with the modified events
+          const updateVehicleResponse = await fetch(
+            `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicles/${id}`,
+            {
+              method: "PUT",
+              headers: {
+                Authorization: `Bearer ${customer.AccessToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ events: updatedEvents }),
+            }
+          );
+
+          if (updateVehicleResponse.ok) {
+            console.log("Vehicle events updated successfully");
+            onClose();
+            // Add any further actions after successful booking creation
+          } else {
+            console.error(
+              "Failed to update vehicle events",
+              updateVehicleResponse
+            );
+            // Handle error (e.g., show an error message)
+          }
+        } else {
+          console.error("Failed to fetch vehicle data", vehicleResponse);
+        }
+      } else {
+        console.error("Failed to create booking", bookingResponse);
+        // Handle error (e.g., show an error message)
+      }
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      // Handle network errors or other exceptions
+    }
   };
 
   return (
@@ -127,10 +306,7 @@ const PaymentDetailsModal = ({ onClose }) => {
 
         {/* Approve Button */}
         <button
-          onClick={() => {
-            onClose();
-            handleRedirect();
-          }}
+          onClick={handleApproveBooking}
           className={`w-full py-1 md:py-2 mt-2 text-white text-sm md:text-sm rounded-full ${
             isChecked
               ? "bg-blue-950 hover:bg-blue-900"
@@ -145,52 +321,45 @@ const PaymentDetailsModal = ({ onClose }) => {
   );
 };
 
-const PriceBreakdown = () => {
+export default function PriceBreakdown({
+  days,
+  dailyPrice,
+  totalPrice,
+  id,
+  ownerId,
+  dropOffTime,
+  pickUpTime,
+  pickUpLocation,
+  dropOffLocation,
+}) {
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
 
   return (
-    <div className="flex items-center justify-center p-4">
+    <div className="flex items-center justify-center ">
       <div className="bg-[#0d1b3e] text-gray-300 shadow-lg p-6 rounded-2xl w-full max-w-md">
         <h1 className="text-xl md:text-2xl text-white mb-4">Price Breakdown</h1>
 
         <div className="space-y-3">
           <div className="flex justify-between text-xs md:text-sm">
             <span>Daily Fee</span>
-            <span>2,450 birr</span>
+            <span>{dailyPrice} birr</span>
           </div>
 
           <div className="flex justify-between text-xs md:text-sm">
             <span>Rental days</span>
-            <span>3 days</span>
-          </div>
-
-          <div className="h-px bg-white/20 my-3" />
-
-          <div className="flex justify-between font-semibold text-white text-xs md:text-sm">
-            <span>Total Cost</span>
-            <span>5,395 Birr</span>
+            <span>{days} days</span>
           </div>
 
           <div className="flex justify-between text-xs md:text-sm">
-            <span>Basic Insurance Plan</span>
-            <span>1,000 birr</span>
-          </div>
-
-          <div className="flex justify-between text-xs md:text-sm">
-            <span>Legal contract Fee</span>
-            <span>1,000 birr</span>
-          </div>
-
-          <div className="flex justify-between text-xs md:text-sm">
-            <span>Registration Fee</span>
-            <span>1,200 birr</span>
+            <span>Service Fee</span>
+            <span>{ownerId} birr</span>
           </div>
 
           <div className="h-px bg-white/20 my-3" />
 
           <div className="flex justify-between text-sm font-semibold text-white">
             <span>Total cost</span>
-            <span>$7,700 birr</span>
+            <span>{totalPrice} birr</span>
           </div>
         </div>
 
@@ -203,10 +372,17 @@ const PriceBreakdown = () => {
       </div>
 
       {showPaymentDetails && (
-        <PaymentDetailsModal onClose={() => setShowPaymentDetails(false)} />
+        <PaymentDetailsModal
+          totalPrice={totalPrice}
+          id={id}
+          ownerId={ownerId}
+          dropOffTime={dropOffTime}
+          pickUpTime={pickUpTime}
+          pickUpLocation={pickUpLocation}
+          dropOffLocation={dropOffLocation}
+          onClose={() => setShowPaymentDetails(false)}
+        />
       )}
     </div>
   );
-};
-
-export default PriceBreakdown;
+}

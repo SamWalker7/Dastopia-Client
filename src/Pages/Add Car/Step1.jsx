@@ -144,8 +144,8 @@ const Step1 = ({ nextStep }) => {
           <TextField
             label="Plate Number"
             variant="outlined"
-            name="vehichleNumber"
-            value={vehicleData.vehichleNumber}
+            name="vehicleNumber"
+            value={vehicleData.vehicleNumber}
             onChange={handleChange}
             size="small"
             fullWidth

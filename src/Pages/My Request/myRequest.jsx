@@ -25,7 +25,7 @@ const MyRequests = () => {
     <div className="flex justify-center md:pt-40 p-8 bg-[#F8F8FF] min-h-screen">
       {/* Left Panel - Rental Requests */}
       <div className="w-1/4 bg-white p-6 rounded-xl shadow-md space-y-4">
-        <h2 className="text-3xl font-bold text-[#00113D]">My Requests</h2>
+        <h2 className="text-xl font-bold text-[#00113D]">My Requests</h2>
 
         {/* Rental Request Card */}
         {[
@@ -55,13 +55,13 @@ const MyRequests = () => {
             key={index}
             className={`p-4  space-y-8 rounded-lg shadow-blue-100 shadow-md`}
           >
-            <div className="text-lg mb-4 space-y-2 w-full text-gray-500">
+            <div className="text-sm mb-4 space-y-2 w-full text-gray-500">
               <div className="grid grid-cols-2 gap-4 w-full mt-4">
                 <div className="pl-4">
                   <span className="font-medium text-black">Car Brand</span>
                   <p className="">Toyota</p>
                 </div>
-                <div className="ml-24 w-full">
+                <div className=" w-full">
                   <span className="font-medium text-black">Car Model</span>
                   <p className="">Camry</p>
                 </div>{" "}
@@ -71,18 +71,18 @@ const MyRequests = () => {
                   </span>
                   <p className="">August 4, 2024</p>
                 </div>
-                <div className="ml-24 w-full">
+                <div className=" w-full">
                   <span className="font-medium text-black">Rent Duration</span>
                   <p className="">12 Days</p>
                 </div>
               </div>
             </div>
-            <div className="text-lg mb-4 space-y-2 w-full text-gray-500">
+            <div className="text-sm mb-4 space-y-2 w-full text-gray-500">
               <div className="grid grid-cols-3 gap-4 w-full mt-4">
                 <div className="pl-4">
                   <span className="font-medium text-black">Status</span>
                   <div
-                    className={`w-44 flex justify-center items-center py-2 px-4 text-base rounded-xl bg-[#E9F1FE] text-[#4478EB] my-2  `}
+                    className={`w-44 flex justify-center items-center py-2 px-4 text-sm rounded-xl bg-[#E9F1FE] text-[#4478EB] my-2  `}
                   >
                     Waiting Approval
                   </div>
@@ -90,7 +90,7 @@ const MyRequests = () => {
               </div>
             </div>
 
-            <button className="mt-3 w-full py-3 rounded-full bg-[#00113D] text-white ">
+            <button className="mt-3 w-full py-2 text-sm rounded-full bg-[#00113D] text-white ">
               View Details
             </button>
           </div>
@@ -101,34 +101,34 @@ const MyRequests = () => {
         <div className="flex gap-10  ">
           {/* Request Summary */}
           <section className="w-1/2 bg-white p-6   rounded-xl shadow-md  ">
-            <h2 className="text-2xl font-semibold text-[#00113D] mb-8">
+            <h2 className="text-sm font-semibold text-[#00113D] mb-8">
               Request Summary
             </h2>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="font-medium text-lg text-[#00113D]">
+                <p className="font-medium text-sm text-[#00113D]">
                   Request Status
                 </p>
-                <p className="text-lg text-[#5A5A5A]">Pending</p>
+                <p className="text-sm text-[#5A5A5A]">Pending</p>
               </div>
               <div>
-                <p className="font-medium text-lg text-[#00113D] ">
+                <p className="font-medium text-sm text-[#00113D] ">
                   Request Date and Time
                 </p>
-                <p className="text-lg text-[#5A5A5A]">June 12, 2024 3:00AM</p>
+                <p className="text-sm text-[#5A5A5A]">June 12, 2024 3:00AM</p>
               </div>
               <div
-                className={`w-44 flex justify-center items-center py-2 px-4 text-base rounded-xl bg-[#E9F1FE] text-[#4478EB]
+                className={`w-44 flex justify-center items-center py-2 px-4 text-sm rounded-xl bg-[#E9F1FE] text-[#4478EB]
             `}
               >
                 {" "}
                 Waiting Approval
               </div>
             </div>
-            <h2 className="text-2xl mt-16 mb-4 font-semibold text-[#00113D] ">
+            <h2 className="text-sm mt-16 mb-4 font-semibold text-[#00113D] ">
               Car Details
             </h2>
-            <div className="text-lg  space-y-2 w-full text-gray-500">
+            <div className="text-sm  space-y-2 w-full text-gray-500">
               <div className="grid grid-cols-2 gap-4 w-3/5 mt-4">
                 <div className="">
                   <span className="font-medium text-black">Car Brand</span>
@@ -148,10 +148,10 @@ const MyRequests = () => {
 
           {/* Rental Details */}
           <section className="w-1/2 bg-white p-6   rounded-xl shadow-md">
-            <h2 className="text-2xl font-semibold text-[#00113D] mb-8">
+            <h2 className="text-sm font-semibold text-[#00113D] mb-8">
               Rental Details
             </h2>
-            <div className="flex flex-col  text-lg text-[#5A5A5A]">
+            <div className="flex flex-col  text-sm text-[#5A5A5A]">
               <div className="flex items-start gap-2">
                 <div>
                   <p className="flex items-center ">
@@ -185,7 +185,7 @@ const MyRequests = () => {
                 </div>
               </div>
             </div>
-            <div className="mt-4 text-lg">
+            <div className="mt-4 text-sm">
               <span className="font-medium text-black"> Driver request</span>
               <p className="text-gray-500">Yes</p>
             </div>
@@ -194,7 +194,7 @@ const MyRequests = () => {
         <div>
           {/* Rentee Details */}
           <section className="h-fit bg-white p-6 space-y-6   rounded-xl shadow-md">
-            <h2 className="text-2xl font-semibold text-[#00113D] mb-8">
+            <h2 className="text-sm font-semibold text-[#00113D] mb-8">
               Rentee Details
             </h2>
             <div className=" items-center flex gap-8">
@@ -204,22 +204,22 @@ const MyRequests = () => {
                 className="w-40 h-40 rounded-full"
               />
               <div className="grid gap-4 grid-cols-2">
-                <h3 className="flex gap-4 text-lg  text-[#5A5A5A]">
+                <h3 className="flex gap-4 text-sm  text-[#5A5A5A]">
                   <IoPersonOutline size={18} /> Steven Gerard
                 </h3>
-                <div className="flex items-center gap-4 text-lg text-[#5A5A5A] mt-1">
+                <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
                   <MdOutlineLocalPhone size={18} />
                   <p>+251 9243212</p>
                 </div>
-                <div className="flex items-center gap-4 text-lg text-[#5A5A5A] mt-1">
+                <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
                   <MdOutlineMail size={18} />
                   <p>jandoe@gmail.com</p>
                 </div>
-                <div className="flex items-center gap-4 text-lg text-[#5A5A5A] mt-1">
+                <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
                   <IoLocationOutline size={18} />
                   <p>Addis Ababa, Ethiopia</p>
                 </div>
-                <button className="flex items-center gap-2 mt-4 px-16 py-3 text-base  border rounded-full border-[#00113D] text-[#00113D] bg-white">
+                <button className="flex items-center gap-2 mt-4 px-16 py-1 text-base  border rounded-full border-[#00113D] text-[#00113D] bg-white">
                   <IoChatboxOutline size={16} />
                   Chat With Renter
                 </button>
@@ -231,7 +231,7 @@ const MyRequests = () => {
               <>
                 <button
                   onClick={() => setIsModalVisible(true)}
-                  className="flex-1 py-4 rounded-full bg-[#FDEAEA] text-red-700 border border-red-700"
+                  className="flex-1 py-1 rounded-full bg-[#FDEAEA] text-red-700 border border-red-700"
                 >
                   Cancel Booking
                 </button>
@@ -245,10 +245,10 @@ const MyRequests = () => {
                     {/* Modal content */}
                     <div className="fixed inset-0 flex items-center justify-center z-30">
                       <div className="bg-white p-6 rounded-lg shadow-lg w-[300px]">
-                        <h2 className="text-3xl mb-4">
+                        <h2 className="text-xl mb-4">
                           Are you sure you want to cancel this Booking request?
                         </h2>
-                        <p className="text-gray-600 text-lg my-10">
+                        <p className="text-gray-600 text-sm my-10">
                           Cancelling a request will cause you to reenter the
                           request from the start.
                         </p>
@@ -258,7 +258,7 @@ const MyRequests = () => {
                               handleCancelBooking(); // Perform cancel booking action
                               setIsModalVisible(false); // Close modal
                             }}
-                            className="bg-blue-950 text-base flex items-center justify-center w-fit text-white rounded-full px-8 my-2 py-4"
+                            className="bg-blue-950 text-sm flex items-center justify-center w-fit text-white rounded-full px-8 my-2 py-1"
                           >
                             Cancel
                           </button>
@@ -267,7 +267,7 @@ const MyRequests = () => {
                               setApproved(false); // Reset approval state
                               setIsModalVisible(false); // Close modal
                             }}
-                            className="bg-red-100 text-base flex items-center justify-center w-fit text-red-600 hover:bg-red-600 hover:text-white rounded-full px-8 my-2 py-4"
+                            className="bg-red-100 text-sm flex items-center justify-center w-fit text-red-600 hover:bg-red-600 hover:text-white rounded-full px-8 my-2 py-1"
                           >
                             Cancel Booking
                           </button>

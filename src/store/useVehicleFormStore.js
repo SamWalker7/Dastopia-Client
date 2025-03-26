@@ -34,7 +34,7 @@ const initialVehicleData = {
   otherMake: "",
   model: "",
   year: "",
-  vehichleNumber: "",
+  vehicleNumber: "",
   doors: "",
   fuelType: "",
   seats: "",
@@ -190,40 +190,30 @@ const useVehicleFormStore = create(
         }));
       }, // Action to get a pre-signed URL for vehicle image upload
 
-      getVehicleImagePreSignedUrl: async (vehicleId, filename, contentType) => {
-        const url = `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/get_presigned_url/${vehicleId}`; // Updated URL
+      getPresignedUrl: async (vehicleId, filename, contentType, operation) => {
+        const url =
+          "https://xo55y7ogyj.execute-api.us-east-1.amazonaws.com/prod/add_vehicle";
+
         const options = {
           method: "POST",
-          body: JSON.stringify({ filename, contentType }), // Updated request body
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            operation, // Either "getPresignedUrl" or "getAdminPresignedUrl"
+            vehicleId,
+            filename,
+            contentType,
+          }),
         };
+
         try {
           const data = await get().apiCallWithRetry(url, options);
           console.log("Presigned URL data:", data);
-          return { url: data.body.url, key: data.body.key }; // Return both URL and key
+          return { url: data.body.url, key: data.body.key }; // Return both URL & key
         } catch (error) {
           console.error("Error fetching presigned URL:", error);
           throw error;
         }
-      }, // Action to get a pre-signed URL for admin document upload
-
-      getAdminDocumentPreSignedUrl: async (
-        vehicleId,
-        filename,
-        contentType
-      ) => {
-        const url = `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/get_admin_presigned_url/${vehicleId}`;
-        const options = {
-          method: "POST",
-          body: JSON.stringify({ filename, contentType }),
-        };
-        try {
-          const data = await get().apiCallWithRetry(url, options);
-          return data.body.url;
-        } catch (error) {
-          console.error("Error fetching presigned URL:", error);
-          throw error;
-        }
-      }, // Action to upload file to pre-signed URL (No token needed here, direct S3 upload)
+      },
 
       uploadToPreSignedUrl: async (preSignedUrl, file, contentType) => {
         try {
@@ -260,10 +250,11 @@ const useVehicleFormStore = create(
           const filename = file.name;
           const contentType = file.type; // Get pre-signed URL first, now returns URL and key
 
-          const preSignedData = await get().getVehicleImagePreSignedUrl(
+          const preSignedData = await get().getPresignedUrl(
             vehicleId,
             filename,
-            contentType
+            contentType,
+            "getPresignedUrl"
           );
           const preSignedUrl = preSignedData.url;
           const imageKey = preSignedData.key; // Extract the key // Compress the image
@@ -377,10 +368,11 @@ const useVehicleFormStore = create(
           const filename = file.name;
           const contentType = file.type; // Get pre-signed URL first, now returns URL and key
 
-          const preSignedData = await get().getVehicleImagePreSignedUrl(
+          const preSignedData = await get().getPresignedUrl(
             vehicleId,
             filename,
-            contentType
+            contentType,
+            "getPresignedUrl"
           );
           const preSignedUrl = preSignedData.url;
           const imageKey = preSignedData.key; // Extract the key // Upload to S3 using pre-signed URL
@@ -426,10 +418,11 @@ const useVehicleFormStore = create(
             throw new Error("Vehicle ID is not set. Cannot update document.");
           const filename = file.name;
           const contentType = file.type;
-          const preSignedUrl = await get().getAdminDocumentPreSignedUrl(
+          const preSignedUrl = await get().getPresignedUrl(
             vehicleId,
             filename,
-            contentType
+            contentType,
+            "getPresignedUrl"
           );
           await get().uploadToPreSignedUrl(preSignedUrl, file, contentType);
 
@@ -522,7 +515,7 @@ const useVehicleFormStore = create(
           otherMake: vehicleData.otherMake || "string",
           model: vehicleData.model || "string",
           year: vehicleData.year || "string",
-          vehichleNumber: vehicleData.vehichleNumber || "string",
+          vehicleNumber: vehicleData.vehicleNumber || "string",
           doors: vehicleData.doors || "4", // Ensure integer or default 4 (string in schema)
           fuelType: vehicleData.fuelType || "string",
           seats: vehicleData.seats || "0", // Ensure integer or default 0 (string in schema)

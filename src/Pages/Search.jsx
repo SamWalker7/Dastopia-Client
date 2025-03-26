@@ -23,7 +23,6 @@ const Search = () => {
   const dispatch = useDispatch();
 
   const [vehicles, setVehicles] = useState([]);
-  const [lastEvaluated, setLastEvaluated] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
@@ -38,121 +37,6 @@ const Search = () => {
     "Hawassa",
   ];
 
-  const fetchVehiclesByAttribute = async (attributeName, attributeValue) => {
-    setIsLoading(true);
-    if (attributeName === "make" && attributeValue === "any") {
-      setVehicles([]);
-    } else if (!(attributeName === "make" && attributeValue === "any")) {
-      setVehicles([]);
-    }
-
-    const baseUrl =
-      "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/search"; // Updated base URL to the new backend endpoint
-    let url = baseUrl;
-    let queryParams = [];
-
-    if (attributeName && attributeValue && attributeValue !== "any") {
-      queryParams.push(`${attributeName}=${attributeValue}`);
-    } // Add other filters based on the current state
-
-    if (make && make !== "any" && attributeName !== "make") {
-      queryParams.push(`make=${make}`);
-    }
-    if (selectedModel && selectedModel !== "any" && attributeName !== "model") {
-      queryParams.push(`model=${selectedModel}`);
-    }
-    if (
-      transmission &&
-      transmission !== "any" &&
-      attributeName !== "transmission"
-    ) {
-      queryParams.push(`transmission=${transmission}`);
-    }
-    if (category && category !== "any" && attributeName !== "category") {
-      queryParams.push(`category=${category}`);
-    }
-    if (minPrice) {
-      queryParams.push(`price[gte]=${minPrice}`); // Assuming backend supports price ranges, adjust if needed
-    }
-    if (maxPrice) {
-      queryParams.push(`price[lte]=${maxPrice}`); // Assuming backend supports price ranges, adjust if needed
-    }
-
-    queryParams.push(`isActive=active`);
-    queryParams.push(`isApproved=approved`);
-
-    if (queryParams.length > 0) {
-      url += `?${queryParams.join("&")}`;
-    }
-
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        console.log("response:", response);
-        console.error(`HTTP error! status: ${response.status}`);
-        setIsLoading(false);
-        return;
-      }
-      const responseData = await response.json();
-
-      if (responseData.body && Array.isArray(responseData.body)) {
-        const data = responseData.body.map((item) => ({
-          ...item,
-          images: [],
-          imageLoading: true,
-        }));
-        setVehicles(data);
-
-        let fetchedWithImages = [];
-        for (let d of data) {
-          let urls = [];
-          if (d.vehicleImageKeys && Array.isArray(d.vehicleImageKeys)) {
-            //Added check for vehicleImageKeys
-            for (let image of d.vehicleImageKeys) {
-              const imageKey = image.key;
-              console.log("image.key before getDownloadUrl:", imageKey);
-              const path = await getDownloadUrl(imageKey);
-              console.log("path:", path);
-              if (path && path.body) {
-                urls.push(path.body || "https://via.placeholder.com/300");
-              } else {
-                console.warn(
-                  "getDownloadUrl did not return a valid path.body for key:",
-                  imageKey,
-                  ". Using placeholder image."
-                );
-                urls.push("https://via.placeholder.com/300");
-              }
-            }
-          } else {
-            urls = ["https://via.placeholder.com/300"]; // Use placeholder if no image keys
-          }
-          fetchedWithImages.push({
-            ...d,
-            images: urls,
-            imageLoading: false,
-          });
-        }
-        setVehicles(fetchedWithImages);
-      } else {
-        console.error(
-          "API response was not successful: Unexpected response format",
-          responseData
-        );
-        if (!(attributeName === "make" && attributeValue === "any")) {
-          setVehicles([]);
-        }
-      }
-    } catch (error) {
-      console.error("Fetch error:", error);
-      if (!(attributeName === "make" && attributeValue === "any")) {
-        setVehicles([]);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
@@ -160,7 +44,7 @@ const Search = () => {
   }, []);
 
   const [make, setMake] = useState("any");
-  const [model, setModel] = useState([]);
+  const [model, setModel] = useState();
   const [selectedModel, setSelectedModel] = useState("any");
   const [transmission, setTransmission] = useState("any");
   const [category, setCategory] = useState("any");
@@ -172,24 +56,22 @@ const Search = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Fetch initial vehicles when component mounts, showing "Any" make
-    fetchVehiclesByAttribute("make", "any");
-
     const getQueryParam = (name) => {
       const params = new URLSearchParams(window.location.search);
       return params.get(name);
     };
     const pickupLocation = getQueryParam("pickUp");
-    const pickupTime = getQueryParam("pickTime");
-    const dropOffTime = getQueryParam("dropTime");
+    const pickupDate = getQueryParam("pickUp");
+    const dropOffDate = getQueryParam("dropOff");
+
     if (pickupLocation && ethiopianCities.includes(pickupLocation)) {
       setSelectedCity(pickupLocation);
     }
-    if (pickupTime) {
-      setStartDate(pickupTime);
+    if (pickupDate) {
+      setStartDate(pickupDate);
     }
-    if (dropOffTime) {
-      setEndDate(dropOffTime);
+    if (dropOffDate) {
+      setEndDate(dropOffDate);
     }
   }, []);
 
@@ -252,24 +134,11 @@ const Search = () => {
     }
   };
 
-  const handleMakeChange = async (event) => {
+  const handleMakeChange = (event) => {
     const value = event.target.value;
     setMake(value);
-    setModel([]);
     setSelectedModel("any");
-
-    await fetchVehiclesByAttribute("make", value);
-
-    const filteredModels = modelData.filter((model) => {
-      return Object.keys(model)[0] === value;
-    });
-
-    let newModel = [];
-    if (filteredModels.length > 0) {
-      newModel = Object.values(filteredModels[0])[0];
-    }
-
-    setModel(newModel);
+    setModel(modelData.find((m) => Object.keys(m)[0] === value)?.[value] || []);
   };
 
   const handleModelChange = (event) => {
@@ -285,58 +154,24 @@ const Search = () => {
   };
 
   const handleMinPriceChange = (e) => {
-    setMinPrice(e.target.value);
+    const value = e.target.value.replace(/\D/g, "");
+    setMinPrice(value);
   };
 
   const handleMaxPriceChange = (e) => {
-    setMaxPrice(e.target.value);
-  }; // useCallback to memoize the filtering logic
+    const value = e.target.value.replace(/\D/g, "");
+    setMaxPrice(value);
+  };
 
-  const getFilteredVehicles = useCallback(
-    (
-      currentVehicles,
-      currentMake,
-      currentModel,
-      currentTransmission,
-      currentCategory,
-      currentMinPrice,
-      currentMaxPrice
-    ) => {
-      let initiallyFilteredVehicles = [...currentVehicles];
+  const getFilteredVehicles = useCallback(() => {
+    const min = parseFloat(minPrice) || 0;
+    const max = parseFloat(maxPrice) || Infinity;
 
-      if (currentModel !== "any") {
-        initiallyFilteredVehicles = initiallyFilteredVehicles.filter(
-          (vehicle) => vehicle.model === currentModel
-        );
-      }
-
-      if (currentTransmission !== "any") {
-        initiallyFilteredVehicles = initiallyFilteredVehicles.filter(
-          (vehicle) => vehicle.transmission === currentTransmission
-        );
-      }
-
-      if (currentCategory !== "any") {
-        initiallyFilteredVehicles = initiallyFilteredVehicles.filter(
-          (vehicle) => vehicle.category === currentCategory
-        );
-      } // Price filtering - Convert prices to numbers using parseFloat
-
-      const minPriceFilter = parseFloat(currentMinPrice) || 0;
-      const maxPriceFilter = parseFloat(currentMaxPrice) || Infinity;
-
-      initiallyFilteredVehicles = initiallyFilteredVehicles.filter(
-        (vehicle) => {
-          const vehiclePrice = parseFloat(vehicle.price) || 0;
-          return (
-            vehiclePrice >= minPriceFilter && vehiclePrice <= maxPriceFilter
-          );
-        }
-      );
-      return initiallyFilteredVehicles;
-    },
-    []
-  );
+    return vehicles.filter((vehicle) => {
+      const price = parseFloat(vehicle.price) || 0;
+      return price >= min && price <= max;
+    });
+  }, [vehicles, minPrice, maxPrice]);
 
   const [inputValue, setInputValue] = useState("");
   const handleInputChange = (e) => {
@@ -344,142 +179,130 @@ const Search = () => {
   };
   const transmissionType = ["Automatic", "Manual"];
   const Category = ["Sedan", "SUV", "Convertable"];
-  const isValidInput = /^[0-9 ]*$/.test(inputValue); // Get filtered vehicles right before rendering ResultsGrid
-
-  const currentFilteredVehicles = getFilteredVehicles(
-    vehicles,
-    make,
-    selectedModel,
-    transmission,
-    category,
-    minPrice,
-    maxPrice
-  ); // useEffect to trigger filtering whenever filter states change
+  const isValidInput = /^[0-9 ]*$/.test(inputValue);
 
   useEffect(() => {
-    // Fetch vehicles based on filters
-    const fetchFiltered = async () => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const fetchData = async () => {
       setIsLoading(true);
-      setVehicles([]); // Clear existing vehicles before fetching new ones
-
-      const baseUrl =
-        "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/search";
-      let url = baseUrl;
-      let queryParams = [];
-
-      if (make && make !== "any") {
-        queryParams.push(`make=${make}`);
-      }
-      if (selectedModel && selectedModel !== "any") {
-        queryParams.push(`model=${selectedModel}`);
-      }
-      if (transmission && transmission !== "any") {
-        queryParams.push(`transmission=${transmission}`);
-      }
-      if (category && category !== "any") {
-        queryParams.push(`category=${category}`);
-      }
-      if (minPrice) {
-        queryParams.push(`price[gte]=${minPrice}`);
-      }
-      if (maxPrice) {
-        queryParams.push(`price[lte]=${maxPrice}`);
-      }
-
-      queryParams.push(`isActive=active`);
-      queryParams.push(`isApproved=approved`);
-
-      if (queryParams.length > 0) {
-        url += `?${queryParams.join("&")}`;
-      }
-
       try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          console.error(`HTTP error! status: ${response.status}`);
-        }
-        const responseData = await response.json();
-        if (responseData.body && Array.isArray(responseData.body)) {
-          const data = responseData.body.map((item) => ({
-            ...item,
-            images: [],
-            imageLoading: true,
-          }));
-          setVehicles(data);
+        const url = new URL(
+          "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/search"
+        );
 
-          let fetchedWithImages = [];
-          for (let d of data) {
-            let urls = [];
-            if (d.vehicleImageKeys && Array.isArray(d.vehicleImageKeys)) {
-              for (let image of d.vehicleImageKeys) {
-                const imageKey = image.key;
-                const path = await getDownloadUrl(imageKey);
-                if (path && path.body) {
-                  urls.push(path.body || "https://via.placeholder.com/300");
-                } else {
-                  console.warn(
-                    "getDownloadUrl did not return a valid path.body for key:",
-                    imageKey,
-                    ". Using placeholder image."
-                  );
-                  urls.push("https://via.placeholder.com/300");
+        const params = {
+          make: make !== "any" ? make : "",
+          model: selectedModel !== "any" ? selectedModel : "",
+          transmission: transmission !== "any" ? transmission : "",
+          category: category !== "any" ? category : "",
+          pickUp: startDate,
+          dropOff: endDate,
+          isActive: "active",
+          isApproved: "approved",
+        };
+
+        Object.entries(params).forEach(([key, value]) => {
+          if (value) url.searchParams.append(key, value);
+        });
+
+        const response = await fetch(url, { signal });
+        if (!response.ok) throw new Error("Network response was not ok");
+
+        const data = await response.json();
+        const vehicles = data.body || [];
+
+        const vehiclesWithImages = await Promise.all(
+          vehicles.map(async (vehicle) => {
+            const images = await Promise.all(
+              (vehicle.vehicleImageKeys || []).map(async (image) => {
+                try {
+                  const path = await getDownloadUrl(image.key);
+                  return path?.body || "https://via.placeholder.com/300";
+                } catch {
+                  return "https://via.placeholder.com/300";
                 }
-              }
-            } else {
-              urls = ["https://via.placeholder.com/300"];
-            }
-            fetchedWithImages.push({
-              ...d,
-              images: urls,
-              imageLoading: false,
-            });
-          }
-          setVehicles(fetchedWithImages);
-        }
+              })
+            );
+            return { ...vehicle, images };
+          })
+        );
+
+        setVehicles(vehiclesWithImages);
       } catch (error) {
-        console.error("Fetch error:", error);
+        if (error.name !== "AbortError") {
+          console.error("Fetch error:", error);
+          setVehicles([]);
+        }
       } finally {
+        setIsLoading(false);
         setIsLoading(false);
       }
     };
 
-    fetchFiltered();
-  }, [make, selectedModel, transmission, category, minPrice, maxPrice]);
+    fetchData();
+    return () => controller.abort();
+  }, [make, selectedModel, transmission, category, startDate, endDate]);
 
+  const isMinPriceValid = !minPrice || parseFloat(minPrice) >= 0;
+  const isMaxPriceValid =
+    !maxPrice || parseFloat(maxPrice) > parseFloat(minPrice);
+
+  const formatPrice = (price) => {
+    return parseFloat(price).toLocaleString("en-ET", {
+      style: "currency",
+      currency: "ETB",
+      minimumFractionDigits: 2,
+    });
+  };
+  const allLocations = vehicles.flatMap((vehicle) => [
+    ...(vehicle.pickUp || []),
+    ...(vehicle.dropOff || []),
+  ]);
   return (
     <div>
       <div className=" bg-[#FAF9FE] py-32 flex lg:flex-row flex-col items-center lg:items-start w-full">
         <div className=" flex flex-col px-8 lg:pl-12 py-2 items-center ">
-          <div className="bg-white w-full px-10 py-4 justify-between text-lg md:flex-row flex-col rounded-xl shadow-sm shadow-blue-300 border border-blue-300 flex">
-            <div className="flex md:flex-row flex-col items-center text-base">
-              <div className="flex flex-col ">
-                <div>Bole International Airport</div>
-                <div>Wed, Aug 28,2024 , 10:00</div>
+          {startDate && endDate ? (
+            <div className="bg-white w-full px-10 py-4 justify-between text-lg md:flex-row flex-col rounded-xl shadow-sm shadow-blue-300 border border-blue-300 flex mb-4">
+              <div className="flex md:flex-row flex-col items-center text-base">
+                <div className="flex flex-col ">
+                  <div>Pick-up Date</div>
+                  <div>{new Date(startDate).toLocaleDateString()}</div>
+                </div>
+
+                <div className="mx-4">
+                  <svg
+                    className=" text-gray-800 w-8 h-8 transform transition-transform duration-200 
+                  -rotate-9-rotate-90"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M5.23 7.21a.75.75 0 011.06 0L10 10.92l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0l-4.25-4.25a.75.75 0 010-1.06z" />
+                  </svg>
+                </div>
+
+                <div className="flex flex-col ">
+                  <div>Drop-off Date</div>
+                  <div>{new Date(endDate).toLocaleDateString()}</div>
+                </div>
               </div>
 
-              <div className="mx-4">
-                <svg
-                  className=" text-gray-800 w-8 h-8 transform transition-transform duration-200
-         -rotate-90"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M5.23 7.21a.75.75 0 011.06 0L10 10.92l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0l-4.25-4.25a.75.75 0 010-1.06z" />
-                </svg>
-              </div>
-
-              <div className="flex flex-col ">
-                <div>Bole International Airport</div>
-                <div>Wed, Aug 28,2024 , 10:00</div>
-              </div>
+              <button className=" bg-blue-950 text-sm text-white rounded-full px-4 ml-8 my-2 py-2">
+                Edit
+              </button>
             </div>
-
-            <button className=" bg-blue-950 text-sm text-white rounded-full px-4 ml-8 my-2 py-2">
-              Edit
-            </button>
-          </div>
+          ) : (
+            <div className="bg-white w-full px-10 py-4 justify-between text-lg md:flex-row flex-col rounded-xl shadow-sm shadow-blue-300 border border-blue-300 flex mb-4">
+              <div>No dates selected</div>
+              <button className=" bg-blue-950 text-sm text-white rounded-full px-4 ml-8 my-2 py-2">
+                Edit
+              </button>
+            </div>
+          )}
 
           <div className="flex flex-col bg-white my-12 w-full px-4 py-4 text-lg  rounded-xl shadow-md shadow-gray-100 ">
             <div className="text-xl mx-4 font-semibold mt-4">Filters</div>
@@ -532,11 +355,12 @@ const Search = () => {
                     >
                       <MenuItem value="any">Any</MenuItem>
 
-                      {model.map((m) => (
-                        <MenuItem key={m} value={m}>
-                          {m}
-                        </MenuItem>
-                      ))}
+                      {model &&
+                        model.map((m) => (
+                          <MenuItem key={m} value={m}>
+                            {m}
+                          </MenuItem>
+                        ))}
                     </Select>
                   </FormControl>
                 </div>
@@ -575,33 +399,37 @@ const Search = () => {
                   <div className="relative inline-block my-3 text-lg w-full mr-4">
                     <TextField
                       fullWidth
-                      label="Min Price"
+                      label="Min Price (ETB)"
                       variant="outlined"
                       size="small"
                       value={minPrice}
                       onChange={handleMinPriceChange}
-                      error={!isValidInput}
-                      helperText={
-                        !isValidInput
-                          ? "Only numeric characters are allowed."
-                          : ""
-                      }
+                      inputProps={{
+                        inputMode: "numeric",
+                        pattern: "[0-9]*",
+                        type: "tel",
+                      }}
+                      error={!isMinPriceValid}
+                      helperText={!isMinPriceValid && "Invalid minimum price"}
                     />
                   </div>
                   {/* Max Price Input */}
                   <div className="relative inline-block my-3 text-lg w-full">
                     <TextField
                       fullWidth
-                      label="Max Price"
+                      label="Max Price (ETB)"
                       variant="outlined"
                       size="small"
                       value={maxPrice}
                       onChange={handleMaxPriceChange}
-                      error={!isValidInput}
+                      inputProps={{
+                        inputMode: "numeric",
+                        pattern: "[0-9]*",
+                        type: "tel",
+                      }}
+                      error={!isMaxPriceValid}
                       helperText={
-                        !isValidInput
-                          ? "Only numeric characters are allowed."
-                          : ""
+                        !isMaxPriceValid && "Must be greater than min price"
                       }
                     />
                   </div>
@@ -635,36 +463,37 @@ const Search = () => {
                 </div>
               </div>
             </div>
-            {/* Search Button Removed */}
           </div>
 
           <div className=" flex flex-col w-full items-center ">
-            <div className="flex flex-col bg-white my-4 w-full px-8 py-4 text-lg md:text-2xl  rounded-xl shadow-md shadow-gray-100 ">
+            <div className="flex flex-col bg-white my-4w-full px-8 py-4 text-lg md:text-2xl  rounded-xl shadow-md shadow-gray-100 ">
               <div className="flex flex-wrap">
                 {isLoading ? (
                   <div>
                     <CircularProgress />
                   </div>
-                ) : currentFilteredVehicles.length > 0 ? (
+                ) : getFilteredVehicles().length > 0 ? (
                   <div>
                     <div className="text-xl m-4 font-normal my-8">
                       Found
                       <span className="font-bold">
-                        ({currentFilteredVehicles.length})
+                        ({getFilteredVehicles().length})
                       </span>
                       Cars
                     </div>
 
                     <ResultsGrid
-                      key={`${make}-${selectedModel}-${transmission}-${category}-${minPrice}-${maxPrice}`}
-                      vehicles={currentFilteredVehicles}
+                      key={`${make}-${selectedModel}-${transmission}-${category}-${minPrice}-${maxPrice}-${startDate}-${endDate}`}
+                      vehicles={getFilteredVehicles()}
                       pickUpTime={startDate}
                       DropOffTime={endDate}
-                      lastEvaluatedKey={lastEvaluated}
                     />
                   </div>
                 ) : (
-                  <div>No vehicles found. Adjust filters to search.</div>
+                  <div>
+                    No vehicles found for the selected dates and filters. Adjust
+                    your search criteria.
+                  </div>
                 )}
               </div>
             </div>
@@ -674,7 +503,7 @@ const Search = () => {
         <div className="flex flex-col lg:w-2/5 h-full items-start justify-start w-5/6 lg:pr-20">
           {error && <div>{error}</div>}
           <div className="flex bg-white w-full p-2 text-lg md:text-2xl  rounded-xl shadow-md shadow-gray-100  ">
-            <MapComponent />
+            <MapComponent vehicles={vehicles} />
           </div>
         </div>
       </div>

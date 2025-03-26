@@ -11,8 +11,24 @@ import { FaCalendarAlt } from "react-icons/fa";
 import useVehicleFormStore from "../../store/useVehicleFormStore";
 import { getDownloadUrl } from "../../api";
 const customer = JSON.parse(localStorage.getItem("customer"));
+const fetchPlaceName = async (lat, lng) => {
+  const apiKey = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4";
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
 
-
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.status === "OK") {
+      return data.results[0].formatted_address;
+    } else {
+      console.error("Geocoding failed:", data.status);
+      return `Lat: ${lat}, Lng: ${lng}`;
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return `Lat: ${lat}, Lng: ${lng}`;
+  }
+};
 const Details = ({ selectedVehicleId }) => {
   const [vehicleDetails, setVehicleDetails] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -24,6 +40,32 @@ const Details = ({ selectedVehicleId }) => {
   const [parsedCalendar, setParsedCalendar] = useState([]);
 
   const Status = ["Active", "Inactive"];
+  const [pickUpLocations, setPickUpLocations] = useState([]);
+  const [dropOffLocations, setDropOffLocations] = useState([]);
+
+  useEffect(() => {
+    const fetchLocations = async (locations, setLocations) => {
+      if (Array.isArray(locations)) {
+        const placeNames = await Promise.all(
+          locations.map(async (location) => {
+            if (Array.isArray(location) && location.length === 2) {
+              return await fetchPlaceName(location[0], location[1]);
+            }
+            return "Invalid location";
+          })
+        );
+        setLocations(placeNames);
+      }
+    };
+
+    if (vehicleDetails?.pickUp) {
+      fetchLocations(vehicleDetails.pickUp, setPickUpLocations);
+    }
+
+    if (vehicleDetails?.dropOff) {
+      fetchLocations(vehicleDetails.dropOff, setDropOffLocations);
+    }
+  }, [vehicleDetails]);
 
   useEffect(() => {
     const fetchVehicleDetails = async () => {
@@ -39,7 +81,6 @@ const Details = ({ selectedVehicleId }) => {
           `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/${selectedVehicleId}`,
           {
             method: "GET",
-            
           }
         );
         if (response && response.body) {
@@ -103,7 +144,12 @@ const Details = ({ selectedVehicleId }) => {
     };
 
     fetchVehicleDetails();
-  }, [selectedVehicleId, apiCallWithRetry, selectedImage,customer.AccessToken]);
+  }, [
+    selectedVehicleId,
+    apiCallWithRetry,
+    selectedImage,
+    customer.AccessToken,
+  ]);
 
   const handleStatus = async (e) => {
     const newStatusValue = e.target.value;
@@ -140,7 +186,7 @@ const Details = ({ selectedVehicleId }) => {
         setError("Vehicle not found.");
       } else if (response && response.status === 401) {
         setError("Unauthorized.");
-      } else if(response){
+      } else if (response) {
         setError(`Failed to update status. Status code: ${response.status}`);
       } else {
         setError("Failed to update status. No response received.");
@@ -159,41 +205,25 @@ const Details = ({ selectedVehicleId }) => {
 
   if (error) {
     console.log("Error:", error);
-    return <div> <h3 className="text-base  mt-4"> Click "See Details" To See more information </h3></div>;
+    return (
+      <div>
+        {" "}
+        <h3 className="text-base  mt-4">
+          {" "}
+          Click "See Details" To See more information{" "}
+        </h3>
+      </div>
+    );
   }
 
   if (!vehicleDetails) {
-    return  console.log("Vehicle Details not found");
+    return console.log("Vehicle Details not found");
   }
 
   const getImageUrl = (imageKey) => {
     return imageUrls[imageKey] || audia1;
   };
 
-  const renderLocations = (locations) => {
-    if (Array.isArray(locations)) {
-      return locations.map((location, index) => {
-        // Location is now an array of coordinates [lat, lng]
-        const locationName = `Lat: ${location[0]}, Lng: ${location[1]}`; // Display coordinates as location name
-        return (
-          <span
-            key={index}
-            className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
-          >
-            {locationName}
-          </span>
-        );
-      });
-    } else if (typeof locations === "string" && locations) {
-      return (
-        <span className="border border-gray-400 text-sm px-3 py-1 rounded-xl">
-          {locations}
-        </span>
-      );
-    } else {
-      return <span className="text-gray-500">Not specified</span>;
-    }
-  };
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
@@ -350,7 +380,14 @@ const Details = ({ selectedVehicleId }) => {
           <section className="my-16">
             <h2 className="font-semibold text-lg mb-4">Pick up Locations</h2>
             <div className="flex flex-wrap gap-2">
-              {renderLocations(vehicleDetails.pickUp)}
+              {pickUpLocations.map((place, index) => (
+                <span
+                  key={index}
+                  className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
+                >
+                  {place}
+                </span>
+              ))}
             </div>
           </section>
 
@@ -359,10 +396,16 @@ const Details = ({ selectedVehicleId }) => {
               Drop off Locations
             </h2>
             <div className="flex flex-wrap gap-2">
-              {renderLocations(vehicleDetails.dropOff)}
+              {dropOffLocations.map((place, index) => (
+                <span
+                  key={index}
+                  className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
+                >
+                  {place}
+                </span>
+              ))}
             </div>
           </section>
-
           <section className="my-16">
             <h2 className="font-semibold text-lg mb-4">
               Available Rental Dates

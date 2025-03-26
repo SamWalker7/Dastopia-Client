@@ -4,7 +4,7 @@ import { Paper, Button, TextField } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchImages, fetchVehicles } from "../../store/slices/vehicleSlice";
 import MapComponent from "../../components/GoogleMaps";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Skeleton from "@mui/material/Skeleton";
 import { getDownloadUrl, getOneVehicle } from "../../api";
 import audia1 from "../../images/cars-big/toyota-box.png";
@@ -18,10 +18,17 @@ import {
   FaRegCircle,
   FaStar,
   FaUserFriends,
+  FaCalendar,
+  FaTag,
 } from "react-icons/fa";
+import { FaCalendarAlt } from "react-icons/fa";
+
 import RentalModal from "./RentalModal";
 import PriceBreakdown from "./PriceBreakdown";
 import Dropdown from "../../components/Search/Dropdown";
+import useVehicleFormStore from "../../store/useVehicleFormStore";
+const customer = JSON.parse(localStorage.getItem("customer"));
+
 const locations = [
   "Addis Ababa",
   "Bole",
@@ -31,11 +38,38 @@ const locations = [
   "Summit",
   // Add more locations as needed
 ];
+
+const fetchPlaceName = async (lat, lng) => {
+  const apiKey = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4";
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.status === "OK") {
+      return data.results[0].formatted_address;
+    } else {
+      console.error("Geocoding failed:", data.status);
+      return `Lat: ${lat}, Lng: ${lng}`;
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return `Lat: ${lat}, Lng: ${lng}`;
+  }
+};
 export default function Details2(props) {
+  const location = useLocation();
+  const { pickUpTime, DropOffTime } = location.state || {};
+  console.log(pickUpTime, DropOffTime);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate(); // useNavigate hook for navigation
   const [pickupLocation, setPickupLocation] = useState("");
   const [dropoffLocation, setDropoffLocation] = useState("");
+  const placeholderImage = "https://via.placeholder.com/300";
+
+  const [selectedImage, setSelectedImage] = useState(placeholderImage);
+  const [pickUpLocations, setPickUpLocations] = useState();
+  const [dropOffLocations, setDropOffLocations] = useState();
 
   const { id } = useParams();
   const [selected, setSelected] = useState(null);
@@ -44,9 +78,77 @@ export default function Details2(props) {
   const [imageLoading, setImageLoading] = useState(true);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [error, setError] = useState("");
-  const placeholderImage = "https://via.placeholder.com/300";
-  const [vehicleImages, setVehicleImages] = useState([]);
+  const [vehicleImages, setVehicleImages] = useState();
+  const [vehicleDetails, setVehicleDetails] = useState(null);
+  const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { apiCallWithRetry } = useVehicleFormStore();
+  const [imageUrls, setImageUrls] = useState({});
+  const [parsedCalendar, setParsedCalendar] = useState();
+  const selectedVehicleId = id;
 
+  useEffect(() => {
+    const fetchLocations = async (locations, setLocations) => {
+      if (Array.isArray(locations)) {
+        const placeNames = await Promise.all(
+          locations.map(async (location) => {
+            if (Array.isArray(location) && location.length === 2) {
+              return await fetchPlaceName(location[0], location[1]);
+            }
+            return "Invalid location";
+          })
+        );
+        setLocations(placeNames);
+      }
+    };
+
+    if (vehicleDetails?.pickUp) {
+      fetchLocations(vehicleDetails.pickUp, setPickUpLocations);
+    }
+
+    if (vehicleDetails?.dropOff) {
+      fetchLocations(vehicleDetails.dropOff, setDropOffLocations);
+    }
+  }, [vehicleDetails]);
+
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Unknown Date";
+    }
+  };
+
+  const renderLocations = (locations) => {
+    if (Array.isArray(locations)) {
+      return locations.map((location, index) => {
+        // Location is now an array of coordinates [lat, lng]
+        const locationName = `Lat: ${location[0]}, Lng: ${location[1]}`; // Display coordinates as location name
+        return (
+          <span
+            key={index}
+            className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
+          >
+            {locationName}
+          </span>
+        );
+      });
+    } else if (typeof locations === "string" && locations) {
+      return (
+        <span className="border border-gray-400 text-sm px-3 py-1 rounded-xl">
+          {locations}
+        </span>
+      );
+    } else {
+      return <span className="text-gray-500">Not specified</span>;
+    }
+  };
   const handleStartDateChange = (event) => {
     const value = event.target.value;
     const currentDate = new Date().setHours(0, 0, 0, 0);
@@ -69,6 +171,89 @@ export default function Details2(props) {
     }
   };
 
+  useEffect(() => {
+    const fetchVehicleDetails = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (!selectedVehicleId) {
+          setError("Vehicle ID is missing.");
+          setLoading(false);
+          return;
+        }
+        const response = await apiCallWithRetry(
+          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/${selectedVehicleId}`,
+          {
+            method: "GET",
+          }
+        );
+        if (response && response.body) {
+          console.log("API Response for Vehicle Details:", response.body);
+          setVehicleDetails(response.body);
+          setStatus(response.body.isActive ? "Active" : "Inactive");
+          setParsedCalendar(response.body.events || []);
+          if (
+            response.body.vehicleImageKeys &&
+            response.body.vehicleImageKeys.length > 0
+          ) {
+            const urls = {};
+            for (const imageKey of response.body.vehicleImageKeys) {
+              try {
+                const downloadURL = await getDownloadUrl(imageKey);
+                urls[imageKey] = downloadURL?.body;
+                console.log(
+                  "Download URL for",
+                  imageKey,
+                  ":",
+                  downloadURL.body
+                );
+                if (!selectedImage) {
+                  setSelectedImage(imageKey);
+                }
+              } catch (downloadUrlError) {
+                console.error(
+                  `Failed to fetch download URL for ${imageKey}:`,
+                  downloadUrlError
+                );
+                urls[imageKey] = audia1;
+                if (!selectedImage) {
+                  setSelectedImage(audia1);
+                }
+              }
+            }
+            setImageUrls(urls);
+            if (!selectedImage && response.body.vehicleImageKeys.length > 0) {
+              setSelectedImage(response.body.vehicleImageKeys[0]);
+            }
+          } else {
+            setSelectedImage(audia1);
+          }
+          if (response.body.events) {
+            setParsedCalendar(response.body.events);
+          } else {
+            setParsedCalendar(); // Ensure parsedCalendar is always an array
+          }
+        } else {
+          setError(
+            "Failed to fetch vehicle details or invalid response format."
+          );
+        }
+      } catch (err) {
+        console.error("Error fetching vehicle details:", err);
+        setError("Error fetching vehicle details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicleDetails();
+  }, [
+    selectedVehicleId,
+    apiCallWithRetry,
+    selectedImage,
+    customer?.AccessToken, // Added optional chaining in case customer is null
+  ]);
+
   const handleEndDateChange = (event) => {
     const value = event.target.value;
     if (new Date(value) <= new Date(startDate)) {
@@ -89,14 +274,15 @@ export default function Details2(props) {
     try {
       const response = await getOneVehicle(id);
       const data = response.body;
+      console.log("data is", data);
       let imageUrls = [];
 
       if (data.vehicleImageKeys && data.vehicleImageKeys.length > 0) {
         const fetchedUrls = await Promise.all(
           data.vehicleImageKeys.map(async (imageKey) => {
             try {
-              const path = await getDownloadUrl(imageKey.key);
-              console.log("getDownloadUrl path:", path);
+              const path = await getDownloadUrl(imageKey);
+              console.log("getDownloadUrl path:", path, "HI", imageKey);
               return path?.body || placeholderImage;
             } catch (error) {
               console.error(
@@ -115,8 +301,10 @@ export default function Details2(props) {
 
       setSelected({
         ...data,
+
         imageLoading: false,
       });
+      console.log("selected is", selected);
       setVehicleImages(imageUrls);
     } catch (error) {
       console.error("Error fetching vehicle details:", error);
@@ -136,7 +324,7 @@ export default function Details2(props) {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  });
 
   useEffect(() => {
     const getQueryParam = (name) => {
@@ -148,7 +336,7 @@ export default function Details2(props) {
 
     setStartDate(pickUpTime);
     setEndDate(dropOffTime);
-  }, []);
+  });
 
   const styles = {
     formControl: {
@@ -182,7 +370,6 @@ export default function Details2(props) {
     padding: "15px",
   };
 
-  const [selectedImage, setSelectedImage] = useState(placeholderImage);
   const [pickUp, setPickUp] = useState("");
 
   const handlePick = (e) => setPickUp(e.target.value);
@@ -195,40 +382,21 @@ export default function Details2(props) {
   if (error) {
     return <p>Error: {error}</p>;
   }
+  // Calculate the number of days
+  const pickUpDate = new Date(pickUpTime);
+  const dropOffDate = new Date(DropOffTime);
+  const timeDifference = dropOffDate.getTime() - pickUpDate.getTime();
+  const days = Math.ceil(timeDifference / (1000 * 3600 * 24));
+
+  // Get vehicle price from state
+  const dailyPrice = selected?.price || 0;
+  const totalPrice = days * dailyPrice;
 
   return (
     <div className="py-32 md:py-8 lg:flex-row flex-col bg-[#FAF9FE] md:px-16 p-4  gap-10 flex ">
       <div className="flex  flex-col lg:w-3/4">
-        <div className="bg-white md:mt-24 md:flex-row flex-col mb-8 w-full px-10 py-4 justify-between text-lg  rounded-xl shadow-sm shadow-blue-300 border border-blue-300  flex">
-          <div className="flex md:flex-row flex-col w-full md:w-2/3 justify-between items-center">
-            {" "}
-            <div className="flex flex-col ">
-              <div>Bole International Airport</div>
-            </div>
-            <div className="mx-4">
-              {" "}
-              <svg
-                className=" text-gray-800 w-8 h-8 transform transition-transform duration-200
-                -rotate-90"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M5.23 7.21a.75.75 0 011.06 0L10 10.92l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0l-4.25-4.25a.75.75 0 010-1.06z" />
-              </svg>
-            </div>
-            <div className="flex flex-col ">
-              <div>Bole International Airport</div>
-            </div>
-          </div>
-          <button className=" border border-blue-950 text-sm text-black hover:bg-blue-200 hover:border-none rounded-full px-6 ml-8 my-2  py-1">
-            Edit
-          </button>
-        </div>
-
         {/* Car Details Section */}
-        <div className="flex md:flex-row flex-col gap-10 ">
+        <div className="flex md:flex-row flex-col gap-10 md:mt-24">
           {/* Left Side - Car Info */}
           <div className="p-6 bg-white md:w-1/2 h-fit shadow-lg rounded-lg">
             <div className="flex px-2  flex-col">
@@ -288,116 +456,99 @@ export default function Details2(props) {
           </div>
 
           {/* Right Side - Specifications and Reviews */}
-          <div className="p-10 bg-white w-full  shadow-lg rounded-lg">
-            <div className="flex justify-between  items-center">
-              <h3 className="text-base font-semibold">Price</h3>
-              <span className="text-base font-bold">
-                {selected?.price} Birr
-              </span>
-            </div>
-            <div className="bg-blue-100 text-blue-700 py-2 px-4 rounded-lg text-center mt-4">
-              Daily Rent Price: 190 Birr
-            </div>
-
-            {/* Car Specification */}
-            <h4 className="mt-8 text-lg font-semibold">Car Specification</h4>
-            <div className="grid grid-cols-3 text-base gap-4 mt-4">
-              <div>
-                <span className="font-medium ">Car Brand</span>
-                <p className="text-gray-500">{selected?.make}</p>
-              </div>
-              <div>
-                <span className="font-medium">Car Model</span>
-                <p className="text-gray-500">{selected?.model}</p>
-              </div>
-
-              <div>
-                <span className="font-medium">Category</span>
-                <p className="text-gray-500">{selected?.category}</p>
+          <div className=" bg-white w-full h-fit flex justify-center items-center flex-col  shadow-lg rounded-lg">
+            <div className="bg-blue-100 w-11/12  text-blue-700 py-2 px-4 rounded-lg text-center mt-10">
+              <div className="flex justify-between  items-center">
+                <h3 className="text-base font-semibold">Price</h3>
+                <span className="text-base font-bold">
+                  {selected?.price} Birr
+                </span>
               </div>
             </div>
+            <div className="p-10 pt-0 w-full h-fit  shadow-lg rounded-lg">
+              {/* Car Specification */}
+              <h4 className="mt-8 text-lg font-semibold">Car Specification</h4>
+              <div className="grid grid-cols-3 text-base gap-4 mt-4">
+                <div>
+                  <span className="font-medium ">Car Brand</span>
+                  <p className="text-gray-500">{selected?.make}</p>
+                </div>
+                <div>
+                  <span className="font-medium">Car Model</span>
+                  <p className="text-gray-500">{selected?.model}</p>
+                </div>
 
-            <div className="my-8">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                Features
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {/* Safe handling of carFeatures */}
-                {selected?.carFeatures &&
-                  (Array.isArray(selected.carFeatures) ? ( // Check if it's already an array
-                    selected.carFeatures.map((feature, index) => (
-                      <span
-                        key={index}
-                        className=" text-gray-700 px-4 py-2 rounded-xl text-base border border-gray-300"
-                      >
-                        {feature}
-                      </span>
-                    ))
-                  ) : // If not an array, treat it as a string (or fallback to empty array)
-                  typeof selected.carFeatures === "string" ? (
-                    selected.carFeatures.split(",").map(
-                      (
-                        feature,
-                        index // Split if it's a string
-                      ) => (
-                        <span
-                          key={index}
-                          className=" text-gray-700 px-4 py-2 rounded-xl text-base border border-gray-300"
-                        >
-                          {feature.trim()} {/* Trim whitespace */}
-                        </span>
-                      )
-                    )
-                  ) : (
-                    // Fallback if it's neither string nor array - render nothing or a placeholder
-                    <span>No features listed</span>
+                <div>
+                  <span className="font-medium">Category</span>
+                  <p className="text-gray-500">{selected?.category}</p>
+                </div>
+              </div>
+
+              <section className="my-16">
+                <h2 className="font-semibold text-lg mb-4">Features</h2>
+                <div className="flex flex-wrap gap-2">
+                  {vehicleDetails?.carFeatures?.map((feature, index) => (
+                    <span
+                      key={index}
+                      className="border border-gray-400 text-base px-3 py-1 rounded-xl"
+                    >
+                      {feature}
+                    </span>
                   ))}
-              </div>
-            </div>
+                </div>
+              </section>
 
-            {/* Pickup and Drop-off Locations */}
-            <div className="flex justify-between md:pr-52 mb-6">
-              <div className="my-8">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">
+              <section className="my-8">
+                <h2 className="font-semibold text-lg mb-4">
                   Pick up Locations
-                </h3>
-                <ul className=" text-base space-y-6 text-gray-700">
-                  {selected?.pickupLocations &&
-                    selected?.pickupLocations.map((location, index) => (
-                      <li className="flex items-center gap-4" key={index}>
-                        <IoLocationOutline size={16} />
-                        {location}
-                      </li>
-                    ))}
-                </ul>
-              </div>
-              <div className="my-8">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                  Drop off Locations
-                </h3>
-                <ul className=" text-base space-y-6 text-gray-700">
-                  {selected?.dropOffLocations &&
-                    selected?.dropOffLocations.map((location, index) => (
-                      <li className="flex items-center gap-4" key={index}>
-                        <IoLocationOutline size={16} />
-                        {location}
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            </div>
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {pickUpLocations.map((place, index) => (
+                    <span
+                      key={index}
+                      className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
+                    >
+                      {place}
+                    </span>
+                  ))}
+                </div>
+              </section>
 
-            {/* Insurance */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-800">Insurance</h3>
-              <p className="text-base text-gray-700 mt-2">
-                {selected?.insurance}
-              </p>
+              <section className="my-8">
+                <h2 className="font-semibold text-2xl my-4 mb-4">
+                  Drop off Locations
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {dropOffLocations.map((place, index) => (
+                    <span
+                      key={index}
+                      className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
+                    >
+                      {place}
+                    </span>
+                  ))}
+                </div>
+              </section>
+
+              <section className="my-16">
+                <h2 className="font-semibold text-lg mb-4">
+                  Available Rental Dates
+                </h2>
+                <div className="space-y-4">
+                  {parsedCalendar.map((dateRange, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <FaCalendarAlt size={16} />
+                      <span className="text-sm">{`${formatDate(
+                        dateRange.startDate
+                      )} - ${formatDate(dateRange.endDate)}`}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
             </div>
           </div>
         </div>
       </div>
-
       <div className="flex flex-col lg:w-1/4">
         <section className=" bg-white p-6 md:mt-24 mb-8  rounded-xl shadow-md">
           <h2 className="text-lg font-semibold text-[#00113D] mb-8">
@@ -407,28 +558,53 @@ export default function Details2(props) {
             <div className="flex items-start gap-2">
               <div>
                 <p className="flex items-center ">
-                  <FaRegCircle className="text-gray-400" />{" "}
-                  <span className="px-4">Sunday, Jun 30 - 10:00 AM</span>
+                  <FaRegCircle className="text-gray-600" />{" "}
+                  <span className="px-4 text-black">
+                    Pick-up Date: {""}
+                    {new Date(pickUpTime).toLocaleDateString()}
+                  </span>
                 </p>
+                <br />
+
                 <div className="ml-2 px-6 border-l pb-12 border-gray-300">
-                  <p className="font-semibold">Bole International Airport</p>
-                  <a href="#" className="text-blue-800 underline">
-                    View Pick-up detail instructions
-                  </a>
+                  <p className="font-semibold">
+                    {" "}
+                    <p>
+                      {pickupLocation ? (
+                        <span className="text-green-500">{pickupLocation}</span>
+                      ) : (
+                        <span className="text-red-400">
+                          Please Select a location
+                        </span>
+                      )}
+                    </p>
+                  </p>
                 </div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div>
                 <p className="flex items-center">
-                  <FaRegCircle className="text-gray-400" />{" "}
-                  <span className="px-4">Sunday, Jun 30 - 10:00 AM</span>
+                  <FaRegCircle className="text-gray-600" />{" "}
+                  <span className="px-4 text-black">
+                    Drop-Off Date: {new Date(DropOffTime).toLocaleDateString()}
+                  </span>
                 </p>
+                <br />
                 <div className="ml-2 px-6  pb-8 ">
-                  <p className="font-semibold">Bole International Airport</p>
-                  <a href="#" className="text-blue-800 underline">
-                    View Pick-up detail instructions
-                  </a>
+                  <p className="font-semibold">
+                    <p>
+                      {dropoffLocation ? (
+                        <span className="text-green-500">
+                          {dropoffLocation}
+                        </span>
+                      ) : (
+                        <span className="text-red-400">
+                          Please Select a location
+                        </span>
+                      )}
+                    </p>
+                  </p>
                 </div>
               </div>
             </div>
@@ -436,14 +612,14 @@ export default function Details2(props) {
           <div className=" w-full">
             <Dropdown
               label="Select Pick up location"
-              options={locations}
+              options={pickUpLocations}
               selectedOption={pickupLocation}
               onSelect={setPickupLocation}
             />
 
             <Dropdown
               label="Select Drop off location"
-              options={locations}
+              options={dropOffLocations}
               selectedOption={dropoffLocation}
               onSelect={setDropoffLocation}
             />
@@ -454,10 +630,20 @@ export default function Details2(props) {
           </div>
           <div className="p-4  bg-blue-100 text-sm mt-4 py-4 h-fit">
             Having no driver selected means that you are liable for any issues
-            that is related to an accident to the rented vechile
+            that is related to an accident to the rented vechile.
           </div>
         </section>
-        <PriceBreakdown />
+        <PriceBreakdown
+          days={days}
+          dailyPrice={dailyPrice}
+          totalPrice={totalPrice}
+          id={vehicleDetails?.id}
+          ownerId={vehicleDetails?.ownerId} // Ensure ownerId is passed
+          dropOffTime={DropOffTime}
+          pickUpTime={pickUpTime}
+          pickUpLocation={pickUpLocations} // Ensure pickupLocation is passed
+          dropOffLocation={dropOffLocations} // Ensure dropoffLocation is passed
+        />
       </div>
     </div>
   );
