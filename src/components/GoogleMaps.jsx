@@ -118,7 +118,7 @@ const MapComponent = ({ vehicles = [] }) => {
               <div class="mt-2 text-sm flex items-center">
                 <span class="mr-2">📍 Pickup Location</span>
               </div>
-              <div class="mt-1 text-xs text-gray-600">Click for details</div>
+             
             </div>
           `,
         });

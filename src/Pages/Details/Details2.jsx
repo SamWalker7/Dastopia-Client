@@ -641,8 +641,8 @@ export default function Details2(props) {
           ownerId={vehicleDetails?.ownerId} // Ensure ownerId is passed
           dropOffTime={DropOffTime}
           pickUpTime={pickUpTime}
-          pickUpLocation={pickUpLocations} // Ensure pickupLocation is passed
-          dropOffLocation={dropOffLocations} // Ensure dropoffLocation is passed
+          pickUpLocation={pickupLocation} // Ensure pickupLocation is passed
+          dropOffLocation={dropoffLocation} // Ensure dropoffLocation is passed
         />
       </div>
     </div>

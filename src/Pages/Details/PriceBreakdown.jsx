@@ -23,7 +23,10 @@ const PaymentDetailsModal = ({
   const handleApproveBooking = async () => {
     try {
       console.log("ownerId before fetch:", USER_ID); // Add this line
-
+      const pickArr = [];
+      pickArr.push(pickUpLocation);
+      const dropArr = [];
+      dropArr.push(dropOffLocation);
       const bookingResponse = await fetch(
         "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/",
         {
@@ -39,8 +42,8 @@ const PaymentDetailsModal = ({
             startDate: pickUpTime,
             endDate: dropOffTime,
             price: totalPrice.toString(),
-            pickUp: pickUpLocation,
-            dropOff: dropOffLocation,
+            pickUp: pickArr,
+            dropOff: dropArr,
             cancelUrl: "your_cancel_url",
             returnUrl: "your_return_url",
           }),
@@ -314,7 +317,7 @@ const PaymentDetailsModal = ({
           }`}
           disabled={!isChecked}
         >
-          Approve Booking
+          Book Now
         </button>
       </div>
     </div>

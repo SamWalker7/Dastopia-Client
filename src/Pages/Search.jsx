@@ -290,17 +290,17 @@ const Search = () => {
                   <div>{new Date(endDate).toLocaleDateString()}</div>
                 </div>
               </div>
-
+              {/* 
               <button className=" bg-blue-950 text-sm text-white rounded-full px-4 ml-8 my-2 py-2">
                 Edit
-              </button>
+              </button> */}
             </div>
           ) : (
             <div className="bg-white w-full px-10 py-4 justify-between text-lg md:flex-row flex-col rounded-xl shadow-sm shadow-blue-300 border border-blue-300 flex mb-4">
               <div>No dates selected</div>
-              <button className=" bg-blue-950 text-sm text-white rounded-full px-4 ml-8 my-2 py-2">
+              {/* <button className=" bg-blue-950 text-sm text-white rounded-full px-4 ml-8 my-2 py-2">
                 Edit
-              </button>
+              </button> */}
             </div>
           )}
 

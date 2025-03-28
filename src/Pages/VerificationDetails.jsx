@@ -283,7 +283,7 @@ const VerificationDetails = ({ user2, setUser }) => {
     if (images[type]) {
       return (
         <div className="w-full h-full flex items-center justify-center bg-gray-100">
-          <span className="text-gray-500">Processing image...</span>
+          <span className="text-gray-500">Upload image.</span>
         </div>
       );
     }
