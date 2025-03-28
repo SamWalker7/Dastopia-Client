@@ -125,6 +125,8 @@ const Login = () => {
                 ),
               }}
               className="w-full my-3"
+              autoComplete="off" // Or try "off"
+s
             >
             </TextField>
               <a

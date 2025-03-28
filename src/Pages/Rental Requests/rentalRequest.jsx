@@ -29,12 +29,13 @@ const RentalRequests = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [approved, setApproved] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
-  const [rentalRequests, setRentalRequests] = useState([]);
+  const [rentalRequests, setRentalRequests] = useState();
   const [vehicleDetailsMap, setVehicleDetailsMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { apiCallWithRetry } = useVehicleFormStore();
   const [selectedRequest, setSelectedRequest] = useState(null); // State to hold selected request
+  const customer = JSON.parse(localStorage.getItem("customer"));
 
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);
@@ -49,6 +50,11 @@ const RentalRequests = () => {
           "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/get_all_owner_booking",
           {
             method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${customer.AccessToken}`,
+          },
+           
           }
         );
 
@@ -72,11 +78,10 @@ const RentalRequests = () => {
               if (!vehicleDetail) {
                 vehicleDetail = await fetchVehicleDetails(request.carId);
               }
-
               return {
                 ...request,
                 expiresInSeconds,
-                vehicleDetail: vehicleDetail || {}, // Add vehicle details to the request object
+                vehicleDetail: vehicleDetail, // Add vehicle details to the request object
               };
             })
           );
@@ -181,7 +186,6 @@ const RentalRequests = () => {
                   <p className="">{request.renteeId || "Unknown Rentee"}</p>
                 </div>
               </div>
-
               <div className="h-full  flex flex-col justify-center w-full">
                 <span className="font-medium text-black"> Rent Duration</span>
                 <p className="">
@@ -275,11 +279,10 @@ const RentalRequests = () => {
                     Booking Pending
                   </div>
                 </div>
-
                 <h2 className="text-lg mt-16 mb-4 font-semibold text-[#00113D]">
                   Car Details
                 </h2>
-                <div className="text-sm  space-y-2 w-full text-gray-500">
+                <div className="text-sm   space-y-2 w-full text-gray-500">
                   <div className="grid grid-cols-2 gap-4 w-3/5 mt-4">
                     <div className="">
                       <span className="font-medium text-black">Car Brand</span>
@@ -308,7 +311,7 @@ const RentalRequests = () => {
                 <h2 className="text-lg font-semibold text-[#00113D] mb-8">
                   Rental Details
                 </h2>
-                <div className="flex flex-col  text-sm text-[#5A5A5A]">
+                <div className="flex flex-col   text-sm text-[#5A5A5A]">
                   <div className="flex items-start gap-2">
                     <div>
                       <p className="flex items-center ">
@@ -359,7 +362,6 @@ const RentalRequests = () => {
                 </div>
               </section>
             </div>
-
             <div>
               {/* Rentee Details */}
               <section className="h-fit bg-white p-6 space-y-6   rounded-xl shadow-md">
@@ -409,7 +411,6 @@ const RentalRequests = () => {
                     <>
                       {/* Overlay background */}
                       <div className="fixed inset-0 bg-black opacity-50 z-20"></div>
-
                       {/* Modal content */}
                       <div className="fixed inset-0 flex items-center justify-center z-30">
                         <div className="bg-white p-6 rounded-lg shadow-lg md:w-[350px]">
@@ -480,7 +481,6 @@ const RentalRequests = () => {
                           Please read and accept the terms and conditions before
                           confirming your booking.
                         </p>
-
                         {/* Terms Content */}
                         <div className="text-xs text-black leading-relaxed">
                           <h3 className="font-semibold text-black mb-2">
@@ -549,7 +549,6 @@ const RentalRequests = () => {
                             </li>
                           </ol>
                         </div>
-
                         {/* Checkbox */}
                         <div className="flex items-center mt-4">
                           <input
@@ -570,7 +569,7 @@ const RentalRequests = () => {
                         {/* Approve Button */}
                         <button
                           onClick={() => handleConfirmBooking()}
-                          className={`w-full py-2 mt-4 text-white  text-sm rounded-full ${
+                          className={`w-full py-2 mt-4 text-white   text-sm rounded-full ${
                             isChecked
                               ? "bg-blue-950 hover:bg-blue-900"
                               : "bg-gray-400 cursor-not-allowed"
