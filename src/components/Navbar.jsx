@@ -22,8 +22,10 @@ import {
   FaCheckSquare,
   FaWindowClose,
   FaHome,
+  FaSpinner,
 } from "react-icons/fa";
 import Img3 from "../images/testimonials/avatar.png";
+import { getDownloadUrl } from "../api";
 
 const MenuItem = ({ icon, text, hasDropdown, children, onClick }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -58,6 +60,70 @@ const MenuItem = ({ icon, text, hasDropdown, children, onClick }) => {
 function Navbar({ user2, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
+  const [profilePicKeyNavbar, setProfilePicKeyNavbar] = useState(null);
+  const [profileImageUrlNavbar, setProfileImageUrlNavbar] = useState(Img3); // Default to Img3
+  const [isImageLoadingNavbar, setIsImageLoadingNavbar] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setIsImageLoadingNavbar(true);
+      try {
+        const response = await fetch(
+          "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/account/get_profile",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${user2?.AccessToken}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.success && data?.data?.formattedProfile) {
+            const formattedProfile = data.data.formattedProfile;
+            setProfilePicKeyNavbar(formattedProfile.profilePicture);
+          } else {
+            console.error("Failed to fetch profile data for navbar:", data);
+            setIsImageLoadingNavbar(false);
+          }
+        } else {
+          console.error("Failed to fetch profile for navbar:", response.status);
+          setIsImageLoadingNavbar(false);
+        }
+      } catch (error) {
+        console.error("Error fetching profile for navbar:", error);
+        setIsImageLoadingNavbar(false);
+      }
+    };
+
+    if (user2?.AccessToken) {
+      fetchProfile();
+    } else {
+      setIsImageLoadingNavbar(false); // If no token, no loading
+    }
+  }, [user2?.AccessToken]);
+
+  useEffect(() => {
+    const fetchProfileImage = async () => {
+      setIsImageLoadingNavbar(true);
+      try {
+        if (profilePicKeyNavbar) {
+          const response = await getDownloadUrl(profilePicKeyNavbar);
+          setProfileImageUrlNavbar(response?.body || Img3);
+        } else {
+          setProfileImageUrlNavbar(Img3);
+        }
+      } catch (error) {
+        console.error("Error fetching profile image for navbar:", error);
+        setProfileImageUrlNavbar(Img3);
+      } finally {
+        setIsImageLoadingNavbar(false);
+      }
+    };
+
+    fetchProfileImage();
+  }, [profilePicKeyNavbar]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -105,8 +171,8 @@ function Navbar({ user2, setUser }) {
   };
   return (
     <>
-      <nav className="fixed w-screen md:bg-transparent bg-white  z-20">
-        <div className="mx-auto px-8 sm:px-6 lg:px-12  flex   w-full justify-between items-center h-20">
+      <nav className="fixed w-screen md:bg-transparent bg-white   z-20">
+        <div className="mx-auto px-8 sm:px-6 lg:px-12   flex   w-full justify-between items-center h-20">
           {/* Mobile Hamburger */}
           <div className="md:hidden">
             <button onClick={openNav} className="focus:outline-none">
@@ -125,15 +191,22 @@ function Navbar({ user2, setUser }) {
             </Link>
           </div>
           <div onClick={gotoProfile} className="md:hidden ">
-            <img
-              src={Img3}
-              className="w-10 h-10 rounded-full text-white md:mb-4 md:mr-6"
-            />
+            {isImageLoadingNavbar ? (
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100">
+                <FaSpinner className="animate-spin text-xl text-gray-400" />
+              </div>
+            ) : (
+              <img
+                src={profileImageUrlNavbar}
+                className="w-10 h-10 rounded-full object-cover text-white md:mb-4 md:mr-6"
+                alt="Profile"
+              />
+            )}
           </div>
 
           {/* Desktop Menu */}
           <div
-            className={`${backgroundColor} py-0 hidden md:flex px-6  rounded-full space-x-4 items-center`}
+            className={`${backgroundColor} py-0 hidden md:flex px-6   rounded-full space-x-4 items-center`}
           >
             {[
               { to: "/", label: "Home" },
@@ -145,7 +218,7 @@ function Navbar({ user2, setUser }) {
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  `px-0 py-0 text-gray-600 text-sm  hover:text-yellow-500 ${
+                  `px-0 py-0 text-gray-600 text-sm   hover:text-yellow-500 ${
                     isActive
                       ? "text-yellow-500 border-b-2 border-yellow-500"
                       : ""
@@ -166,10 +239,17 @@ function Navbar({ user2, setUser }) {
                   <span>Add Car</span>
                 </NavLink>
                 <NavLink to="/profile" className=" ">
-                  <img
-                    src={Img3}
-                    className="w-8 h-8 rounded-full  text-white "
-                  />
+                  {isImageLoadingNavbar ? (
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100">
+                      <FaSpinner className="animate-spin text-md text-gray-400" />
+                    </div>
+                  ) : (
+                    <img
+                      src={profileImageUrlNavbar}
+                      className="w-8 h-8 rounded-full object-cover  text-white "
+                      alt="Profile"
+                    />
+                  )}
                 </NavLink>
                 <div className="relative" ref={menuRef}>
                   <button
@@ -260,7 +340,7 @@ function Navbar({ user2, setUser }) {
             {user && (
               <button
                 onClick={handleLogout}
-                className="text-white bg-primary px-4 py-0  hover:bg-opacity-90"
+                className="text-white bg-primary px-4 py-0   hover:bg-opacity-90"
               >
                 Sign out
               </button>
@@ -293,7 +373,7 @@ function Navbar({ user2, setUser }) {
               //   onClick={openNav}
 
               //   className={({ isActive }) =>
-              //     `block px-3 py-0  text-sm font-medium ${
+              //     `block px-3 py-0   text-sm font-medium ${
               //       isActive
               //         ? "text-yellow-500 border-b-2 border-yellow-500"
               //         : "text-gray-600 hover:text-gray-900"
@@ -307,14 +387,14 @@ function Navbar({ user2, setUser }) {
             {!user && (
               <>
                 <NavLink
-                  className="text-primary block w-full text-left px-4 py-0  border border-primary hover:bg-primary hover:text-white"
+                  className="text-primary block w-full text-left px-4 py-0   border border-primary hover:bg-primary hover:text-white"
                   to="/signin"
                   onClick={openNav}
                 >
                   Sign In/Signup
                 </NavLink>
                 <NavLink
-                  className="text-white bg-primary block w-full text-left px-4 py-0  hover:bg-opacity-90"
+                  className="text-white bg-primary block w-full text-left px-4 py-0   hover:bg-opacity-90"
                   to="/signup"
                   onClick={openNav}
                 >
@@ -330,13 +410,13 @@ function Navbar({ user2, setUser }) {
                     handleLogout();
                     openNav();
                   }}
-                  className="text-white bg-primary block w-full text-left px-4 py-0  hover:bg-opacity-90"
+                  className="text-white bg-primary block w-full text-left px-4 py-0   hover:bg-opacity-90"
                 >
                   Logout
                 </button>
                 <NavLink
                   to="/addcar"
-                  className={`hover:bg-gray-50 text-sm flex items-center  rounded-full px-3 ml-4 my-2 py-0`}
+                  className={`hover:bg-gray-50 text-sm flex items-center   rounded-full px-3 ml-4 my-2 py-0`}
                 >
                   <FiPlus className="mr-4 " size={12} />
                   <span>Add Car</span>

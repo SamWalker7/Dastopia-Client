@@ -13,18 +13,13 @@ const Profile = ({ user2, setUser }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState({
-    firstName:
-      user2?.userAttributes?.find((attr) => attr.Name === "given_name")
-        ?.Value || "",
-    lastName:
-      user2?.userAttributes?.find((attr) => attr.Name === "family_name")
-        ?.Value || "",
-    email:
-      user2?.userAttributes?.find((attr) => attr.Name === "email")?.Value || "",
-    phoneNumber:
-      user2?.userAttributes?.find((attr) => attr.Name === "phone_number")
-        ?.Value || "",
-    location: "Addis Ababa",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    address: "",
+    city: "",
+    profilePicture: null,
   });
   const [errors, setErrors] = useState({ email: "", phoneNumber: "" });
   const [sortConfig, setSortConfig] = useState({
@@ -32,13 +27,56 @@ const Profile = ({ user2, setUser }) => {
     direction: "ascending",
   });
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [profilePicKey, setProfilePicKey] = useState(
-    user2?.userAttributes?.find(
-      (attr) => attr.Name === "custom:profile_pic_key"
-    )?.Value || null
-  );
+  const [profilePicKey, setProfilePicKey] = useState(null);
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [isImageLoading, setIsImageLoading] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoadingProfile(true);
+      try {
+        const response = await fetch(
+          "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/account/get_profile",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${user2?.AccessToken}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.success && data?.data?.formattedProfile) {
+            const formattedProfile = data.data.formattedProfile;
+            setProfile({
+              firstName: formattedProfile.firstName || "",
+              lastName: formattedProfile.lastName || "",
+              email: formattedProfile.email || "",
+              phoneNumber: formattedProfile.phoneNumber || "",
+              address: formattedProfile.address || "",
+              city: formattedProfile.city || "",
+              profilePicture: formattedProfile.profilePicture || null,
+            });
+            setProfilePicKey(formattedProfile.profilePicture);
+          } else {
+            console.error("Failed to fetch profile data:", data);
+          }
+        } else {
+          console.error("Failed to fetch profile:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    if (user2?.AccessToken) {
+      fetchProfile();
+    }
+  }, [user2?.AccessToken]);
 
   useEffect(() => {
     const fetchProfileImage = async () => {
@@ -72,21 +110,140 @@ const Profile = ({ user2, setUser }) => {
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidPhoneNumber = (phoneNumber) => /^\d{10}$/.test(phoneNumber);
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     let hasError = false;
     const newErrors = {};
     if (!isValidEmail(profile.email)) {
       newErrors.email = "Please enter a valid email address.";
       hasError = true;
     }
-    if (!isValidPhoneNumber(profile.phoneNumber)) {
-      newErrors.phoneNumber = "Please enter a valid 10-digit phone number.";
-      hasError = true;
-    }
+    // if (!isValidPhoneNumber(profile.phoneNumber)) {
+    //   newErrors.phoneNumber = "Please enter a valid 10-digit phone number.";
+    //   hasError = true;
+    // }
     setErrors(newErrors);
+    const customer = JSON.parse(localStorage.getItem("customer"));
+
+    const USER_ID =
+      customer?.userAttributes?.find((attr) => attr.Name === "sub")?.Value ||
+      ""; //the current user's ID
     if (!hasError) {
-      alert("Profile updated!");
-      console.log("Updated profile:", profile);
+      try {
+        console.log("Updating profile with data:", profilePicKey);
+
+        const response = await fetch(
+          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/account/update_profile/${USER_ID}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${user2?.AccessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              accessToken: user2?.AccessToken,
+              email: profile.email,
+              given_name: profile.firstName,
+              family_name: profile.lastName,
+              address: profile.address,
+              "custom:city": profile.city,
+              "custom:profile_picture_key": profilePicKey,
+            }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.success) {
+            alert("Profile updated successfully!");
+            // Fetch updated profile and update state
+            const fetchUpdatedProfile = async () => {
+              try {
+                const getProfileResponse = await fetch(
+                  "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/account/get_profile",
+                  {
+                    method: "GET",
+                    headers: {
+                      Authorization: `Bearer ${user2?.AccessToken}`,
+                    },
+                  }
+                );
+
+                if (getProfileResponse.ok) {
+                  const updatedProfileData = await getProfileResponse.json();
+                  if (
+                    updatedProfileData?.success &&
+                    updatedProfileData?.data?.formattedProfile
+                  ) {
+                    console.log(
+                      "Updated profile data:",
+                      updatedProfileData.data.formattedProfile
+                    );
+                    const formattedProfile =
+                      updatedProfileData.data.formattedProfile;
+                    // const updatedUser = {
+                    //   ...user2,
+                    //   userAttributes: [
+                    //     { Name: "email", Value: formattedProfile.email },
+                    //     {
+                    //       Name: "family_name",
+                    //       Value: formattedProfile.lastName,
+                    //     },
+                    //     {
+                    //       Name: "given_name",
+                    //       Value: formattedProfile.firstName,
+                    //     },
+                    //     {
+                    //       Name: "custom:profile_pic_key",
+                    //       Value: formattedProfile.profilePicture,
+                    //     },
+                    //     // Add other relevant attributes if needed
+                    //   ],
+                    // };
+                    // localStorage.setItem(
+                    //   "customer",
+                    //   JSON.stringify(updatedUser)
+                    // );
+                    //setUser(updatedUser);
+                    console.log("Updated user:", formattedProfile);
+                    setProfile({
+                      firstName: formattedProfile.firstName || "",
+                      lastName: formattedProfile.lastName || "",
+                      email: formattedProfile.email || "",
+                      phoneNumber: formattedProfile.phoneNumber || "",
+                      address: formattedProfile.address || "",
+                      city: formattedProfile.city || "",
+                      profilePicture: formattedProfile.profilePicture || null,
+                    });
+                    setProfilePicKey(formattedProfile.profilePicture);
+                  } else {
+                    console.error(
+                      "Failed to fetch updated profile data:",
+                      updatedProfileData
+                    );
+                  }
+                } else {
+                  console.error(
+                    "Failed to fetch updated profile:",
+                    getProfileResponse.status
+                  );
+                }
+              } catch (error) {
+                console.error("Error fetching updated profile:", error);
+              }
+            };
+            fetchUpdatedProfile();
+          } else {
+            alert("Failed to update profile.");
+            console.error("Failed to update profile:", data);
+          }
+        } else {
+          alert("Failed to update profile.");
+          console.error("Failed to update profile:", response.status);
+        }
+      } catch (error) {
+        alert("Failed to update profile.");
+        console.error("Error updating profile:", error);
+      }
     }
   };
 
@@ -152,17 +309,6 @@ const Profile = ({ user2, setUser }) => {
 
   const handleProfilePicUploadedFromChild = (newKey) => {
     setProfilePicKey(newKey);
-    const updatedUser = {
-      ...user2,
-      userAttributes: [
-        ...user2.userAttributes.filter(
-          (attr) => attr.Name !== "custom:profile_pic_key"
-        ),
-        { Name: "custom:profile_pic_key", Value: newKey },
-      ],
-    };
-    localStorage.setItem("customer", JSON.stringify(updatedUser));
-    setUser(updatedUser);
   };
 
   useEffect(() => {
@@ -212,6 +358,15 @@ const Profile = ({ user2, setUser }) => {
             Error: Could not load rental history. Please try again later.
           </p>
         </div>
+      </div>
+    );
+  }
+
+  if (loadingProfile) {
+    return (
+      <div className="py-10 bg-[#FAF9FE] md:px-20 px-6 space-y-8 md:pt-32 pt-28 flex justify-center items-center">
+        <FaSpinner className="animate-spin text-blue-500 text-4xl" />
+        <span className="ml-2">Loading profile...</span>
       </div>
     );
   }

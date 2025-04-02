@@ -137,47 +137,47 @@ const MapComponent = ({ vehicles = [] }) => {
       });
 
       // Process dropoff locations
-      (vehicle?.dropOff || []).forEach(([lat, lng]) => {
-        if (!lat || !lng) return;
+      // (vehicle?.dropOff || []).forEach(([lat, lng]) => {
+      //   if (!lat || !lng) return;
 
-        const marker = new google.maps.Marker({
-          position: { lat, lng },
-          map,
-          icon: createDropoffIcon(color),
-          title: `${make} ${model} - Dropoff`,
-        });
+      //   const marker = new google.maps.Marker({
+      //     position: { lat, lng },
+      //     map,
+      //     icon: createDropoffIcon(color),
+      //     title: `${make} ${model} - Dropoff`,
+      //   });
 
-        const infoWindow = new google.maps.InfoWindow({
-          content: `
-            <div class="p-2 min-w-[200px]">
-              <div class="flex items-center mb-2">
-                <div class="w-4 h-4 rounded-full mr-2" style="background: ${color}"></div>
-                <h3 class="font-bold text-lg">${make} ${model}</h3>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-sm">Daily Rate:</span>
-                <span class="font-semibold">${price}</span>
-              </div>
-              <div class="mt-2 text-sm flex items-center">
-                <span class="mr-2">🏁 Dropoff Location</span>
-              </div>
-              <div class="mt-1 text-xs text-gray-600">Click for details</div>
-            </div>
-          `,
-        });
+      //   const infoWindow = new google.maps.InfoWindow({
+      //     content: `
+      //       <div class="p-2 min-w-[200px]">
+      //         <div class="flex items-center mb-2">
+      //           <div class="w-4 h-4 rounded-full mr-2" style="background: ${color}"></div>
+      //           <h3 class="font-bold text-lg">${make} ${model}</h3>
+      //         </div>
+      //         <div class="flex justify-between">
+      //           <span class="text-sm">Daily Rate:</span>
+      //           <span class="font-semibold">${price}</span>
+      //         </div>
+      //         <div class="mt-2 text-sm flex items-center">
+      //           <span class="mr-2">🏁 Dropoff Location</span>
+      //         </div>
+      //         <div class="mt-1 text-xs text-gray-600">Click for details</div>
+      //       </div>
+      //     `,
+      //   });
 
-        marker.addListener("click", () => {
-          // Zoom and center on marker
-          map.setZoom(18);
-          map.panTo(marker.getPosition());
+      //   marker.addListener("click", () => {
+      //     // Zoom and center on marker
+      //     map.setZoom(18);
+      //     map.panTo(marker.getPosition());
 
-          infoWindowsRef.current.forEach((iw) => iw.close());
-          infoWindow.open(map, marker);
-        });
+      //     infoWindowsRef.current.forEach((iw) => iw.close());
+      //     infoWindow.open(map, marker);
+      //   });
 
-        markersRef.current.push(marker);
-        infoWindowsRef.current.push(infoWindow);
-      });
+      //   markersRef.current.push(marker);
+      //   infoWindowsRef.current.push(infoWindow);
+      // });
     });
   }, [vehicles, map]);
 

@@ -6,6 +6,7 @@ import {
   FaGasPump,
   FaTag,
   FaUserFriends,
+  FaStar,
 } from "react-icons/fa";
 import { FaCalendarAlt } from "react-icons/fa";
 import useVehicleFormStore from "../../store/useVehicleFormStore";
@@ -42,6 +43,50 @@ const Details = ({ selectedVehicleId }) => {
   const Status = ["Active", "Inactive"];
   const [pickUpLocations, setPickUpLocations] = useState([]);
   const [dropOffLocations, setDropOffLocations] = useState([]);
+  const [ratings, setRatings] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
+
+  const fetchRatings = async (carID) => {
+    try {
+      const response = await fetch(
+        "https://xo55y7ogyj.execute-api.us-east-1.amazonaws.com/prod/add_vehicle",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            operation: "getRatingsbyID",
+            carId: carID,
+          }),
+        }
+      );
+      const data = await response.json();
+      if (data.statusCode === 200 && data.body.success) {
+        return {
+          ratings: data.body.data.ratings,
+          averageRating: data.body.data.averageRating,
+        };
+      } else {
+        console.error("Failed to fetch ratings:", data);
+        return { ratings: [], averageRating: 0 };
+      }
+    } catch (error) {
+      console.error("Error fetching ratings:", error);
+      return { ratings: [], averageRating: 0 };
+    }
+  };
+
+  useEffect(() => {
+    if (selectedVehicleId) {
+      fetchRatings(selectedVehicleId)
+        .then((data) => {
+          setRatings(data.ratings);
+          setAverageRating(data.averageRating);
+        })
+        .catch((error) => console.error("Error setting ratings:", error));
+    }
+  }, [selectedVehicleId]);
 
   useEffect(() => {
     const fetchLocations = async (locations, setLocations) => {
@@ -208,7 +253,7 @@ const Details = ({ selectedVehicleId }) => {
     return (
       <div>
         {" "}
-        <h3 className="text-base  mt-4">
+        <h3 className="text-base  mt-4">
           {" "}
           Click "See Details" To See more information{" "}
         </h3>
@@ -421,6 +466,71 @@ const Details = ({ selectedVehicleId }) => {
                   </div>
                 ))}
             </div>
+          </section>
+
+          {/* Rating & Reviews Section */}
+          <section className="my-16">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+              Rating & Reviews
+            </h3>
+            <div className="flex items-center mb-2">
+              <span className="font-semibold text-gray-700 mr-2">
+                Average Rating:
+              </span>
+              <div className="text-yellow-500 text-base">
+                {Array.from({ length: Math.round(averageRating) }).map(
+                  (_, i) => (
+                    <FaStar key={`star-${i}`} className="inline-block" />
+                  )
+                )}
+                {Array.from({ length: 5 - Math.round(averageRating) }).map(
+                  (_, i) => (
+                    <FaStar
+                      key={`empty-star-${i}`}
+                      className="inline-block text-gray-300"
+                    />
+                  )
+                )}
+              </div>
+              <span className="ml-2 text-gray-600">
+                ({averageRating?.toFixed(2)})
+              </span>
+            </div>
+            {ratings.length > 0 ? (
+              ratings.map((review, index) => (
+                <div
+                  key={index}
+                  className="mb-4 p-4 border rounded-md shadow-sm"
+                >
+                  <div className="flex items-center">
+                    {/* Basic star rating - you might want a more visual component */}
+                    <div className="text-yellow-500 text-base">
+                      {Array.from({ length: review.rating }).map((_, i) => (
+                        <FaStar
+                          key={`review-star-${index}-${i}`}
+                          className="inline-block"
+                        />
+                      ))}
+                      {Array.from({ length: 5 - review.rating }).map((_, i) => (
+                        <FaStar
+                          key={`review-empty-star-${index}-${i}`}
+                          className="inline-block text-gray-300"
+                        />
+                      ))}
+                    </div>
+                    <p className="ml-3 text-base text-gray-700">
+                      {review.rating}/5
+                    </p>
+                  </div>
+                  <p className="text-base text-gray-700 mt-1">
+                    {review.userName}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">{review.review}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">No reviews yet.</p>
+            )}
           </section>
         </div>
       </div>

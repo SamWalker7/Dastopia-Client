@@ -103,12 +103,12 @@ const AccountInformation = ({
   };
 
   return (
-    <div className="bg-white p-6 shadow-lg rounded-lg space-y-6 md:w-1/4 h-fit">
+    <div className="bg-white p-6 shadow-lg rounded-lg space-y-6 md:w-2/4 h-fit">
       <h2 className="text-xl font-semibold">Account Information</h2>
 
-      <div className="flex flex-col items-center space-y-4">
+      <div className="flex flex-col md:flex-row items-center space-y-4">
         {/* Profile Picture Section */}
-        <div className="relative group">
+        <div className="relative group w-fit mr-8">
           {isImageLoading ? (
             <div className="w-32 h-32 rounded-full flex items-center justify-center bg-gray-100">
               <FaSpinner className="animate-spin text-2xl text-gray-400" />
@@ -117,14 +117,14 @@ const AccountInformation = ({
             <img
               src={profileImageUrl || placeholderImage}
               alt="Profile"
-              className="w-32 h-32 rounded-full object-cover border-4 border-gray-100"
+              className="w-56 h-40 rounded-full object-cover border-4 border-gray-100"
             />
           )}
           <button
             onClick={toggleModal}
-            className="absolute -bottom-2 -right-2 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-all"
+            className="absolute bottom-4 -right-2 bg-white p-1 rounded-full shadow-md hover:bg-gray-100 transition-all"
           >
-            <img src={editIcon} className="w-5 h-5" alt="Edit" />
+            <img src={editIcon} className="w-8 h-8" alt="Edit" />
           </button>
         </div>
 
@@ -193,10 +193,10 @@ const AccountInformation = ({
                   {isUploading ? (
                     <>
                       <FaSpinner className="animate-spin mr-2" />
-                      Uploading...
+                      ...
                     </>
                   ) : (
-                    "Upload"
+                    "Select"
                   )}
                 </button>
               </div>
@@ -240,18 +240,19 @@ const AccountInformation = ({
           />
 
           <div className="relative">
-            <label className="absolute -top-2 left-2 text-xs bg-white px-1 text-gray-500">
+            <label className="absolute -top-2 left-2 text-xs bg-gray-200 px-1 text-gray-500">
               Phone Number
             </label>
-            <div className="flex items-center border border-gray-300 rounded-md px-3 py-2 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
-              <img src={flag} alt="Flag" className="w-5 h-4 mr-2" />
+            <div className="flex items-center border border-gray-300 rounded-md px-0 py-0 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+              <img src={flag} alt="Flag" className="w-5 h-4 mr-2 ml-3" />
               <input
                 type="tel"
                 name="phoneNumber"
                 value={profile.phoneNumber}
                 onChange={handleChange}
-                className="flex-1 outline-none text-sm"
+                className="flex-1 outline-none text-sm pr-3 py-2"
                 placeholder="Enter phone number"
+                disabled={true}
               />
             </div>
             {errors.phoneNumber && (
@@ -259,15 +260,24 @@ const AccountInformation = ({
             )}
           </div>
 
-          <TextField
+          {/* <TextField
             label="Location"
             variant="outlined"
-            name="location"
-            value={profile.location}
+            name="address" // Changed from 'location' to 'address' to match the API
+            value={profile.address} // Changed from profile.location to profile.address
             onChange={handleChange}
             size="small"
             fullWidth
-          />
+          /> */}
+          {/* <TextField
+            label="City"
+            variant="outlined"
+            name="city"
+            value={profile.city}
+            onChange={handleChange}
+            size="small"
+            fullWidth
+          /> */}
 
           <button
             onClick={handleUpdate}
