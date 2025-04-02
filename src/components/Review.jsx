@@ -35,11 +35,11 @@ const ReviewForm = ({ carId, userId, userName }) => {
           },
           body: JSON.stringify({
             operation: 'addRatingandReview',
-            userId: "a41854a8-a011-7032-e01b-8fea894234ac",
-            carId: "a011fb46-297e-472d-a3c0-bce3e95ddd39",
+            userId: userId,
+            carId: carId,
             rating: rating,
             review: reviewText,
-            userName:"a41854a8-a011-7032-e01b-8fea894234ac",
+            userName: userName,
           }),
         }
       );
