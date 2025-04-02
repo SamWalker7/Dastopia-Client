@@ -1,6 +1,6 @@
 import Footer from "../../components/Footer";
 import ActiveRental from "./ActiveRental";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import image from "../../images/testimonials/avatar.png";
 import {
   IoChatboxOutline,
@@ -10,6 +10,7 @@ import {
 } from "react-icons/io5";
 import { MdOutlineLocalPhone, MdOutlineMail } from "react-icons/md";
 import { FaRegCircle } from "react-icons/fa";
+import { responsiveFontSizes } from "@mui/material";
 
 const ActivBooking = () => {
   const [activeTab, setActiveTab] = useState("ActiveBooking");
@@ -18,6 +19,8 @@ const ActivBooking = () => {
   const [isChecked, setIsChecked] = useState(false);
   const [selectedConditions, setSelectedConditions] = useState([]);
   const [otherComments, setOtherComments] = useState("");
+  const customer = JSON.parse(localStorage.getItem("customer"));
+  const noActiveBookingsMessage = "There are no active bookings.";
   const [files, setFiles] = useState({
     front: null,
     right: null,
@@ -25,6 +28,8 @@ const ActivBooking = () => {
     rear: null,
     interior: null,
   });
+  const [carDetails, setCarDetails] = useState(null);
+  const [carId, setCarId] = useState(null);
 
   const conditions = [
     "Scratches",
@@ -55,10 +60,126 @@ const ActivBooking = () => {
     console.log("Other Comments:", otherComments);
     console.log("Files:", files);
   };
+  const [activeCars, setActiveCars] = useState([]);
+  // Utility function to format dates
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+
+  // Fix: Check if activeCars is an array before accessing length
+  const firstBooking = Array.isArray(activeCars) && activeCars.length > 0 ? activeCars[0] : null;
+  const startDate = firstBooking ? formatDate(firstBooking.startDate) : "N/A";
+  const endDate = firstBooking ? formatDate(firstBooking.endDate) : "N/A";
+  const pickUp = firstBooking ? firstBooking.pickUp:"N/A";
+  const dropOff = firstBooking ? firstBooking.dropOff:"N/A";
+  const firstname = firstBooking ? firstBooking.ownerGivenName:"N/A";
+  const lastname = firstBooking ? firstBooking.ownerSurName:"N/A";
+
+  useEffect(() => {
+    const getBookings = async () => {
+      try {
+        const response = await fetch(
+          "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/get_all_owner_booking",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${customer.AccessToken}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const currentDate = new Date();
+          const activeCarsArray =[];
+
+          if (data && data.body && Array.isArray(data.body)) {
+            for (const booking of data.body) {
+              const startDate = new Date(booking.startDate);
+              const endDate = new Date(booking.endDate);
+
+              if (currentDate >= startDate && currentDate <= endDate) {
+                activeCarsArray.push({
+                  carId: booking.carId,
+                  startDate: booking.startDate,
+                  endDate: booking.endDate,
+                  ...booking,
+                });
+              }
+            }
+
+            if (activeCarsArray.length === 0) {
+              setActiveCars([]);
+              setCarId(null);
+              setCarDetails(null);
+            } else {
+              setActiveCars(activeCarsArray);
+              setCarId(activeCarsArray[0]?.carId); // Added optional chaining
+            }
+          } else {
+            console.error("Unexpected data format:", data);
+            setActiveCars([]);
+            setCarId(null);
+            setCarDetails(null);
+          }
+        } else {
+          console.error("Failed to fetch bookings:", response.status);
+        }
+      } catch (error) {
+        console.error("Error during booking fetch:", error);
+        setActiveCars([]);
+        setCarId(null);
+        setCarDetails(null);
+      }
+    };
+
+    getBookings();
+  }, [customer.AccessToken]);
+
+  useEffect(() => {
+    const fetchCarDetails = async () => {
+      if (!carId) {
+        setCarDetails(null);
+        return;
+      }
+      const apiUrl = `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/${carId}`;
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${customer.AccessToken}`, // Assuming you need authorization
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setCarDetails(data.body); // Assuming the car details are nested in 'body'
+        } else {
+          console.error("Failed to fetch car details:", response.status);
+          setCarDetails(null); // Clear previous details on error
+        }
+      } catch (error) {
+        console.error("Error fetching car details:", error);
+        setCarDetails(null); // Clear previous details on error
+      }
+
+    }
+    fetchCarDetails();
+  }, [carId, customer.AccessToken]); // Re-run when carId or AccessToken changes
+
   return (
     <div className=" flex flex-col bg-[#FAF9FE] ">
       <div className="md:mt-32 mt-20">
-        <div className="relative    ">
+        <div className="relative     ">
           <div className="flex  mx-20  mb-4 sm:mb-6">
             <button
               onClick={() => setActiveTab("ActiveBooking")}
@@ -87,267 +208,275 @@ const ActivBooking = () => {
               <div className="">
                 {activeTab === "ActiveBooking" ? (
                   <div className="flex md:flex-row flex-col p-4">
-                    <div className="h-fit bg-white p-8 space-y-10 md:m-8 md:ml-16 mb-8   rounded-xl shadow-md w-full md:w-1/3">
-                      {/* <ActiveBooking /> */}
-                      <h2 className="text-lg  mt-4 font-semibold text-[#00113D] ">
-                        Car Details
-                      </h2>
-                      <div className="text-sm  space-y-2 w-full text-gray-500">
-                        <div className="grid grid-cols-4 gap-4  mt-4">
-                          <div className="">
-                            <span className="font-medium text-black">
-                              Car Brand
-                            </span>
-                            <p className="">Toyota</p>
-                          </div>
-                          <div className=" ">
-                            <span className="font-medium text-black">
-                              Car Model
-                            </span>
-                            <p className="">Camry</p>
-                          </div>
-                          <div className=" ">
-                            <span className="font-medium text-black">
-                              Pictures
-                            </span>
-                            <p className=" underline cursor-pointer ">
-                              View Pictures
-                            </p>
-                          </div>
-                          <div className=" text-sm">
-                            <span className="font-medium text-black">
-                              {" "}
-                              Driver request
-                            </span>
-                            <p className="text-gray-500">Yes</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="  flex mt-20 gap-8">
-                        <div className="flex items-start">
-                          <img
-                            src={image}
-                            alt="Renter Profile"
-                            className="w-16 h-16 rounded-full"
-                          />
-                        </div>
-                        <div className="grid pt-4 gap-4 grid-cols-1">
-                          <h2 className="text-base font-semibold text-[#00113D] ">
-                            Owner Details
+                    {activeCars.length > 0 ? (
+                      <>
+                        <div className="h-fit bg-white p-8 space-y-10 md:m-8 md:ml-16 mb-8   rounded-xl shadow-md w-full md:w-1/3">
+                          <h2 className="text-lg  mt-4 font-semibold text-[#00113D] ">
+                            Car Details
                           </h2>
-                          <h3 className="flex gap-4 text-sm  text-[#5A5A5A]">
-                            <IoPersonOutline size={18} /> Steven Gerard
-                          </h3>
-                          <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
-                            <MdOutlineLocalPhone size={18} />
-                            <p>+251 9243212</p>
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
-                            <MdOutlineMail size={18} />
-                            <p>jandoe@gmail.com</p>
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
-                            <IoLocationOutline size={18} />
-                            <p>Addis Ababa, Ethiopia</p>
-                          </div>
-                        </div>
-                      </div>
-                      <button className="flex items-center justify-center  w-full gap-2 mt-4 py-3 text-xs  border rounded-full border-[#00113D] text-[#00113D] bg-white">
-                        <IoChatboxOutline size={16} />
-                        Chat With Renter
-                      </button>
-
-                      {/* Action Buttons */}
-                      <div className="flex text-sm gap-4">
-                        <button className="flex-1 py-3 rounded-full bg-[#FDEAEA] text-red-700 border border-red-700">
-                          Cancel Booking
-                        </button>
-                        <button
-                          className="flex-1  py-3 rounded-full bg-[#00113D] text-white"
-                          onClick={() => setApproved(true)}
-                        >
-                          Return Car
-                        </button>
-                        {approved && (
-                          <div>
-                            {" "}
-                            {/* Overlay background */}
-                            <div className="fixed inset-0 bg-black opacity-50 z-20"></div>
-                            {/* Modal content */}
-                            <div className=" fixed inset-0 flex self-center  justify-center z-30 flex-col items-start p-6 gap-4 w-1/2 h-fit  mx-auto  rounded-lg shadow-md">
-                              <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-                                <h1 className="text-lg font-semibold mb-2">
-                                  Car Condition Report
-                                </h1>
-                                <p className="text-gray-600 mb-4">
-                                  Please input any incidents or accidents that
-                                  you have experienced
+                          <div className="text-sm  space-y-2 w-full text-gray-500">
+                            <div className="grid grid-cols-4 gap-4   mt-4">
+                              <div className="">
+                                <span className="font-medium text-black">
+                                  Car Brand
+                                </span>
+                                <p>{carDetails?.make || "N/A"}</p>
+                              </div>
+                              <div className=" ">
+                                <span className="font-medium text-black">
+                                  Car Model
+                                </span>
+                                <p className="">{carDetails?.model || "N/A"}</p>
+                              </div>
+                              <div className=" ">
+                                <span className="font-medium text-black">
+                                  Pictures
+                                </span>
+                                <p className=" underline cursor-pointer ">
+                                  View Pictures
                                 </p>
+                              </div>
+                              <div className=" text-sm">
+                                <span className="font-medium text-black">
+                                  {" "}
+                                  Driver request
+                                </span>
+                                <p className="text-gray-500">{carDetails?.driverRequired ? "Yes" : "No"}</p>
+                              </div>
+                            </div>
+                          </div>
 
-                                {/* Checkbox List */}
-                                <div className="space-y-1 mb-6">
-                                  {conditions.map((condition, index) => (
-                                    <div
-                                      key={index}
-                                      className="flex items-center"
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        id={`condition-${index}`}
-                                        checked={selectedConditions.includes(
-                                          condition
-                                        )}
-                                        onChange={() =>
-                                          handleCheckboxChange(condition)
-                                        }
-                                        className="w-5 h-5 mr-2 text-blue-600 rounded border-gray-300"
-                                      />
-                                      <label
-                                        htmlFor={`condition-${index}`}
-                                        className="text-gray-800"
-                                      >
-                                        {condition}
-                                      </label>
-                                    </div>
-                                  ))}
-                                </div>
+                          <div className="   flex mt-20 gap-8">
+                            <div className="flex items-start">
+                              <img
+                                src={image}
+                                alt="Renter Profile"
+                                className="w-16 h-16 rounded-full"
+                              />
+                            </div>
+                            <div className="grid pt-4 gap-4 grid-cols-1">
+                              <h2 className="text-base font-semibold text-[#00113D] ">
+                                Owner Details
+                              </h2>
+                              <h3 className="flex gap-4 text-sm   text-[#5A5A5A]">
+                                <IoPersonOutline size={18} /> 
+                                <p>{firstname}-{lastname}</p>
+                              </h3>
+                              <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
+                                <MdOutlineLocalPhone size={18} />
+                                <p>{carDetails?.ownerPhone }</p>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
+                                <MdOutlineMail size={18} />
+                                <p>{carDetails?.ownerEmail}</p>
+                              </div>
+                            </div>
+                          </div>
+                          <button className="flex items-center justify-center   w-full gap-2 mt-4 py-3 text-xs   border rounded-full border-[#00113D] text-[#00113D] bg-white">
+                            <IoChatboxOutline size={16} />
+                            Chat With Renter
+                          </button>
 
-                                {/* Other Comments */}
-                                <input
-                                  type="text"
-                                  placeholder="Other"
-                                  value={otherComments}
-                                  onChange={(e) =>
-                                    setOtherComments(e.target.value)
-                                  }
-                                  className="w-full p-2 mb-2 text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:border-[#00113D]"
-                                />
+                          {/* Action Buttons */}
+                          <div className="flex text-sm gap-4">
+                            <button className="flex-1 py-3 rounded-full bg-[#FDEAEA] text-red-700 border border-red-700">
+                              Cancel Booking
+                            </button>
+                            <button
+                              className="flex-1   py-3 rounded-full bg-[#00113D] text-white"
+                              onClick={() => setApproved(true)}
+                            >
+                              Return Car
+                            </button>
+                            {approved && (
+                              <div>
+                                {" "}
+                                {/* Overlay background */}
+                                <div className="fixed inset-0 bg-black opacity-50 z-20"></div>
+                                {/* Modal content */}
+                                <div className=" fixed inset-0 flex self-center   justify-center z-30 flex-col items-start p-6 gap-4 w-1/2 h-fit   mx-auto   rounded-lg shadow-md">
+                                  <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+                                    <h1 className="text-lg font-semibold mb-2">
+                                      Car Condition Report
+                                    </h1>
+                                    <p className="text-gray-600 mb-4">
+                                      Please input any incidents or accidents that
+                                      you have experienced
+                                    </p>
 
-                                {/* File Upload Areas */}
-                                <p className="text-gray-600 mb-4">
-                                  Send an attachment or a screenshot of all
-                                  sides of the car
-                                </p>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                                  {[
-                                    "front",
-                                    "right",
-                                    "left",
-                                    "rear",
-                                    "interior",
-                                  ].map((side) => (
-                                    <div
-                                      key={side}
-                                      className="border border-dashed border-gray-400 p-4 rounded-lg flex flex-col items-center"
-                                    >
-                                      <div className="font-semibold flex items-center  text-xs w-full justify-between text-gray-700 capitalize">
-                                        <div>{side} of the car </div>
-                                        <div className="flex flex-col items-center">
-                                          {/* Upload icon */}
-
-                                          <p className="bg-gray-100 px-6 py-2 rounded-lg text-gray-400 ">
-                                            <IoFileTray size={16} />
-                                          </p>
+                                    {/* Checkbox List */}
+                                    <div className="space-y-1 mb-6">
+                                      {conditions.map((condition, index) => (
+                                        <div
+                                          key={index}
+                                          className="flex items-center"
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            id={`condition-${index}`}
+                                            checked={selectedConditions.includes(
+                                              condition
+                                            )}
+                                            onChange={() =>
+                                              handleCheckboxChange(condition)
+                                            }
+                                            className="w-5 h-5 mr-2 text-blue-600 rounded border-gray-300"
+                                          />
+                                          <label
+                                            htmlFor={`condition-${index}`}
+                                            className="text-gray-800"
+                                          >
+                                            {condition}
+                                          </label>
                                         </div>
-                                      </div>
-                                      <label
-                                        htmlFor={`file-${side}`}
-                                        className="text-blue-600 mt-2 cursor-pointer"
-                                      >
-                                        Click here{" "}
-                                        <span className="text-gray-500">
-                                          to upload or drop files here
-                                        </span>
-                                      </label>
-                                      <input
-                                        type="file"
-                                        id={`file-${side}`}
-                                        accept="image/*"
-                                        onChange={(e) =>
-                                          handleFileChange(e, side)
-                                        }
-                                        className="hidden"
-                                      />
-                                      {files[side] && (
-                                        <p className="text-sm text-yellow-500 mt-1">
-                                          {files[side].name}
-                                        </p>
-                                      )}
+                                      ))}
                                     </div>
-                                  ))}
-                                </div>
 
-                                {/* Submit Button */}
-                                <button
-                                  onClick={(e) => {
-                                    setApproved(false);
-                                    handleSubmit(e);
-                                  }}
-                                  className="w-full py-2 text-white bg-[#00113D] rounded-full  text-sm   hover:bg-blue-900"
-                                >
-                                  Submit Report
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {/* right side */}
-                    <section className="w-fit h-fit bg-white p-6   rounded-xl shadow-md">
-                      <h2 className="text-lg font-semibold text-[#00113D] mb-8">
-                        Rental Summary
-                      </h2>
-                      <h2 className="text-base  text-[#00113D] my-2">
-                        Booking Status
-                      </h2>
-                      <h2 className="text-sm bg-green-200 rounded-lg w-fit  text-[#00113D] px-4 py-2 mb-16">
-                        Active
-                      </h2>
-                      <div className="flex flex-col  text-lg text-[#5A5A5A]">
-                        <div className="flex items-start gap-2">
-                          <div>
-                            <p className="flex  items-center ">
-                              {" "}
-                              <FaRegCircle className=" text-gray-400" />{" "}
-                            </p>
-                            <div className="ml-2 px-6 flex items-center border-l h-40 pb-12 border-gray-300">
-                              {" "}
-                              <div className="-mt-24 bg-gray-200 text-sm p-8 flex rounded-lg">
-                                <div className="font-semibold  mr-4 w-28 ">
-                                  PickUp
+                                    {/* Other Comments */}
+                                    <input
+                                      type="text"
+                                      placeholder="Other"
+                                      value={otherComments}
+                                      onChange={(e) =>
+                                        setOtherComments(e.target.value)
+                                      }
+                                      className="w-full p-2 mb-2 text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:border-[#00113D]"
+                                    />
+
+                                    {/* File Upload Areas */}
+                                    <p className="text-gray-600 mb-4">
+                                      Send an attachment or a screenshot of all
+                                      sides of the car
+                                    </p>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                                      {[
+                                        "front",
+                                        "right",
+                                        "left",
+                                        "rear",
+                                        "interior",
+                                      ].map((side) => (
+                                        <div
+                                          key={side}
+                                          className="border border-dashed border-gray-400 p-4 rounded-lg flex flex-col items-center"
+                                        >
+                                          <div className="font-semibold flex items-center   text-xs w-full justify-between text-gray-700 capitalize">
+                                            <div>{side} of the car </div>
+                                            <div className="flex flex-col items-center">
+                                              {/* Upload icon */}
+
+                                              <p className="bg-gray-100 px-6 py-2 rounded-lg text-gray-400 ">
+                                                <IoFileTray size={16} />
+                                              </p>
+                                            </div>
+                                          </div>
+                                          <label
+                                            htmlFor={`file-${side}`}
+                                            className="text-blue-600 mt-2 cursor-pointer"
+                                          >
+                                            Click here{" "}
+                                            <span className="text-gray-500">
+                                              to upload or drop files here
+                                            </span>
+                                          </label>
+                                          <input
+                                            type="file"
+                                            id={`file-${side}`}
+                                            accept="image/*"
+                                            onChange={(e) =>
+                                              handleFileChange(e, side)
+                                            }
+                                            className="hidden"
+                                          />
+                                          {files[side] && (
+                                            <p className="text-sm text-yellow-500 mt-1">
+                                              {files[side].name}
+                                            </p>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+
+                                    {/* Submit Button */}
+                                    <button
+                                      onClick={(e) => {
+                                        setApproved(false);
+                                        handleSubmit(e);
+                                      }}
+                                      className="w-full py-2 text-white bg-[#00113D] rounded-full   text-sm   hover:bg-blue-900"
+                                    >
+                                      Submit Report
+                                    </button>
+                                  </div>
                                 </div>
-                                <div className="">
-                                  <p className="">Date: September 3,2024</p>
-                                  <p>Time: 12:00PM</p>
-                                </div>
                               </div>
-                            </div>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-start  gap-2">
-                          <div>
-                            <p className="flex  items-center ">
-                              {" "}
-                              <FaRegCircle className=" text-gray-400" />{" "}
-                            </p>
-                            <div className="ml-2 px-6 flex items-center pt-8  pb-12 border-gray-300">
-                              {" "}
-                              <div className="-mt-24 bg-gray-200 text-sm p-8 flex rounded-lg">
-                                <div className="font-semibold mr-4 w-28">
-                                  Return On
+                        {/* right side */}
+                        <section className="w-fit h-fit bg-white p-6   rounded-xl shadow-md">
+                          <h2 className="text-lg font-semibold text-[#00113D] mb-8">
+                            Rental Summary
+                          </h2>
+                          <h2 className="text-base   text-[#00113D] my-2">
+                            Booking Status
+                          </h2>
+                          <h2 className="text-sm bg-green-200 rounded-lg w-fit   text-[#00113D] px-4 py-2 mb-16">
+                            Active
+                          </h2>
+                          <div className="flex flex-col   text-lg text-[#5A5A5A]">
+                            <div className="flex items-start gap-2">
+                              <div>
+                                <p className="flex   items-center ">
+                                  {" "}
+                                  <FaRegCircle className=" text-gray-400" />{" "}
+                                </p>
+                                <div className="ml-2 px-6 flex items-center border-l h-40 pb-12 border-gray-300">
+                                  {" "}
+                                  <div className="-mt-24 bg-gray-200 text-sm p-8 flex rounded-lg">
+                                    <div className="font-semibold   mr-4 w-28 ">
+                                      PickUp
+                                    </div>
+                                    <div className="">
+                                      <p>Date: {startDate}</p>
+                                      <p>{pickUp}</p>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className="">
-                                  <p className="">Date: September 3,2024</p>
-                                  <p>Time: 12:00PM</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start   gap-2">
+                              <div>
+                                <p className="flex   items-center ">
+                                  {" "}
+                                  <FaRegCircle className=" text-gray-400" />{" "}
+                                </p>
+                                <div className="ml-2 px-6 flex items-center pt-8   pb-12 border-gray-300">
+                                  {" "}
+                                  <div className="-mt-24 bg-gray-200 text-sm p-8 flex rounded-lg">
+                                    <div className="font-semibold mr-4 w-28">
+                                      Return On
+                                    </div>
+                                    <div className="">
+                                      <p>Date: {endDate}</p>
+                                      <p>{dropOff}</p>
+                                      
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    </section>
+                        </section>
+                      </>
+                    ) : (
+                      <section className="w-full h-fit bg-white p-6 rounded-xl shadow-md">
+                        <h2 className="text-lg font-semibold text-[#00113D] mb-8">
+                          Rental Summary
+                        </h2>
+                        <p className="text-gray-500">{noActiveBookingsMessage}</p>
+                      </section>
+                    )}
                   </div>
                 ) : (
                   <div className="">

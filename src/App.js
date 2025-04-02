@@ -46,7 +46,7 @@ import Step5 from "./Pages/Add Car/Step5";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { refreshToken } from "./store/auth/authThunks";
-AWS.config.region = "us-east-1";
+import Review from "./components/Review"; 
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -126,7 +126,7 @@ function App() {
         <Route path="/booking_details/:id" element={<BookingDetails />} />
         <Route path="/booking_requests" element={<BookingRequests />} />
         <Route path="/my_requests" element={<MyRequest />} />
-        <Route path="*" element={<NotFound />} />
+        <Route path="/review" element={<Review />} />        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
