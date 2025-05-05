@@ -9,9 +9,8 @@ import {
 } from "react-icons/io5";
 import { MdOutlineLocalPhone, MdOutlineMail } from "react-icons/md";
 import useVehicleFormStore from "../../store/useVehicleFormStore";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 
-// Helper function to convert seconds to hh:mm:ss format
 const formatTime = (seconds) => {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -20,24 +19,16 @@ const formatTime = (seconds) => {
 };
 
 const RentalRequests = () => {
-  const navigate = useNavigate(); // Initialize useNavigate
-  const handleConfirmBooking = () => {
-    setIsModalVisible(false);
-    console.log("Account Booking Confirmed");
-  };
-
-  const handleCancelBooking = () => {
-    setIsModalVisible(false);
-  };
+  const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [approved, setApproved] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
-  const [rentalRequests, setRentalRequests] = useState();
+  const [rentalRequests, setRentalRequests] = useState([]);
   const [vehicleDetailsMap, setVehicleDetailsMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { apiCallWithRetry } = useVehicleFormStore();
-  const [selectedRequest, setSelectedRequest] = useState(null); // State to hold selected request
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const customer = JSON.parse(localStorage.getItem("customer"));
 
   const handleCheckboxChange = () => {
@@ -45,9 +36,81 @@ const RentalRequests = () => {
   };
 
   const handleChatWithRenter = (renteeId, reservationId) => {
-    // Navigate to the ChatApp route, passing the renteeId and reservationId as query parameters
     navigate(`/chat?renteeId=${renteeId}&reservationId=${reservationId}`);
-    // Alternatively, you could use a route parameter like `/chat/${renteeId}`
+  };
+
+  const handleConfirmBooking = async () => {
+    setApproved(false);
+    if (selectedRequest) {
+      await handleApproveRequest(selectedRequest.id);
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    setIsModalVisible(false);
+    if (selectedRequest) {
+      await handleRejectRequest(selectedRequest.id);
+    }
+  };
+
+  const handleApproveRequest = async (bookingId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await apiCallWithRetry(
+        `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/approve_booking/${bookingId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${customer.AccessToken}`,
+          },
+        }
+      );
+
+      if (response && response.statusCode === 200) {
+        setRentalRequests((prevRequests) =>
+          prevRequests.filter((request) => request.id !== bookingId)
+        );
+        setSelectedRequest(null);
+      } else {
+        setError(`Failed to approve booking ${bookingId}.`);
+      }
+    } catch (err) {
+      setError(`Error approving booking ${bookingId}.`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRejectRequest = async (bookingId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await apiCallWithRetry(
+        `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/deny_booking/${bookingId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${customer.AccessToken}`,
+          },
+        }
+      );
+
+      if (response && response.statusCode === 200) {
+        setRentalRequests((prevRequests) =>
+          prevRequests.filter((request) => request.id !== bookingId)
+        );
+        setSelectedRequest(null);
+      } else {
+        setError(`Failed to reject booking ${bookingId}.`);
+      }
+    } catch (err) {
+      setError(`Error rejecting booking ${bookingId}.`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -68,7 +131,7 @@ const RentalRequests = () => {
 
         if (response && response.body) {
           const pendingRequests = response.body.filter(
-            (request) => request.approvedStatus === "pending"
+            (request) => request.approvedStatus.toLowerCase() === "pending"
           );
 
           const requestsWithExpiry = await Promise.all(
@@ -76,7 +139,7 @@ const RentalRequests = () => {
               const createdAt = new Date(request.createdAt);
               const expiryTime = new Date(
                 createdAt.getTime() + 24 * 60 * 60 * 1000
-              ); // Expires in 24 hours
+              );
               const expiresInSeconds = Math.max(
                 0,
                 Math.floor((expiryTime.getTime() - new Date().getTime()) / 1000)
@@ -89,19 +152,15 @@ const RentalRequests = () => {
               return {
                 ...request,
                 expiresInSeconds,
-                vehicleDetail: vehicleDetail, // Add vehicle details to the request object
+                vehicleDetail,
               };
             })
           );
-          console.log("Rental requests fetched successfully:", rentalRequests);
           setRentalRequests(requestsWithExpiry);
         } else {
-          setError(
-            "Failed to fetch rental requests or invalid response format."
-          );
+          setError("Failed to fetch rental requests or invalid response format.");
         }
       } catch (err) {
-        console.error("Error fetching rental requests:", err);
         setError("Error fetching rental requests.");
       } finally {
         setLoading(false);
@@ -120,29 +179,17 @@ const RentalRequests = () => {
           setVehicleDetailsMap((prevMap) => ({
             ...prevMap,
             [carId]: vehicleResponse.body,
-          })); // Store vehicle details in map
-          console.log(
-            `Vehicle details fetched for carId: ${carId}`,
-            vehicleResponse.body
-          );
+          }));
           return vehicleResponse.body;
-        } else {
-          console.error(
-            `Failed to fetch vehicle details for carId: ${carId} or invalid response format.`
-          );
-          return null;
         }
+        return null;
       } catch (error) {
-        console.error(
-          `Error fetching vehicle details for carId: ${carId}`,
-          error
-        );
         return null;
       }
     };
 
     fetchRentalRequests();
-  }, [apiCallWithRetry, vehicleDetailsMap, customer?.AccessToken]); // Added customer?.AccessToken as a dependency
+  }, [apiCallWithRetry, vehicleDetailsMap, customer?.AccessToken]);
 
   if (loading) {
     return <div>Loading rental requests...</div>;
@@ -158,131 +205,106 @@ const RentalRequests = () => {
       <div className="md:w-1/3 w-full bg-white p-6 rounded-xl shadow-md space-y-4">
         <h2 className="text-xl font-bold text-[#00113D]">Rental Requests</h2>
 
-        {/* Rental Request Card */}
-        {rentalRequests?.map(
-          (
-            request,
-            index // Added optional chaining for rentalRequests
-          ) => (
+        {rentalRequests?.map((request) => (
+          <div
+            key={request.id}
+            className="p-4 w-full space-y-8 rounded-lg shadow-blue-100 shadow-md"
+          >
             <div
-              key={request.id}
-              className={`p-4 w-full space-y-8 rounded-lg shadow-blue-100 shadow-md`}
+              className={`p-4 flex justify-between items-center mb-3 border border-dashed ${
+                request.expiresInSeconds <= 0
+                  ? "border-[#EB4444] bg-[#FDEAEA] text-[#EB4444]"
+                  : "border-[#4478EB] bg-[#E9F1FE] text-[#4478EB]"
+              } rounded-lg`}
             >
-              <div
-                className={`p-4 flex justify-between items-center mb-3 border border-dashed ${
-                  request.expiresInSeconds <= 0
-                    ? "border-[#EB4444] bg-[#FDEAEA] text-[#EB4444]"
-                    : "border-[#4478EB] bg-[#E9F1FE] text-[#4478EB]"
-                } rounded-lg  `}
+              <span className="font-semibold text-base text-[#000000]">
+                Expires in
+              </span>
+              <span
+                className={`px-4 py-2 text-sm font-medium rounded-full text-white ${
+                  request.expiresInSeconds <= 0 ? "bg-[#410002]" : "bg-[#00173C]"
+                }`}
               >
-                <span className="font-semibold text-base text-[#000000]">
-                  Expires in
-                </span>
-                <span
-                  className={`px-4 py-2 text-sm font-medium rounded-full text-white  ${
-                    request.expiresInSeconds <= 0
-                      ? "bg-[#410002]"
-                      : "bg-[#00173C]"
-                  }`}
-                >
-                  {request.expiresInSeconds > 0
-                    ? formatTime(request.expiresInSeconds)
-                    : "Expired"}
-                </span>
-              </div>
+                {request.expiresInSeconds > 0
+                  ? formatTime(request.expiresInSeconds)
+                  : "Expired"}
+              </span>
+            </div>
 
-              <div className="grid grid-cols-2 text-sm text-gray-500 w-full gap-4 mt-4">
-                <div className="flex items-center w-full gap-3 ">
-                  <img
-                    src={image}
-                    alt="Renter Profile"
-                    className="w-16 h-16 rounded-full"
-                  />
-                  <div className="w-full">
-                    <span className="font-medium text-black">Rentee Name</span>
-                    <p className="">
-                      {request.vehicleDetail?.ownerGivenName ||
-                        "Unknown Rentee"}
-                    </p>
-                  </div>
-                </div>
-                <div className="h-full  flex flex-col justify-center w-full">
-                  <span className="font-medium text-black"> Rent Duration</span>
+            <div className="grid grid-cols-2 text-sm text-gray-500 w-full gap-4 mt-4">
+              <div className="flex items-center w-full gap-3">
+                <img
+                  src={image}
+                  alt="Renter Profile"
+                  className="w-16 h-16 rounded-full"
+                />
+                <div className="w-full">
+                  <span className="font-medium text-black">Rentee Name</span>
                   <p className="">
-                    {request.startDate && request.endDate
-                      ? `${Math.ceil(
-                          (new Date(request.endDate) -
-                            new Date(request.startDate)) /
-                            (1000 * 60 * 60 * 24)
-                        )} Days`
-                      : "N/A"}
+                    {request.renteeInfo?.given_name || "Unknown Rentee"}
                   </p>
                 </div>
               </div>
-              <div className="text-sm mb-4 space-y-2 w-full text-gray-500">
-                <div className="grid grid-cols-2 gap-4 w-full mt-4">
-                  <div className="pl-4">
-                    <span className="font-medium text-black">Car Brand</span>
-                    <p className="">
-                      {request.vehicleDetail?.make || "Unknown"}
-                    </p>
-                  </div>
-                  <div className=" w-full">
-                    <span className="font-medium text-black">Car Model</span>
-                    <p className="">
-                      {request.vehicleDetail?.model || "Unknown"}
-                    </p>
-                  </div>
-                </div>
+              <div className="h-full flex flex-col justify-center w-full">
+                <span className="font-medium text-black">Rent Duration</span>
+                <p className="">
+                  {request.startDate && request.endDate
+                    ? `${Math.ceil(
+                        (new Date(request.endDate) - new Date(request.startDate)) /
+                          (1000 * 60 * 60 * 24)
+                      )} Days`
+                    : "N/A"}
+                </p>
               </div>
-              <div className="text-sm mb-4 space-y-2 w-full text-gray-500">
-                <div className="grid grid-cols-2 gap-4 w-full mt-4">
-                  <div className="pl-4">
-                    <span className="font-medium text-black">
-                      Total Payment
-                    </span>
-                    <p className="font-medium text-black">
-                      {request.amount} birr
-                    </p>
-                  </div>
-                  {/* <div className=" w-full">
-                  <div
-                    className={`w-full flex justify-center items-center py-2 px-4 text-xs rounded-xl ${
-                      request.expiresInSeconds <= 0
-                        ? "bg-[#FDEAEA] text-[#EB4444]"
-                        : "bg-[#E9F1FE] text-[#4478EB]"
-                    }  `}
-                  >
-                    {request.status}
-                  </div>
-                </div> */}
-                </div>
-              </div>
-
-              <button
-                className={`mt-3 w-full py-1 rounded-full ${
-                  request.expiresInSeconds <= 0
-                    ? "bg-gray-400 cursor-not-allowed text-white"
-                    : "bg-[#00113D] text-white"
-                }`}
-                onClick={() => setSelectedRequest(request)}
-                disabled={request.expiresInSeconds <= 0}
-              >
-                View Details
-              </button>
             </div>
-          )
-        )}
+            <div className="text-sm mb-4 space-y-2 w-full text-gray-500">
+              <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                <div className="pl-4">
+                  <span className="font-medium text-black">Car Brand</span>
+                  <p className="">
+                    {request.vehicleDetail?.make || "Unknown"}
+                  </p>
+                </div>
+                <div className="w-full">
+                  <span className="font-medium text-black">Car Model</span>
+                  <p className="">
+                    {request.vehicleDetail?.model || "Unknown"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="text-sm mb-4 space-y-2 w-full text-gray-500">
+              <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                <div className="pl-4">
+                  <span className="font-medium text-black">Total Payment</span>
+                  <p className="font-medium text-black">
+                    {request.amount} birr
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              className={`mt-3 w-full py-1 rounded-full ${
+                request.expiresInSeconds <= 0
+                  ? "bg-gray-400 cursor-not-allowed text-white"
+                  : "bg-[#00113D] text-white"
+              }`}
+              onClick={() => setSelectedRequest(request)}
+              disabled={request.expiresInSeconds <= 0}
+            >
+              View Details
+            </button>
+          </div>
+        ))}
       </div>
 
       {/* Right Panel */}
-      <div className=" md:w-2/3  md:px-10  flex w-full     space-y-6 flex-col">
+      <div className="md:w-2/3 md:px-10 flex w-full space-y-6 flex-col">
         {selectedRequest ? (
           <>
-            {/* Right Panel - Request Summary */}
             <div className="flex md:flex-row flex-col gap-10">
-              {/* Request Summary */}
-              <section className="md:w-1/2 w-full md:mt-0 mt-4 bg-white p-6      rounded-xl shadow-md  ">
+              <section className="md:w-1/2 w-full md:mt-0 mt-4 bg-white p-6 rounded-xl shadow-md">
                 <h2 className="text-lg font-semibold text-[#00113D] mb-8">
                   Request Summary
                 </h2>
@@ -296,69 +318,56 @@ const RentalRequests = () => {
                     </p>
                   </div>
                   <div>
-                    <p className="font-medium text-sm text-[#00113D] ">
+                    <p className="font-medium text-sm text-[#00113D]">
                       Request Date and Time
                     </p>
                     <p className="text-sm text-[#5A5A5A]">
                       {new Date(selectedRequest.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  <div
-                    className={`w-44 flex justify-center items-center py-2 px-4 text-base rounded-xl bg-[#E9F1FE] text-[#4478EB]`}
-                  >
+                  <div className="w-44 flex justify-center items-center py-2 px-4 text-base rounded-xl bg-[#E9F1FE] text-[#4478EB]">
                     Booking Pending
                   </div>
                 </div>
                 <h2 className="text-lg mt-16 mb-4 font-semibold text-[#00113D]">
                   Car Details
                 </h2>
-                <div className="text-sm      space-y-2 w-full text-gray-500">
+                <div className="text-sm space-y-2 w-full text-gray-500">
                   <div className="grid grid-cols-2 gap-4 w-3/5 mt-4">
-                    <div className="">
+                    <div>
                       <span className="font-medium text-black">Car Brand</span>
                       <p className="">
                         {selectedRequest.vehicleDetail?.make || "Unknown"}
                       </p>
                     </div>
-                    <div className=" w-full">
+                    <div className="w-full">
                       <span className="font-medium text-black">Car Model</span>
                       <p className="">
                         {selectedRequest.vehicleDetail?.model || "Unknown"}
-                      </p>
-                    </div>
-                    <div className=" w-full">
-                      <span className="font-medium text-black">Pictures</span>
-                      <p className=" underline cursor-pointer ">
-                        View Pictures
                       </p>
                     </div>
                   </div>
                 </div>
               </section>
 
-              {/* Rental Details */}
-              <section className="md:w-1/2 w-full bg-white p-6      rounded-xl shadow-md">
+              <section className="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
                 <h2 className="text-lg font-semibold text-[#00113D] mb-8">
                   Rental Details
                 </h2>
-                <div className="flex flex-col      text-sm text-[#5A5A5A]">
+                <div className="flex flex-col text-sm text-[#5A5A5A]">
                   <div className="flex items-start gap-2">
                     <div>
-                      <p className="flex items-center ">
+                      <p className="flex items-center">
                         <FaRegCircle className="text-gray-400" />
                         <span className="px-4">
                           {selectedRequest.startDate
-                            ? new Date(
-                                selectedRequest.startDate
-                              ).toLocaleString()
+                            ? new Date(selectedRequest.startDate).toLocaleString()
                             : "N/A"}
                         </span>
                       </p>
                       <div className="ml-2 px-6 border-l pb-12 border-gray-300">
                         <p className="font-semibold">Pick Up Location</p>
-                        {/* <a href="#" className="text-blue-800 underline">
-                          View Pick-up detail instructions
-                        </a> */}
+                        <p>{selectedRequest.pickUp?.[0] || "Unknown location"}</p>
                       </div>
                     </div>
                   </div>
@@ -372,20 +381,15 @@ const RentalRequests = () => {
                             : "N/A"}
                         </span>
                       </p>
-                      <div className="ml-2 px-6      pb-8 ">
+                      <div className="ml-2 px-6 pb-8">
                         <p className="font-semibold">Drop Off Location</p>
-                        {/* <a href="#" className="text-blue-800 underline">
-                          View Pick-up detail instructions
-                        </a> */}
+                        <p>{selectedRequest.dropOff?.[0] || "Unknown location"}</p>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="mt-4 text-sm">
-                  <span className="font-medium text-black">
-                    {" "}
-                    Driver request
-                  </span>
+                  <span className="font-medium text-black">Driver request</span>
                   <p className="text-gray-500">
                     {selectedRequest.driverRequest ? "Yes" : "No"}
                   </p>
@@ -393,49 +397,41 @@ const RentalRequests = () => {
               </section>
             </div>
             <div>
-              {/* Rentee Details */}
-              <section className="h-fit bg-white p-6 space-y-6      rounded-xl shadow-md">
+              <section className="h-fit bg-white p-6 space-y-6 rounded-xl shadow-md">
                 <h2 className="text-lg font-semibold text-[#00113D] mb-8">
                   Rentee Details
                 </h2>
-                <div className=" items-center flex md:flex-row flex-col gap-8">
+                <div className="items-center flex md:flex-row flex-col gap-8">
                   <img
                     src={image}
                     alt="Renter Profile"
                     className="w-32 h-32 rounded-full"
                   />
                   <div className="grid gap-4 md:grid-cols-2 grid-cols-1 justify-center items-center">
-                    <h3 className="flex gap-4 text-sm        text-[#5A5A5A]">
+                    <h3 className="flex gap-4 text-sm text-[#5A5A5A]">
                       <IoPersonOutline size={18} />
-                      {selectedRequest.vehicleDetail?.ownerGivenName ||
-                        "Unknown Rentee"}{" "}
-                      {/* Use renteeId from selectedRequest */}
+                      {selectedRequest.renteeInfo?.given_name || "Unknown Rentee"}
                     </h3>
                     <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
                       <MdOutlineLocalPhone size={18} />
                       <p>
-                        {selectedRequest.vehicleDetail?.ownerPhone ||
-                          "Unknown Rentee"}
+                        {selectedRequest.renteeInfo?.phone_number || "Unknown"}
                       </p>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
                       <MdOutlineMail size={18} />
                       <p>
-                        {" "}
-                        {selectedRequest.vehicleDetail?.ownerEmail ||
-                          "Unknown Rentee"}
+                        {selectedRequest.renteeInfo?.email || "Unknown"}
                       </p>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
                       <IoLocationOutline size={18} />
                       <p>
-                        {" "}
-                        {selectedRequest.vehicleDetail?.city ||
-                          "Unknown Rentee"}
+                        {selectedRequest.pickUp?.[0] || "Unknown location"}
                       </p>
                     </div>
                     <button
-                      className="flex items-center gap-2 mt-4 px-16 py-3 text-xs        border rounded-full border-[#00113D] text-[#00113D] bg-white"
+                      className="flex items-center gap-2 mt-4 px-16 py-3 text-xs border rounded-full border-[#00113D] text-[#00113D] bg-white"
                       onClick={() =>
                         handleChatWithRenter(
                           selectedRequest.renteeId,
@@ -449,7 +445,6 @@ const RentalRequests = () => {
                   </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="flex text-base gap-4">
                   <button
                     onClick={() => setIsModalVisible(true)}
@@ -459,36 +454,27 @@ const RentalRequests = () => {
                   </button>
                   {isModalVisible && (
                     <>
-                      {/* Overlay background */}
                       <div className="fixed inset-0 bg-black opacity-50 z-20"></div>
-                      {/* Modal content */}
                       <div className="fixed inset-0 flex items-center justify-center z-30">
                         <div className="bg-white p-6 rounded-lg shadow-lg md:w-[350px]">
                           <h2 className="text-xl mb-4">
-                            Are you sure you want to cancel this request?
+                            Are you sure you want to reject this request?
                           </h2>
                           <p className="text-gray-600 text-sm my-10">
-                            Cancelling a request will cause you to reenter the
-                            request from the start
+                            Rejecting this request will notify the renter.
                           </p>
                           <div className="flex justify-between space-x-8">
                             <button
-                              onClick={() => {
-                                handleCancelBooking(); // Perform cancel booking action
-                                setIsModalVisible(false); // Close modal
-                              }}
+                              onClick={() => setIsModalVisible(false)}
                               className="bg-blue-950 text-xs flex items-center justify-center w-fit text-white rounded-full px-8 my-2 py-2"
                             >
-                              Cancel
+                              Go Back
                             </button>
                             <button
-                              onClick={() => {
-                                setApproved(false); // Reset approval state
-                                setIsModalVisible(false); // Close modal
-                              }}
+                              onClick={handleCancelBooking}
                               className="bg-red-100 text-xs flex items-center justify-center w-fit text-red-600 hover:bg-red-600 hover:text-white rounded-full px-8 my-2 py-2"
                             >
-                              Cancel Booking
+                              Reject Request
                             </button>
                           </div>
                         </div>
@@ -503,11 +489,8 @@ const RentalRequests = () => {
                   </button>
                   {approved && (
                     <div>
-                      {/* Overlay background */}
                       <div className="fixed inset-0 bg-black opacity-50 z-20"></div>
-                      {/* Modal content */}
-                      <div className=" fixed inset-0 flex self-center      justify-center z-30 flex-col items-start p-6 gap-4 md:w-1/2 h-fit        mx-auto bg-white rounded-lg shadow-md">
-                        {/* Header */}
+                      <div className="fixed scale-50 inset-0 flex self-center justify-center z-30 flex-col items-start p-6 gap-4 mx-auto bg-white rounded-lg shadow-md">
                         <div className="flex items-center w-full mb-4">
                           <button
                             onClick={() => setApproved(false)}
@@ -520,7 +503,6 @@ const RentalRequests = () => {
                           </h2>
                         </div>
 
-                        {/* Title */}
                         <h1 className="text-lg font-bold text-black">
                           Terms and Conditions
                         </h1>
@@ -531,7 +513,6 @@ const RentalRequests = () => {
                           Please read and accept the terms and conditions before
                           confirming your booking.
                         </p>
-                        {/* Terms Content */}
                         <div className="text-xs text-black leading-relaxed">
                           <h3 className="font-semibold text-black mb-2">
                             General Terms
@@ -599,7 +580,6 @@ const RentalRequests = () => {
                             </li>
                           </ol>
                         </div>
-                        {/* Checkbox */}
                         <div className="flex items-center mt-4">
                           <input
                             type="checkbox"
@@ -616,10 +596,9 @@ const RentalRequests = () => {
                           </label>
                         </div>
 
-                        {/* Approve Button */}
                         <button
-                          onClick={() => handleConfirmBooking()}
-                          className={`w-full py-2 mt-4 text-white  text-sm rounded-full ${
+                          onClick={handleConfirmBooking}
+                          className={`w-full py-2 mt-4 text-white text-sm rounded-full ${
                             isChecked
                               ? "bg-blue-950 hover:bg-blue-900"
                               : "bg-gray-400 cursor-not-allowed"
