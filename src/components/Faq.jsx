@@ -1,213 +1,97 @@
-import { useState } from "react";
-import {
-  Container,
-  Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Box,
-  Paper,
-} from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import shadows from "@mui/material/styles/shadows";
+import React, { useState } from "react";
 
-function Faq() {
-  const [activeQ, setActiveQ] = useState(null);
+// Questions and answers data
+const faqData = [
+  {
+    question: "What is a Payment Gateway?",
+    answer:
+      "A payment gateway is a technology used to accept and process payments online.",
+  },
+  {
+    question:
+      "Do I need to pay to Instapay even when there is no transaction going on in my business?",
+    answer:
+      "No, you do not need to pay Instapay when there is no transaction happening. With one of the lowest transaction charges in the industry, pay only when you get paid!",
+  },
+  {
+    question: "What platforms does ACME payment gateway support?",
+    answer:
+      "ACME payment gateway supports multiple platforms such as web, mobile, and POS terminals.",
+  },
+  {
+    question: "Does ACME provide international payments support?",
+    answer:
+      "Yes, ACME supports international payments with various currencies.",
+  },
+  {
+    question:
+      "Is there any setup fee or annual maintenance fee that I need to pay regularly?",
+    answer:
+      "There is no setup fee or maintenance fee for using ACME payment gateway, making it an affordable choice for your business.",
+  },
+];
 
-  const openQ = (id) => {
-    setActiveQ(activeQ === id ? null : id);
-  };
+const FAQPage = () => {
+  const [activeIndex, setActiveIndex] = useState(1); // Default to the second question
 
-  const FaqData = [
-    {
-      id: "q1",
-      question: "1. How do I book a car?",
-      answer:
-        "You can book a car by downloading our app and following the booking process or by calling our call center where an agent will assist you.",
-    },
-    {
-      id: "q2",
-      question: "2. What documents do I need to provide to rent a car?",
-      answer:
-        "Typically, you will need to provide a valid driver’s license, a government-issued ID or passport, and a credit card for payment and security advance deposit.",
-    },
-    {
-      id: "q3",
-      question: "3. What types of cars are available for rent?",
-      answer:
-        "We offer a wide range of cars from budget options to luxury vehicles. You can view all available options on our app or inquire through our call center.",
-    },
-    {
-      id: "q4",
-      question: "4. What is the minimum rental period?",
-      answer:
-        "The minimum rental period is typically 1 day. However, for specific requirements, you can contact our call center.",
-    },
-    {
-      id: "q5",
-      question: "5. How much does it cost to rent a car?",
-      answer:
-        "The cost varies depending on the type of car, rental period, and any additional services. You can get a detailed price in our app or by contacting our call center.",
-    },
-    {
-      id: "q6",
-      question: "6. Is there a mileage limit for rented cars?",
-      answer:
-        "Depending on the location there is a mileage limit, while others offer unlimited mileage. Details are provided during the booking process.",
-    },
-    {
-      id: "q7",
-      question: "7. What is your cancellation policy?",
-      answer:
-        "Our cancellation policy allows you to cancel your booking up to 24 hours before the rental period starts without any charges. Cancellations made less than 24 hours before the start time may incur a fee.",
-    },
-    {
-      id: "q8",
-      question: "8. Can I extend my rental period?",
-      answer:
-        "Yes, you can extend your rental period subject to availability. Please contact our call center or use the app to request an extension.",
-    },
-    {
-      id: "q9",
-      question: "9. What should I do in case of an accident or breakdown?",
-      answer:
-        "In case of an accident or breakdown, contact our customer support number provided in the rental agreement. We will assist you with roadside assistance or arrange a replacement vehicle.",
-    },
-    {
-      id: "q10",
-      question: "10. Are there any additional fees or charges?",
-      answer:
-        "Additional fees may apply for services such as child seats, additional drivers, or insurance coverage. Details are provided during the booking process.",
-    },
-    {
-      id: "q11",
-      question: "11. Can I rent a car without a driver?",
-      answer:
-        "Yes, you can choose to rent a car without a driver. We also offer cars with drivers for those who prefer it. But for without driver rent, we require an additional deposit.",
-    },
-    {
-      id: "q12",
-      question: "12. What payment methods do you accept?",
-      answer:
-        "We accept major credit cards, debit cards, and mobile payment options. Cash payments are not accepted. Payments should be done in advance.",
-    },
-    {
-      id: "q13",
-      question: "13. Is insurance included in the rental price?",
-      answer:
-        "Basic insurance is included in the rental price. You have the option to purchase additional coverage for extra protection.",
-    },
-    {
-      id: "q14",
-      question: "14. How do I return the car?",
-      answer:
-        "You can return the car to the designated return location specified in your rental agreement. For convenience, you can also arrange for a pick-up through our app or call center.",
-    },
-    {
-      id: "q15",
-      question: "15. Can I rent a car for someone else?",
-      answer:
-        "Yes, you can rent a car for someone else, but the person driving the car must meet our rental requirements and provide the necessary documents.",
-    },
-    {
-      id: "q16",
-      question: "16. What happens if I return the car late?",
-      answer:
-        "Late returns may incur additional charges. Please inform us in advance if you anticipate returning the car late to avoid extra fees.",
-    },
-    {
-      id: "q17",
-      question: "17. Can I choose a specific car model?",
-      answer:
-        "While we strive to provide the car model you prefer, specific models are subject to availability. You can specify your preference during booking, and we will do our best to accommodate it.",
-    },
-    {
-      id: "q18",
-      question: "18. Do you offer discounts or loyalty programs?",
-      answer:
-        "Yes, we offer various loyalty programs for our regular customers. Check our app or inquire through our call center for current promotions and loyalty benefits.",
-    },
-  ];
-
-  const styles = {
-    faqSection: {
-      padding: "64px 0",
-      backgroundColor: "#f5f5f5",
-    },
-    faqContent: {
-      marginBottom: "24px",
-    },
-    faqTitle: {
-      textAlign: "center",
-      marginBottom: "16px",
-    },
-    faqSubtitle: {
-      color: "#9e9e9e",
-    },
-    faqBox: {
-      marginBottom: "24px",
-    },
-    faqQuestion: {
-      cursor: "pointer",
-      padding: "5px",
-      paddingLeft: "10px",
-      border: "1px solid #ddd",
-      backgroundColor: "#fff",
-      color: "black",
-    },
+  // Function to change the selected question
+  const handleClick = (index) => {
+    setActiveIndex(index);
   };
 
   return (
-    <section style={styles.faqSection}>
-      <Container maxWidth="md">
-        <Box style={styles.faqContent}>
-          <Box style={styles.faqTitle}>
-            <Typography variant="h2" fontWeight="bold">
-              Frequently Asked Questions
-            </Typography>
-            <Typography variant="h5" color="textSecondary" mb={5} mt={3}>
-              All You Need to Know About Booking a Rental Car on Our Platform:
-              Expert Answers to Your Most Pressing Questions.
-            </Typography>
-          </Box>
+    <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+      <h2 className="text-4xl font-semibold text-center mt-16 mb-32">
+        Frequently Asked Questions
+      </h2>
 
-          <Box>
-            {FaqData.map(({ id, question, answer }) => (
-              <Paper key={id} style={styles.faqBox}>
-                <Accordion expanded={activeQ === id} onChange={() => openQ(id)}>
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreIcon />}
-                    style={styles.faqQuestion}
-                  >
-                    <Typography
-                      variant="h5"
-                      style={{
-                        color: "black",
-                        fontWeight: "bold",
-                        fontSize: "2rem",
-                      }}
-                    >
-                      {question}
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Typography
-                      variant="h5"
-                      style={{
-                        fontSize: "2rem",
-                      }}
-                    >
-                      {answer}
-                    </Typography>
-                  </AccordionDetails>
-                </Accordion>
-              </Paper>
-            ))}
-          </Box>
-        </Box>
-      </Container>
-    </section>
+      <div className="flex items-center justify-center flex-col lg:flex-row lg:space-x-10">
+        {/* Left side: Questions list */}
+        <div className="w-full shadow-md shadow-blue-50 text-sm rounded-md lg:w-1/2 space-y-4">
+          {faqData.map((faq, index) => (
+            <div
+              key={index}
+              onClick={() => handleClick(index)}
+              className={`cursor-pointer justify-between  p-4 flex  transition-all ease-in-out duration-300 ${
+                activeIndex === index
+                  ? "bg-blue-50 text-black font-medium"
+                  : " text-gray-700"
+              } hover:bg-blue-50 hover:text-gray-600`}
+            >
+              <div className="flex">
+                {" "}
+                <div
+                  className={`cursor-pointer max-w-2 max-h-2 p-3 mx-2 mr-4 rounded-full ${
+                    activeIndex === index ? "bg-gray-700 " : " bg-blue-300"
+                  }`}
+                />
+                <span className="block">{faq.question}</span>
+              </div>
+              <svg
+                className={`cursor-pointer -rotate-90 max-w-8 max-h-8 min-w-8 min-h-8 mx-2 mr-4  ${
+                  activeIndex === index ? "text-gray-700 " : " text-blue-300"
+                }`}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M5.23 7.21a.75.75 0 011.06 0L10 10.92l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0l-4.25-4.25a.75.75 0 010-1.06z" />
+              </svg>
+            </div>
+          ))}
+        </div>
+
+        {/* Right side: Answer content */}
+        <div className="w-full h-fit lg:w-1/2 mt-10 lg:mt-0 p-6 bg-gray-50 rounded-xl shadow-sm shadow-blue-300  transition-all ease-in-out duration-500 transform">
+          <h1 className="text-md font-semibold my-8 text-gray-800">
+            {faqData[activeIndex].question}
+          </h1>
+          <p className="text-sm text-gray-500">{faqData[activeIndex].answer}</p>
+        </div>
+      </div>
+    </div>
   );
-}
+};
 
-export default Faq;
+export default FAQPage;

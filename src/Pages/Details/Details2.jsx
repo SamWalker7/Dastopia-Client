@@ -1,0 +1,871 @@
+import React, { useEffect, useState } from "react";
+import Carousel from "react-material-ui-carousel";
+import { Paper, Button, TextField } from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchImages, fetchVehicles } from "../../store/slices/vehicleSlice";
+import MapComponent from "../../components/GoogleMaps";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import Skeleton from "@mui/material/Skeleton";
+import { getDownloadUrl, getOneVehicle } from "../../api";
+import audia1 from "../../images/cars-big/toyota-box.png";
+import { IoLocationOutline } from "react-icons/io5";
+import {
+  FaArrowLeft,
+  FaBackspace,
+  FaCogs,
+  FaGasPump,
+  FaLocationArrow,
+  FaRegCircle,
+  FaStar,
+  FaUserFriends,
+  FaCalendar,
+  FaTag,
+  FaTimes,
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa";
+import { FaCalendarAlt } from "react-icons/fa";
+import RentalModal from "./RentalModal";
+import PriceBreakdown from "./PriceBreakdown";
+import Dropdown from "../../components/Search/Dropdown";
+import useVehicleFormStore from "../../store/useVehicleFormStore";
+const customer = JSON.parse(localStorage.getItem("customer"));
+
+const locations = ["Addis Ababa", "Bole", "Merkato", "Piassa", "CMC", "Summit"];
+
+const fetchPlaceName = async (lat, lng) => {
+  const apiKey = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4";
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.status === "OK") {
+      return data.results[0].formatted_address;
+    } else {
+      console.error("Geocoding failed:", data.status);
+      return `Lat: ${lat}, Lng: ${lng}`;
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return `Lat: ${lat}, Lng: ${lng}`;
+  }
+};
+
+export default function Details2(props) {
+  const location = useLocation();
+  const [ratings, setRatings] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const { pickUpTime, DropOffTime } = location.state || {};
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const [pickupLocation, setPickupLocation] = useState("");
+  const [dropoffLocation, setDropoffLocation] = useState("");
+  const placeholderImage = "https://via.placeholder.com/300";
+  const [selectedImage, setSelectedImage] = useState(placeholderImage);
+  const [pickUpLocations, setPickUpLocations] = useState([]);
+  const [dropOffLocations, setDropOffLocations] = useState([]);
+  const { id } = useParams();
+  const [selected, setSelected] = useState(null);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [imageLoading, setImageLoading] = useState(true);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [error, setError] = useState("");
+  const [vehicleImages, setVehicleImages] = useState([]);
+  const [vehicleDetails, setVehicleDetails] = useState(null);
+  const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { apiCallWithRetry } = useVehicleFormStore();
+  const [imageUrls, setImageUrls] = useState({});
+  const [parsedCalendar, setParsedCalendar] = useState([]);
+  const selectedVehicleId = id;
+  const [showMapPopup, setShowMapPopup] = useState(false);
+  const [mapLocationData, setMapLocationData] = useState(null);
+  const [selectedLocationType, setSelectedLocationType] = useState("pickup");
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const fetchLocations = async (locations, setLocations) => {
+      if (Array.isArray(locations)) {
+        const placeNames = await Promise.all(
+          locations.map(async (location) => {
+            if (Array.isArray(location) && location.length === 2) {
+              return await fetchPlaceName(location[0], location[1]);
+            }
+            return "Invalid location";
+          })
+        );
+        setLocations(placeNames);
+      }
+    };
+
+    if (vehicleDetails?.pickUp) {
+      fetchLocations(vehicleDetails.pickUp, setPickUpLocations);
+    }
+
+    if (vehicleDetails?.dropOff) {
+      fetchLocations(vehicleDetails.dropOff, setDropOffLocations);
+    }
+  }, [vehicleDetails]);
+
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Unknown Date";
+    }
+  };
+
+  const handleViewMap = (type) => {
+    setSelectedLocationType(type);
+    if (vehicleDetails) {
+      setMapLocationData({
+        locations:
+          type === "pickup" ? vehicleDetails.pickUp : vehicleDetails.dropOff,
+        type,
+      });
+      setShowMapPopup(true);
+    }
+  };
+
+  const handleCloseMapPopup = () => {
+    setShowMapPopup(false);
+    setMapLocationData(null);
+    setSelectedLocationType("pickup");
+  };
+
+  const renderLocations = (locations) => {
+    if (Array.isArray(locations)) {
+      return locations.map((location, index) => {
+        const locationName = `Lat: ${location[0]}, Lng: ${location[1]}`;
+        return (
+          <span
+            key={index}
+            className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
+          >
+            {locationName}
+          </span>
+        );
+      });
+    } else if (typeof locations === "string" && locations) {
+      return (
+        <span className="border border-gray-400 text-sm px-3 py-1 rounded-xl">
+          {locations}
+        </span>
+      );
+    } else {
+      return <span className="text-gray-500">Not specified</span>;
+    }
+  };
+
+  const handleStartDateChange = (event) => {
+    const value = event.target.value;
+    const currentDate = new Date().setHours(0, 0, 0, 0);
+    const selectedStartDate = new Date(value).setHours(0, 0, 0, 0);
+    const selectedEndDate = endDate
+      ? new Date(endDate).setHours(0, 0, 0, 0)
+      : null;
+
+    if (selectedStartDate < currentDate) {
+      setError("Pickup date cannot be before the current date.");
+      setStartDate("");
+    } else if (selectedEndDate && selectedStartDate > selectedEndDate) {
+      setError("Pickup date cannot be after the end date.");
+      setStartDate("");
+    } else {
+      setError("");
+      setStartDate(value);
+      localStorage.setItem("pickUpTime", value);
+    }
+  };
+
+  useEffect(() => {
+    const fetchVehicleDetails = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (!selectedVehicleId) {
+          setError("Vehicle ID is missing.");
+          setLoading(false);
+          return;
+        }
+        const response = await apiCallWithRetry(
+          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/${selectedVehicleId}`,
+          { method: "GET" }
+        );
+        if (response && response.body) {
+          setVehicleDetails(response.body);
+          setStatus(response.body.isActive ? "Active" : "Inactive");
+          setParsedCalendar(response.body.events || []);
+          if (
+            response.body.vehicleImageKeys &&
+            response.body.vehicleImageKeys.length > 0
+          ) {
+            const urls = {};
+            const images = [];
+            for (const imageKey of response.body.vehicleImageKeys) {
+              try {
+                const downloadURL = await getDownloadUrl(imageKey);
+                urls[imageKey] = downloadURL?.body;
+                if (!selectedImage) {
+                  //  setSelectedImage(imageKey);
+                }
+              } catch (downloadUrlError) {
+                console.error(
+                  `Failed to fetch download URL for ${imageKey}:`,
+                  downloadUrlError
+                );
+                // urls[imageKey] = audia1;
+                // images.push(audia1);
+                if (!selectedImage) {
+                  //  setSelectedImage(audia1);
+                }
+              }
+            }
+            // setImageUrls(urls);
+            //setVehicleImages(images); // Set the vehicleImages state here
+            if (!selectedImage && response.body.vehicleImageKeys.length > 0) {
+              //  setSelectedImage(response.body.vehicleImageKeys[0]);
+            }
+          } else {
+            // setSelectedImage(audia1);
+            //setVehicleImages([audia1]);
+          }
+          if (response.body.events) {
+            setParsedCalendar(response.body.events);
+          } else {
+            setParsedCalendar([]);
+          }
+        } else {
+          setError(
+            "Failed to fetch vehicle details or invalid response format."
+          );
+        }
+      } catch (err) {
+        console.error("Error fetching vehicle details:", err);
+        setError("Error fetching vehicle details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicleDetails();
+  }, [
+    selectedVehicleId,
+    apiCallWithRetry,
+    selectedImage,
+    customer?.AccessToken,
+  ]);
+
+  const handleEndDateChange = (event) => {
+    const value = event.target.value;
+    if (new Date(value) <= new Date(startDate)) {
+      setError("End date must be after the pickup date.");
+      setEndDate("");
+    } else if (new Date(value).toDateString() === new Date().toDateString()) {
+      setError("End date cannot be the current date.");
+      setEndDate("");
+    } else {
+      setError("");
+      setEndDate(value);
+      localStorage.setItem("dropOffTime", value);
+    }
+  };
+
+  const fetchData = async () => {
+    setImageLoading(true);
+    try {
+      const response = await getOneVehicle(id);
+      const data = response.body;
+      let imageUrls = [];
+
+      if (data.vehicleImageKeys && data.vehicleImageKeys.length > 0) {
+        const fetchedUrls = await Promise.all(
+          data.vehicleImageKeys.map(async (imageKey) => {
+            try {
+              const path = await getDownloadUrl(imageKey);
+              return path?.body || placeholderImage;
+            } catch (error) {
+              console.error(
+                "Error in getDownloadUrl for key:",
+                imageKey,
+                error
+              );
+              return placeholderImage;
+            }
+          })
+        );
+        imageUrls = fetchedUrls;
+      } else {
+        imageUrls.push(placeholderImage);
+      }
+
+      setSelected({ ...data, imageLoading: false });
+      setVehicleImages(imageUrls);
+    } catch (error) {
+      console.error("Error fetching vehicle details:", error);
+      setError("Failed to load vehicle details.");
+    } finally {
+      setImageLoading(false);
+    }
+  };
+  const openFullScreen = (index) => {
+    setCurrentImageIndex(index);
+    setIsFullScreen(true);
+  };
+
+  // Function to close full-screen viewer
+  const closeFullScreen = () => {
+    setIsFullScreen(false);
+  };
+
+  // Function for next image
+  const nextImage = () => {
+    if (vehicleImages && vehicleImages.length > 0) {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === vehicleImages.length - 1 ? 0 : prevIndex + 1
+      );
+    }
+  };
+
+  // Function for previous image
+  const previousImage = () => {
+    if (vehicleImages && vehicleImages.length > 0) {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === 0 ? vehicleImages.length - 1 : prevIndex - 1
+      );
+    }
+  };
+
+  const fetchRatings = async (carID) => {
+    try {
+      const response = await fetch(
+        "https://xo55y7ogyj.execute-api.us-east-1.amazonaws.com/prod/add_vehicle",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            operation: "getRatingsbyID",
+            carId: carID,
+          }),
+        }
+      );
+      const data = await response.json();
+      if (data.statusCode === 200 && data.body.success) {
+        return {
+          ratings: data.body.data.ratings,
+          averageRating: data.body.data.averageRating,
+        };
+      } else {
+        console.error("Failed to fetch ratings:", data);
+        return { ratings: [], averageRating: 0 };
+      }
+    } catch (error) {
+      console.error("Error fetching ratings:", error);
+      return { ratings: [], averageRating: 0 };
+    }
+  };
+
+  useEffect(() => {
+    if (selectedVehicleId) {
+      fetchRatings(selectedVehicleId)
+        .then((data) => {
+          setRatings(data.ratings);
+          setAverageRating(data.averageRating);
+        })
+        .catch((error) => console.error("Error setting ratings:", error));
+    }
+  }, [selectedVehicleId]);
+  useEffect(() => {
+    if (id) {
+      fetchData();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  });
+
+  useEffect(() => {
+    const getQueryParam = (name) => {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    };
+    const pickUpTime = getQueryParam("pickUpTime");
+    const dropOffTime = getQueryParam("dropOffTime");
+    setStartDate(pickUpTime);
+    setEndDate(dropOffTime);
+  });
+
+  const styles = {
+    formControl: {
+      minWidth: "20%",
+      marginRight: "16px",
+      marginBottom: "10px",
+      flex: "1 0 20%",
+      marginTop: "2rem",
+      fontSize: "16px",
+    },
+    container: {
+      paddingTop: "300px",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      maxWidth: "2000px",
+      alignItems: "center",
+      alignContent: "center",
+      paddingLeft: windowWidth < 700 ? "10px" : "0px",
+    },
+  };
+
+  const boxStyle = {
+    display: "flex",
+    flexDirection: windowWidth < 497 ? "column" : "row",
+    justifyContent: "flex-start",
+    alignContent: "flex-start",
+    alignItems: "flex-start",
+    maxWidth: "1000px",
+    width: "100%",
+    padding: "15px",
+  };
+
+  const [pickUp, setPickUp] = useState("");
+  const handlePick = (e) => setPickUp(e.target.value);
+
+  if (imageLoading) return <p>Loading vehicle details...</p>;
+  if (error) return <p>Error: {error}</p>;
+
+  // Calculate the number of days
+  const pickUpDate = new Date(pickUpTime);
+  const dropOffDate = new Date(DropOffTime);
+  const timeDifference = dropOffDate.getTime() - pickUpDate.getTime();
+  const days = Math.ceil(timeDifference / (1000 * 3600 * 24));
+
+  // Get vehicle price from state
+  const dailyPrice = selected?.price || 0;
+  const totalPrice = days * dailyPrice;
+
+  return (
+    <div className="py-32 md:py-8 lg:flex-row flex-col bg-[#FAF9FE] md:px-16 p-4 gap-10 flex">
+      <div className="flex flex-col lg:w-3/4">
+        <div className="flex md:flex-row flex-col gap-10 md:mt-24">
+          {/* Left Side - Car Info */}
+          <div className="p-6 bg-white md:w-1/2 h-fit shadow-lg rounded-lg">
+            <div className="flex px-2 flex-col">
+              <button
+                onClick={() => navigate(-1)}
+                className="mb-4 flex self-start text-black text-base font-normal items-center cursor-pointer"
+              >
+                <span className="mr-6">
+                  <FaArrowLeft className="text-gray-700" size={12} />
+                </span>{" "}
+                Car Details
+              </button>
+            </div>
+            <h1 className="text-base font-semibold px-2 mb-8 my-4">
+              {selected?.make} {selected?.model}
+            </h1>
+            <img
+              src={
+                vehicleImages && vehicleImages[0]
+                  ? vehicleImages[0]
+                  : placeholderImage
+              }
+              alt={`${selected?.make} ${selected?.model}`}
+              className="w-[300px] h-[250px] rounded-lg mb-4 cursor-pointer"
+              onClick={() => {
+                if (vehicleImages.length > 0) {
+                  openFullScreen(0); // Open fullscreen with the first image
+                }
+              }}
+            />
+            <div className="flex justify-start space-x-2 items-center mt-6">
+              {vehicleImages &&
+                vehicleImages.map((thumb, index) => (
+                  <img
+                    key={index}
+                    src={thumb || placeholderImage}
+                    alt={`Thumbnail ${index + 1}`}
+                    onClick={() => {
+                      setSelectedImage(thumb);
+                      openFullScreen(index); // Open fullscreen with the clicked thumbnail's index
+                    }}
+                    className="w-20 h-20 cursor-pointer rounded-lg"
+                  />
+                ))}
+            </div>
+            <div className="flex mt-4">
+              <div className="flex justify-between w-full items-center px-2 py-4 my-2 text-gray-700 text-base">
+                <div className="flex items-center space-x-2">
+                  <FaGasPump size={16} /> <span>{selected?.fuelType}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <FaCogs size={16} />
+                  <span>{selected?.transmission}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <FaUserFriends size={16} />
+                  <span>{selected?.seats} People</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Specifications and Reviews */}
+          <div className="bg-white w-full h-fit flex justify-center items-center flex-col shadow-lg rounded-lg">
+            <div className="bg-blue-100 w-11/12 text-blue-700 py-2 px-4 rounded-lg text-center mt-10">
+              <div className="flex justify-between items-center">
+                <h3 className="text-base font-semibold">Price</h3>
+                <span className="text-base font-bold">
+                  {selected?.price} Birr
+                </span>
+              </div>
+            </div>
+            <div className="p-10 pt-0 w-full h-fit shadow-lg rounded-lg">
+              <h4 className="mt-8 text-lg font-semibold">Car Specification</h4>
+              <div className="grid grid-cols-3 text-base gap-4 mt-4">
+                <div>
+                  <span className="font-medium">Car Brand</span>
+                  <p className="text-gray-500">{selected?.make}</p>
+                </div>
+                <div>
+                  <span className="font-medium">Car Model</span>
+                  <p className="text-gray-500">{selected?.model}</p>
+                </div>
+                <div>
+                  <span className="font-medium">Category</span>
+                  <p className="text-gray-500">{selected?.category}</p>
+                </div>
+              </div>
+
+              <section className="my-16">
+                <h2 className="font-semibold text-lg mb-4">Features</h2>
+                <div className="flex flex-wrap gap-2">
+                  {vehicleDetails?.carFeatures?.map((feature, index) => (
+                    <span
+                      key={index}
+                      className="border border-gray-400 text-base px-3 py-1 rounded-xl"
+                    >
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+              </section>
+
+              <section className="my-8">
+                <h2 className="font-semibold text-lg mb-4">
+                  Pick up Locations
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {pickUpLocations.map((place, index) => (
+                    <span
+                      key={index}
+                      className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
+                    >
+                      {place}
+                    </span>
+                  ))}
+                </div>
+              </section>
+
+              <section className="my-8">
+                <h2 className="font-semibold text-2xl my-4 mb-4">
+                  Drop off Locations
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {dropOffLocations.map((place, index) => (
+                    <span
+                      key={index}
+                      className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
+                    >
+                      {place}
+                    </span>
+                  ))}
+                </div>
+              </section>
+
+              <section className="my-16">
+                <h2 className="font-semibold text-lg mb-4">
+                  Available Rental Dates
+                </h2>
+                <div className="space-y-4">
+                  {parsedCalendar?.map((dateRange, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <FaCalendarAlt size={16} />
+                      <span className="text-sm">{`${formatDate(
+                        dateRange.startDate
+                      )} - ${formatDate(dateRange.endDate)}`}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Rating & Reviews */}
+              <section className="my-16">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                  Rating & Reviews
+                </h3>
+                <div className="flex items-center mb-2">
+                  <span className="font-semibold text-gray-700 mr-2">
+                    Rating:
+                  </span>
+                  <div className="text-yellow-500 text-base">
+                    {Array.from({ length: Math.round(averageRating) }).map(
+                      (_, i) => (
+                        <FaStar key={`star-${i}`} className="inline-block" />
+                      )
+                    )}
+                    {Array.from({ length: 5 - Math.round(averageRating) }).map(
+                      (_, i) => (
+                        <FaStar
+                          key={`empty-star-${i}`}
+                          className="inline-block text-gray-300"
+                        />
+                      )
+                    )}
+                  </div>
+                  <span className="ml-2 text-gray-600">
+                    ({averageRating?.toFixed(2)})
+                  </span>
+                </div>
+                {ratings.length > 0 ? (
+                  ratings.map((review, index) => (
+                    <div
+                      key={index}
+                      className="mb-4 p-4 border rounded-md shadow-sm"
+                    >
+                      <div className="flex items-center">
+                        {/* Basic star rating - you might want a more visual component */}
+                        <div className="text-yellow-500 text-base">
+                          {Array.from({ length: review.rating }).map((_, i) => (
+                            <FaStar
+                              key={`review-star-${index}-${i}`}
+                              className="inline-block"
+                            />
+                          ))}
+                          {Array.from({ length: 5 - review.rating }).map(
+                            (_, i) => (
+                              <FaStar
+                                key={`review-empty-star-${index}-${i}`}
+                                className="inline-block text-gray-300"
+                              />
+                            )
+                          )}
+                        </div>
+                        <p className="ml-3 text-base text-gray-700">
+                          {review.rating}/5
+                        </p>
+                      </div>
+                      <p className="text-base text-gray-700 mt-1">
+                        {review.userName}
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {review.review}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500">No reviews yet.</p>
+                )}
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:w-1/4">
+        <section className="bg-white p-6 md:mt-24 mb-8 rounded-xl shadow-md">
+          <h2 className="text-lg font-semibold text-[#00113D] mb-8">
+            Pick Up and Drop Off
+          </h2>
+          <div className="flex flex-col text-sm text-[#5A5A5A]">
+            <div className="flex items-start gap-2">
+              <div>
+                <p className="flex items-center">
+                  <FaRegCircle className="text-gray-600" />
+                  <span className="px-4 text-black">
+                    Pick-up Date: {new Date(pickUpTime).toLocaleDateString()}
+                  </span>
+                </p>
+                <br />
+                <div className="ml-2 px-6 border-l pb-12 border-gray-300">
+                  <p className="font-semibold">
+                    <p>
+                      {pickupLocation ? (
+                        <span className="text-green-500">{pickupLocation}</span>
+                      ) : (
+                        <div>
+                          <span className="text-red-400">
+                            Please Select a location
+                          </span>
+                        </div>
+                      )}
+                      <br />
+                      <button
+                        onClick={() => handleViewMap("pickup")}
+                        className="text-blue-500 underline hover:text-blue-700 cursor-pointer"
+                      >
+                        View On Map
+                      </button>
+                    </p>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <div>
+                <p className="flex items-center">
+                  <FaRegCircle className="text-gray-600" />
+                  <span className="px-4 text-black">
+                    Drop-Off Date: {new Date(DropOffTime).toLocaleDateString()}
+                  </span>
+                </p>
+                <br />
+                <div className="ml-2 px-6 pb-8">
+                  <p className="font-semibold">
+                    <p>
+                      {dropoffLocation ? (
+                        <span className="text-green-500">
+                          {dropoffLocation}
+                        </span>
+                      ) : (
+                        <div>
+                          <span className="text-red-400">
+                            Please Select a location
+                          </span>
+                        </div>
+                      )}
+                      <br />
+                      <button
+                        onClick={() => handleViewMap("dropoff")}
+                        className="text-blue-500 underline hover:text-blue-700 cursor-pointer"
+                      >
+                        View On Map
+                      </button>
+                    </p>
+                  </p>
+                </div>
+                <br />
+              </div>
+            </div>
+          </div>
+          <div className="w-full">
+            <Dropdown
+              label="Select Pick up location"
+              options={pickUpLocations}
+              selectedOption={pickupLocation}
+              onSelect={setPickupLocation}
+            />
+            <Dropdown
+              label="Select Drop off location"
+              options={dropOffLocations}
+              selectedOption={dropoffLocation}
+              onSelect={setDropoffLocation}
+            />
+          </div>
+          {/* <div className="mt-4 text-sm">
+            <span className="font-medium text-black">Driver request</span>
+            <p className="text-gray-500">Yes</p>
+          </div> */}
+          <div className="p-4 bg-blue-100 text-sm mt-4 py-4 h-fit">
+            Having no driver selected means that you are liable for any issues
+            that is related to an accident to the rented vechile.
+          </div>
+        </section>
+
+        <PriceBreakdown
+          days={days}
+          dailyPrice={dailyPrice}
+          totalPrice={totalPrice}
+          id={vehicleDetails?.id}
+          ownerId={vehicleDetails?.ownerId}
+          dropOffTime={DropOffTime}
+          pickUpTime={pickUpTime}
+          pickUpLocation={pickupLocation}
+          dropOffLocation={dropoffLocation}
+        />
+      </div>
+
+      {showMapPopup && mapLocationData && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 p-4">
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 flex flex-col"
+            style={{ maxHeight: "90vh" }}
+          >
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-semibold">
+                {mapLocationData.type === "pickup"
+                  ? "Pick Up Locations"
+                  : "Drop Off Locations"}
+              </h2>
+              <button
+                onClick={handleCloseMapPopup}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="h-6 w-6" viewBox="0 0 24 24">
+                  <path
+                    fill="currentColor"
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden flex flex-col ">
+              <div className="flex-1 w-full">
+                <MapComponent vehicles={[vehicleDetails]} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isFullScreen && vehicleImages && vehicleImages.length > 0 && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-90 z-50 flex justify-center items-center">
+          <button
+            onClick={closeFullScreen}
+            className="absolute top-4 right-4 text-white text-2xl focus:outline-none"
+          >
+            <FaTimes />
+          </button>
+          <img
+            src={vehicleImages[currentImageIndex] || placeholderImage}
+            alt={`Full screen image ${currentImageIndex + 1}`}
+            className="max-w-full max-h-full object-contain"
+            onClick={nextImage}
+            style={{ cursor: "pointer" }}
+          />
+          {vehicleImages.length > 1 && (
+            <>
+              <button
+                onClick={previousImage}
+                className="absolute top-1/2 left-4 text-white text-2xl focus:outline-none"
+                style={{ transform: "translateY(-50%)" }}
+              >
+                <FaChevronLeft />
+              </button>
+              <button
+                onClick={nextImage}
+                className="absolute top-1/2 right-4 text-white text-2xl focus:outline-none"
+                style={{ transform: "translateY(-50%)" }}
+              >
+                <FaChevronRight />
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

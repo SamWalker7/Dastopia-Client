@@ -8,19 +8,22 @@ import Testimonials from "../components/Testimonials";
 import Faq from "../components/Faq";
 import Download from "../components/Download";
 import Footer from "../components/Footer";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
 
-function Home() {
+function Home({ user }) {
+  const user1 = useSelector((state) => state.auth.user);
+
+  useEffect(() => {
+    console.log("User from Redux:", user1); // Check if Redux has the user
+  }, [user1]);
   return (
     <>
-      <Hero />
-      <BookCar />
+      <Hero user={user} />
+      {/* <BookCar /> */}
       <PlanTrip />
-      <PickCar />
-      <Banner />
-      <ChooseUs />
       <Testimonials />
       <Faq />
-      <Download />
       <Footer />
     </>
   );
