@@ -83,6 +83,8 @@ export default function Details2(props) {
   const [showMapPopup, setShowMapPopup] = useState(false);
   const [mapLocationData, setMapLocationData] = useState(null);
   const [selectedLocationType, setSelectedLocationType] = useState("pickup");
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     const fetchLocations = async (locations, setLocations) => {
@@ -214,28 +216,28 @@ export default function Details2(props) {
                 const downloadURL = await getDownloadUrl(imageKey);
                 urls[imageKey] = downloadURL?.body;
                 if (!selectedImage) {
-                  setSelectedImage(imageKey);
+                  //  setSelectedImage(imageKey);
                 }
               } catch (downloadUrlError) {
                 console.error(
                   `Failed to fetch download URL for ${imageKey}:`,
                   downloadUrlError
                 );
-                urls[imageKey] = audia1;
-                images.push(audia1);
+                // urls[imageKey] = audia1;
+                // images.push(audia1);
                 if (!selectedImage) {
-                  setSelectedImage(audia1);
+                  //  setSelectedImage(audia1);
                 }
               }
             }
-            setImageUrls(urls);
-            setVehicleImages(images); // Set the vehicleImages state here
+            // setImageUrls(urls);
+            //setVehicleImages(images); // Set the vehicleImages state here
             if (!selectedImage && response.body.vehicleImageKeys.length > 0) {
-              setSelectedImage(response.body.vehicleImageKeys[0]);
+              //  setSelectedImage(response.body.vehicleImageKeys[0]);
             }
           } else {
-            setSelectedImage(audia1);
-            setVehicleImages([audia1]);
+            // setSelectedImage(audia1);
+            //setVehicleImages([audia1]);
           }
           if (response.body.events) {
             setParsedCalendar(response.body.events);
@@ -327,19 +329,21 @@ export default function Details2(props) {
 
   // Function for next image
   const nextImage = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === vehicleImages.length - 1 ? 0 : prevIndex + 1
-    );
+    if (vehicleImages && vehicleImages.length > 0) {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === vehicleImages.length - 1 ? 0 : prevIndex + 1
+      );
+    }
   };
 
   // Function for previous image
   const previousImage = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === 0 ? vehicleImages.length - 1 : prevIndex - 1
-    );
+    if (vehicleImages && vehicleImages.length > 0) {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === 0 ? vehicleImages.length - 1 : prevIndex - 1
+      );
+    }
   };
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const fetchRatings = async (carID) => {
     try {
@@ -481,7 +485,11 @@ export default function Details2(props) {
               }
               alt={`${selected?.make} ${selected?.model}`}
               className="w-[300px] h-[250px] rounded-lg mb-4 cursor-pointer"
-              onClick={() => vehicleImages.length > 0 && openFullScreen(0)}
+              onClick={() => {
+                if (vehicleImages.length > 0) {
+                  openFullScreen(0); // Open fullscreen with the first image
+                }
+              }}
             />
             <div className="flex justify-start space-x-2 items-center mt-6">
               {vehicleImages &&
@@ -490,7 +498,10 @@ export default function Details2(props) {
                     key={index}
                     src={thumb || placeholderImage}
                     alt={`Thumbnail ${index + 1}`}
-                    onClick={() => setSelectedImage(thumb)}
+                    onClick={() => {
+                      setSelectedImage(thumb);
+                      openFullScreen(index); // Open fullscreen with the clicked thumbnail's index
+                    }}
                     className="w-20 h-20 cursor-pointer rounded-lg"
                   />
                 ))}
@@ -764,10 +775,10 @@ export default function Details2(props) {
               onSelect={setDropoffLocation}
             />
           </div>
-          <div className="mt-4 text-sm">
+          {/* <div className="mt-4 text-sm">
             <span className="font-medium text-black">Driver request</span>
             <p className="text-gray-500">Yes</p>
-          </div>
+          </div> */}
           <div className="p-4 bg-blue-100 text-sm mt-4 py-4 h-fit">
             Having no driver selected means that you are liable for any issues
             that is related to an accident to the rented vechile.
@@ -817,6 +828,42 @@ export default function Details2(props) {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {isFullScreen && vehicleImages && vehicleImages.length > 0 && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-90 z-50 flex justify-center items-center">
+          <button
+            onClick={closeFullScreen}
+            className="absolute top-4 right-4 text-white text-2xl focus:outline-none"
+          >
+            <FaTimes />
+          </button>
+          <img
+            src={vehicleImages[currentImageIndex] || placeholderImage}
+            alt={`Full screen image ${currentImageIndex + 1}`}
+            className="max-w-full max-h-full object-contain"
+            onClick={nextImage}
+            style={{ cursor: "pointer" }}
+          />
+          {vehicleImages.length > 1 && (
+            <>
+              <button
+                onClick={previousImage}
+                className="absolute top-1/2 left-4 text-white text-2xl focus:outline-none"
+                style={{ transform: "translateY(-50%)" }}
+              >
+                <FaChevronLeft />
+              </button>
+              <button
+                onClick={nextImage}
+                className="absolute top-1/2 right-4 text-white text-2xl focus:outline-none"
+                style={{ transform: "translateY(-50%)" }}
+              >
+                <FaChevronRight />
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -248,9 +248,9 @@ const Profile = ({ user2, setUser }) => {
   };
 
   const statusColors = {
-    Completed: "bg-blue-950 text-white",
-    Active: "bg-green-100 text-green-700",
-    Canceled: "bg-red-100 text-red-600",
+    pending: "bg-yellow-100 text-yellow-700",
+    approved: "bg-green-100 text-green-700",
+    denied: "bg-red-100 text-red-600",
   };
 
   const sortedRentals = [...rentals].sort((a, b) => {

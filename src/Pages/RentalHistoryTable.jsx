@@ -7,6 +7,7 @@ const RentalHistoryTable = ({
   sortConfig,
   statusColors,
 }) => {
+  console.log("Rental History Table", sortedRentals, handleSort, sortConfig);
   return (
     <div className=" bg-white w-full shadow-lg rounded-lg">
       <div className=" p-6 rounded-lg ">
@@ -59,10 +60,10 @@ const RentalHistoryTable = ({
                     <td className="p-8">
                       <span
                         className={`px-3 py-2 rounded-xl font-semibold text-xs ${
-                          statusColors[rental.status]
+                          statusColors[rental.approvedStatus]
                         }`}
                       >
-                        {rental.status}
+                        {rental.approvedStatus}
                       </span>
                     </td>
                   </tr>

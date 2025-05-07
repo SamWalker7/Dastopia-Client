@@ -170,6 +170,15 @@ const Step1 = ({ nextStep }) => {
             size="small"
             fullWidth
           />
+          <TextField
+            label="Plate Region"
+            variant="outlined"
+            name="plateRegion"
+            value={vehicleData.plateRegion}
+            onChange={handleChange}
+            size="small"
+            fullWidth
+          />
           {/* <Dropdown
             label="Car Type"
             options={[

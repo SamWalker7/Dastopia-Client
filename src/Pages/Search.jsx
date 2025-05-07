@@ -121,8 +121,7 @@ const Search = () => {
   };
 
   const handleEndDateChange = (event) => {
-
-const value = event.target.value;
+    const value = event.target.value;
     if (new Date(value) <= new Date(startDate)) {
       setError("End date must be after the pickup date.");
       setEndDate("");
@@ -250,7 +249,7 @@ const value = event.target.value;
   const isMaxPriceValid =
     !maxPrice || parseFloat(maxPrice) > parseFloat(minPrice);
 
-const formatPrice = (price) => {
+  const formatPrice = (price) => {
     return parseFloat(price).toLocaleString("en-ET", {
       style: "currency",
       currency: "ETB",
@@ -339,7 +338,7 @@ const formatPrice = (price) => {
                 </div>
                 {/* Model Dropdown */}
 
-<div className="relative inline-block my-3 text-lg w-full">
+                <div className="relative inline-block my-3 text-lg w-full">
                   <FormControl fullWidth size="small">
                     <InputLabel
                       id="model-label"
@@ -438,7 +437,7 @@ const formatPrice = (price) => {
                 </div>
                 {/* Category Dropdown */}
 
-<div className="relative inline-block my-3 text-lg w-full">
+                <div className="relative inline-block my-3 text-lg w-full">
                   <FormControl fullWidth size="small">
                     <InputLabel
                       id="category-label"

@@ -158,7 +158,7 @@ const Step5 = ({ prevStep }) => {
               Pick up Locations
             </h3>
             <ul className="text-sm space-y-6 text-gray-700">
-              {vehicleData.pickUpLocation?.map((location, index) => (
+              {vehicleData.pickUp?.map((location, index) => (
                 <li key={index} className="flex items-center gap-4">
                   <IoLocationOutline size={16} />
                   {location.address || location.name || `Location ${index + 1}`}
@@ -171,7 +171,7 @@ const Step5 = ({ prevStep }) => {
               Drop off Locations
             </h3>
             <ul className="text-sm space-y-6 text-gray-700">
-              {vehicleData.dropOffLocation?.map((location, index) => (
+              {vehicleData.dropOff?.map((location, index) => (
                 <li key={index} className="flex items-center gap-4">
                   <IoLocationOutline size={16} />
                   {location.address || location.name || `Location ${index + 1}`}

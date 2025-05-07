@@ -1,31 +1,33 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import Logo from "../images/logo/dasguzo_logo.png";
-import Img2 from "../images/user/person.png";
-import { signout } from "../api/auth";
-import { FiPlus } from "react-icons/fi";
-import { MdMenu } from "react-icons/md";
-import { useLocation } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import React, { useState, useRef, useEffect } from "react";
-import {
-  FaBars,
-  FaCarSide,
-  FaListUl,
-  FaCog,
-  FaLanguage,
-  FaUser,
-  FaCreditCard,
-  FaComments,
-  FaChevronDown,
-  FaChevronUp,
-  FaClipboardList,
-  FaBookmark,
-  FaCheckSquare,
-  FaWindowClose,
-  FaHome,
-  FaSpinner,
-} from "react-icons/fa";
+import Logo from "../images/logo/dasguzo_logo.png";
+import Img2 from "../images/user/person.png"; // This import seems unused in the provided code
 import Img3 from "../images/testimonials/avatar.png";
+import { signout } from "../api/auth"; // This import seems unused in the provided code
 import { getDownloadUrl } from "../api";
+
+// Import MUI Icons
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
+import AddIcon from "@mui/icons-material/Add";
+import CircularProgress from "@mui/material/CircularProgress"; // For spinner
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import ListIcon from "@mui/icons-material/List";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import SettingsIcon from "@mui/icons-material/Settings";
+import LanguageIcon from "@mui/icons-material/Language";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import HomeIcon from "@mui/icons-material/Home";
+import InfoIcon from "@mui/icons-material/Info"; // For About Us
+import FormatQuoteIcon from "@mui/icons-material/FormatQuote"; // For Testimonials
+import GroupIcon from "@mui/icons-material/Group"; // For Our Team
+import ContactMailIcon from "@mui/icons-material/ContactMail"; // For Contact
 
 const MenuItem = ({ icon, text, hasDropdown, children, onClick }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -49,7 +51,7 @@ const MenuItem = ({ icon, text, hasDropdown, children, onClick }) => {
           <span>{text}</span>
         </div>
         {hasDropdown && (
-          <span>{isOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
+          <span>{isOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}</span>
         )}
       </button>
       {hasDropdown && isOpen && <div className="pl-12">{children}</div>}
@@ -141,12 +143,13 @@ function Navbar({ user2, setUser }) {
     navigate(path); // Navigate to the specified path
     setIsOpen(false); // Close the modal or menu if open
   };
+
   const location = useLocation();
   const [nav, setNav] = useState(false);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     localStorage.removeItem("customer"); // Remove user data
     setUser(null); // Update state
     window.dispatchEvent(new Event("storage")); // Trigger update
@@ -169,17 +172,36 @@ function Navbar({ user2, setUser }) {
   const gotoProfile = () => {
     navigate("/profile", { state: { user2 } });
   };
+
+  // Helper function to get the appropriate icon for mobile menu items
+  const getMobileMenuItemIcon = (label) => {
+    switch (label) {
+      case "Home":
+        return <HomeIcon className="text-md" />;
+      case "About":
+        return <InfoIcon className="text-md" />;
+
+      case "Testimonials":
+        return <FormatQuoteIcon className="text-md" />;
+
+      case "Contact":
+        return <ContactMailIcon className="text-md" />;
+      default:
+        return <HomeIcon className="text-md" />; // Default to home icon
+    }
+  };
+
   return (
     <>
-      <nav className="fixed w-screen md:bg-transparent bg-white   z-20">
-        <div className="mx-auto px-8 sm:px-6 lg:px-12   flex   w-full justify-between items-center h-20">
+      <nav className="fixed w-screen md:bg-transparent bg-white z-20">
+        <div className="mx-auto px-8 sm:px-6 lg:px-12 flex w-full justify-between items-center h-20">
           {/* Mobile Hamburger */}
           <div className="md:hidden">
             <button onClick={openNav} className="focus:outline-none">
               {nav ? (
-                <FaWindowClose size={20} className=" text-gray-900" />
+                <CloseIcon size={20} className=" text-gray-900" />
               ) : (
-                <FaBars size={20} className=" text-gray-900" />
+                <MenuIcon size={20} className=" text-gray-900" />
               )}
             </button>
           </div>
@@ -193,7 +215,7 @@ function Navbar({ user2, setUser }) {
           <div onClick={gotoProfile} className="md:hidden ">
             {isImageLoadingNavbar ? (
               <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100">
-                <FaSpinner className="animate-spin text-xl text-gray-400" />
+                <CircularProgress size={20} className="text-gray-400" />
               </div>
             ) : (
               <img
@@ -206,7 +228,7 @@ function Navbar({ user2, setUser }) {
 
           {/* Desktop Menu */}
           <div
-            className={`${backgroundColor} py-0 hidden md:flex px-6   rounded-full space-x-4 items-center`}
+            className={`${backgroundColor} py-0 hidden md:flex px-6 rounded-full space-x-4 items-center`}
           >
             {[
               { to: "/", label: "Home" },
@@ -218,7 +240,7 @@ function Navbar({ user2, setUser }) {
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  `px-0 py-0 text-gray-600 text-sm   hover:text-yellow-500 ${
+                  `px-0 py-0 text-gray-600 text-sm hover:text-yellow-500 ${
                     isActive
                       ? "text-yellow-500 border-b-2 border-yellow-500"
                       : ""
@@ -235,18 +257,18 @@ function Navbar({ user2, setUser }) {
                   to="/addcar"
                   className={` ${backgroundColor1} text-sm flex items-center justify-center rounded-full px-4 ml-4 my-2 py-1`}
                 >
-                  <FiPlus className="mr-4 " size={12} />
+                  <AddIcon className="mr-4 " size={12} />
                   <span>Add Car</span>
                 </NavLink>
                 <NavLink to="/profile" className=" ">
                   {isImageLoadingNavbar ? (
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100">
-                      <FaSpinner className="animate-spin text-md text-gray-400" />
+                      <CircularProgress size={16} className="text-gray-400" />
                     </div>
                   ) : (
                     <img
                       src={profileImageUrlNavbar}
-                      className="w-8 h-8 rounded-full object-cover  text-white "
+                      className="w-8 h-8 rounded-full object-cover text-white "
                       alt="Profile"
                     />
                   )}
@@ -257,75 +279,79 @@ function Navbar({ user2, setUser }) {
                     className="py-4 text-md hover:bg-gray-100 rounded-lg"
                     aria-label="Menu"
                   >
-                    <FaBars />
+                    <MenuIcon />
                   </button>
 
                   {isOpen && (
                     <div className="absolute top-full right-0 mt-2 w-64 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 z-50">
                       <div className="py-0">
                         <MenuItem
-                          icon={<FaClipboardList className="text-md" />}
+                          icon={<AssignmentIcon className="text-md" />}
                           text="Rental Requests"
                           onClick={() => handleNavigate("/rentalrequest")}
                         />
 
                         <MenuItem
-                          icon={<FaBookmark className="text-md" />}
+                          icon={<BookmarkIcon className="text-md" />}
                           text="Active Bookings"
                           onClick={() => handleNavigate("/booking")}
                         />
-
                         <MenuItem
-                          icon={<FaListUl className="text-md" />}
+                          icon={<DirectionsCarIcon className="text-md" />}
+                          text="My Requests"
+                          onClick={() => handleNavigate("/myrequest")}
+                        />
+                        <MenuItem
+                          icon={<ListIcon className="text-md" />}
                           text="My Listings"
                           hasDropdown
                         >
                           <MenuItem
-                            icon={<FaCheckSquare className="text-md" />}
+                            icon={<CheckBoxIcon className="text-md" />}
                             text="Approvals"
                             onClick={() => handleNavigate("/approvals")}
                           />
 
                           <MenuItem
-                            icon={<FaCarSide className="text-md" />}
+                            icon={<DirectionsCarIcon className="text-md" />}
                             text="My Vehicle"
                             onClick={() => handleNavigate("/mylisting")}
                           />
                         </MenuItem>
 
                         <MenuItem
-                          icon={<FaCog className="text-md" />}
+                          icon={<SettingsIcon className="text-md" />}
                           text="General Settings"
                           hasDropdown
                         >
                           <MenuItem
-                            icon={<FaLanguage className="text-md" />}
+                            icon={<LanguageIcon className="text-md" />}
                             text="Language"
                             onClick={() => handleNavigate("/language")}
                           />
 
                           <MenuItem
-                            icon={<FaUser className="text-md" />}
+                            icon={<AccountCircleIcon className="text-md" />}
                             text="Personal Details"
                             onClick={() => handleNavigate("/profile")}
                           />
 
                           <MenuItem
-                            icon={<FaCreditCard className="text-md" />}
+                            icon={<CreditCardIcon className="text-md" />}
                             text="Payment History"
                             onClick={() => handleNavigate("/payments")}
                           />
                         </MenuItem>
 
                         <MenuItem
-                          icon={<FaComments className="text-md" />}
+                          icon={<ChatBubbleIcon className="text-md" />}
                           text="Chats"
                           onClick={() => handleNavigate("/chat")}
                         />
 
                         <div className="px-4 pt-2 pb-4">
                           <button
-                            onClick={handleLogout} // Changed to use handleLogout instead
+                            onClick={handleLogout}
                             className="w-full p-4 text-sm text-center border border-gray-300 rounded-full hover:bg-gray-50"
                           >
                             Log Out
@@ -340,7 +366,7 @@ function Navbar({ user2, setUser }) {
             {user && (
               <button
                 onClick={handleLogout}
-                className="text-white bg-primary px-4 py-0   hover:bg-opacity-90"
+                className="text-white bg-primary px-4 py-0 hover:bg-opacity-90"
               >
                 Sign out
               </button>
@@ -354,75 +380,64 @@ function Navbar({ user2, setUser }) {
             {[
               { to: "/", label: "Home" },
               { to: "/about", label: "About" },
-              { to: "/models", label: "Vehicles" },
               { to: "/testimonials", label: "Testimonials" },
-              { to: "/team", label: "Our Team" },
               { to: "/contact", label: "Contact" },
             ].map(({ to, label }) => (
               <MenuItem
-                icon={<FaHome className="text-md" />}
+                key={to}
+                icon={getMobileMenuItemIcon(label)} // Use the helper function here
                 text={label}
                 onClick={() => {
                   openNav();
                   handleNavigate(to);
                 }}
               />
-              // <NavLink
-              //   key={to}
-              //   to={to}
-              //   onClick={openNav}
-
-              //   className={({ isActive }) =>
-              //     `block px-3 py-0   text-sm font-medium ${
-              //       isActive
-              //         ? "text-yellow-500 border-b-2 border-yellow-500"
-              //         : "text-gray-600 hover:text-gray-900"
-              //     }`
-              //   }
-              // >
-              //   {label}
-              // </NavLink>
             ))}
 
             {!user && (
               <>
-                <NavLink
-                  className="text-primary block w-full text-left px-4 py-0   border border-primary hover:bg-primary hover:text-white"
+                {/* These NavLinks for Sign In/Signup/Register seem to be duplicated or intended for a different state based on '!user' */}
+                {/* Leaving them commented out for now as the desktop menu handles the logged-in state differently */}
+                {/* <NavLink
+                  className="text-primary block w-full text-left px-4 py-0 border border-primary hover:bg-primary hover:text-white"
                   to="/signin"
                   onClick={openNav}
                 >
                   Sign In/Signup
                 </NavLink>
                 <NavLink
-                  className="text-white bg-primary block w-full text-left px-4 py-0   hover:bg-opacity-90"
+                  className="text-white bg-primary block w-full text-left px-4 py-0 hover:bg-opacity-90"
                   to="/signup"
                   onClick={openNav}
                 >
                   Register
-                </NavLink>
+                </NavLink> */}
               </>
             )}
+            {/* This section with user-specific menu items should likely be within the `!user` block in the mobile menu too */}
             {!user && (
               <div className="">
                 {" "}
+                {/* This div seems unnecessary */}
                 <button
                   onClick={() => {
                     handleLogout();
                     openNav();
                   }}
-                  className="text-white bg-primary block w-full text-left px-4 py-0   hover:bg-opacity-90"
+                  className="text-white bg-primary block w-full text-left px-4 py-0 hover:bg-opacity-90"
                 >
                   Logout
                 </button>
                 <NavLink
                   to="/addcar"
-                  className={`hover:bg-gray-50 text-sm flex items-center   rounded-full px-3 ml-4 my-2 py-0`}
+                  className={`hover:bg-gray-50 hover:text-black bg-blue-950 text-white text-sm flex items-center rounded-full pl-4 pr-20 w-fit my-2 py-2`}
+                  onClick={openNav} // Close menu on click
                 >
-                  <FiPlus className="mr-4 " size={12} />
+                  <AddIcon className="mr-4 " size={12} />
                   <span>Add Car</span>
                 </NavLink>
                 <MenuItem
-                  icon={<FaClipboardList className="text-md" />}
+                  icon={<AssignmentIcon className="text-md" />}
                   text="Rental Requests"
                   onClick={() => {
                     openNav();
@@ -430,7 +445,7 @@ function Navbar({ user2, setUser }) {
                   }}
                 />
                 <MenuItem
-                  icon={<FaBookmark className="text-md" />}
+                  icon={<BookmarkIcon className="text-md" />}
                   text="Active Bookings"
                   onClick={() => {
                     openNav();
@@ -438,12 +453,20 @@ function Navbar({ user2, setUser }) {
                   }}
                 />
                 <MenuItem
-                  icon={<FaListUl className="text-md" />}
+                  icon={<DirectionsCarIcon className="text-md" />}
+                  text="My Requests"
+                  onClick={() => {
+                    openNav();
+                    handleNavigate("/myrequest");
+                  }}
+                />
+                <MenuItem
+                  icon={<ListIcon className="text-md" />}
                   text="My Listings"
                   hasDropdown
                 >
                   <MenuItem
-                    icon={<FaCheckSquare className="text-md" />}
+                    icon={<CheckBoxIcon className="text-md" />}
                     text="Approvals"
                     onClick={() => {
                       openNav();
@@ -452,7 +475,7 @@ function Navbar({ user2, setUser }) {
                   />
 
                   <MenuItem
-                    icon={<FaCarSide className="text-md" />}
+                    icon={<DirectionsCarIcon className="text-md" />}
                     text="My Vehicle"
                     onClick={() => {
                       openNav();
@@ -461,12 +484,12 @@ function Navbar({ user2, setUser }) {
                   />
                 </MenuItem>
                 <MenuItem
-                  icon={<FaCog className="text-md" />}
+                  icon={<SettingsIcon className="text-md" />}
                   text="General Settings"
                   hasDropdown
                 >
                   <MenuItem
-                    icon={<FaLanguage className="text-md" />}
+                    icon={<LanguageIcon className="text-md" />}
                     text="Language"
                     onClick={() => {
                       openNav();
@@ -475,7 +498,7 @@ function Navbar({ user2, setUser }) {
                   />
 
                   <MenuItem
-                    icon={<FaUser className="text-md" />}
+                    icon={<AccountCircleIcon className="text-md" />}
                     text="Personal Details"
                     onClick={() => {
                       openNav();
@@ -484,7 +507,7 @@ function Navbar({ user2, setUser }) {
                   />
 
                   <MenuItem
-                    icon={<FaCreditCard className="text-md" />}
+                    icon={<CreditCardIcon className="text-md" />}
                     text="Payment History"
                     onClick={() => {
                       openNav();
@@ -493,7 +516,7 @@ function Navbar({ user2, setUser }) {
                   />
                 </MenuItem>
                 <MenuItem
-                  icon={<FaComments className="text-md" />}
+                  icon={<ChatBubbleIcon className="text-md" />}
                   text="Chats"
                   onClick={() => {
                     openNav();
@@ -502,7 +525,7 @@ function Navbar({ user2, setUser }) {
                 />
                 <div className="px-4 pt-2 pb-4">
                   <button
-                    onClick={handleLogout} // Changed to use handleLogout instead
+                    onClick={handleLogout}
                     className="w-full p-4 py-2 text-sm text-center border border-gray-300 rounded-full hover:bg-gray-50"
                   >
                     Log Out

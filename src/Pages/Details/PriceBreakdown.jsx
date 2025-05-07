@@ -22,11 +22,13 @@ const PaymentDetailsModal = ({
 
   const handleApproveBooking = async () => {
     try {
-      console.log("ownerId before fetch:", USER_ID); // Add this line
+      console.log("ownerId before fetch:", USER_ID);
       const pickArr = [];
       pickArr.push(pickUpLocation);
       const dropArr = [];
       dropArr.push(dropOffLocation);
+
+      // Step 1: Create the Booking (Keep as is)
       const bookingResponse = await fetch(
         "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/",
         {
@@ -36,16 +38,14 @@ const PaymentDetailsModal = ({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            ownerId: ownerId, // This is where the error says it's missing
-            renteeId: USER_ID,
-            carId: id,
-            startDate: pickUpTime,
-            endDate: dropOffTime,
-            price: totalPrice.toString(),
+            ownerId: ownerId, // Assuming ownerId is defined in scope
+            renteeId: USER_ID, // Assuming USER_ID is defined in scope
+            carId: id, // Assuming id is defined in scope
+            startDate: pickUpTime, // Assuming pickUpTime is defined in scope
+            endDate: dropOffTime, // Assuming dropOffTime is defined in scope
+            price: totalPrice.toString(), // Assuming totalPrice is defined in scope
             pickUp: pickArr,
             dropOff: dropArr,
-            cancelUrl: "your_cancel_url",
-            returnUrl: "your_return_url",
           }),
         }
       );
@@ -53,9 +53,9 @@ const PaymentDetailsModal = ({
       if (bookingResponse.ok) {
         console.log("Booking created successfully");
 
-        // Fetch the existing vehicle data to get the events array
+        // Step 2: Fetch the existing vehicle data (Keep as is)
         const vehicleResponse = await fetch(
-          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicles/${id}`,
+          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/${id}`,
           {
             method: "GET",
             headers: {
@@ -66,8 +66,11 @@ const PaymentDetailsModal = ({
 
         if (vehicleResponse.ok) {
           const vehicleData = await vehicleResponse.json();
-          const events = vehicleData.body.events;
+          // Assuming the actual vehicle properties are within vehicleData.body
+          const originalVehicleBody = vehicleData.body;
 
+          // Step 3: Process the events to create updatedEvents (Keep as is)
+          const events = originalVehicleBody.events; // Use events from the fetched data
           const updatedEvents = [];
           const pickUpDateObj = new Date(pickUpTime);
           const dropOffDateObj = new Date(dropOffTime);
@@ -84,7 +87,7 @@ const PaymentDetailsModal = ({
                 // The booking falls entirely within this event's range.
                 if (pickUpDateObj > eventStartDateObj) {
                   updatedEvents.push({
-                    eventId: uuidv4(),
+                    eventId: uuidv4(), // Assuming uuidv4 is defined in scope
                     startDate: event.startDate,
                     endDate: pickUpTime,
                     status: "available",
@@ -113,6 +116,7 @@ const PaymentDetailsModal = ({
                 pickUpDateObj < eventEndDateObj &&
                 dropOffDateObj > eventStartDateObj
               ) {
+                // This section handles overlaps. Keeping the original logic provided.
                 if (
                   pickUpDateObj >= eventStartDateObj &&
                   pickUpDateObj <= eventEndDateObj
@@ -151,41 +155,58 @@ const PaymentDetailsModal = ({
                     status: "available",
                     source: "manual",
                   });
+                } else {
+                  // If none of the above overlap conditions match, push the original event.
+                  // This might happen if the booking completely covers an existing 'available' block.
+                  updatedEvents.push(event);
                 }
               } else {
+                // Event is available but doesn't overlap with the booking period based on the checks above
                 updatedEvents.push(event);
               }
             } else {
+              // Event is not available (e.g., already blocked), keep it as is
               updatedEvents.push(event);
             }
           });
+          // End Process Events
 
-          // Update the vehicle with the modified events
-          const updateVehicleResponse = await fetch(
-            `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicles/${id}`,
-            {
-              method: "PUT",
-              headers: {
-                Authorization: `Bearer ${customer.AccessToken}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ events: updatedEvents }),
-            }
-          );
+          // Step 4: Prepare the body for the PUT request
+          // Create a new object by copying all properties from the original vehicle body
+          const vehicleUpdateBody = { ...originalVehicleBody };
+          // Replace the 'events' property with the newly generated updatedEvents
+          vehicleUpdateBody.events = updatedEvents;
+          // Ensure the ID is also included in the body payload if the API requires it there
+          vehicleUpdateBody.id = id;
+          console.log("vehicleUpdateBody", vehicleUpdateBody);
+          // Step 5: Update the vehicle with the modified data
+          // const updateVehicleResponse = await fetch(
+          //   `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v11/vehicle/${id}`,
+          //   {
+          //     method: "PUT",
+          //     headers: {
+          //       Authorization: `Bearer ${customer.AccessToken}`,
+          //       "Content-Type": "application/json",
+          //     },
+          //     // Send the complete updated body (original data + new events)
+          //     body: JSON.stringify(vehicleUpdateBody),
+          //   }
+          // );
 
-          if (updateVehicleResponse.ok) {
-            console.log("Vehicle events updated successfully");
-            onClose();
-            // Add any further actions after successful booking creation
-          } else {
-            console.error(
-              "Failed to update vehicle events",
-              updateVehicleResponse
-            );
-            // Handle error (e.g., show an error message)
-          }
+          // if (updateVehicleResponse.ok) {
+          //   console.log("Vehicle updated successfully with new events");
+          //   onClose(); // Assuming onClose is defined in scope
+          //   // Add any further actions after successful booking and update
+          // } else {
+          //   console.error(
+          //     "Failed to update vehicle events",
+          //     updateVehicleResponse
+          //   );
+          //   // Handle error (e.g., show an error message)
+          // }
         } else {
           console.error("Failed to fetch vehicle data", vehicleResponse);
+          // Handle error (e.g., show an error message)
         }
       } else {
         console.error("Failed to create booking", bookingResponse);

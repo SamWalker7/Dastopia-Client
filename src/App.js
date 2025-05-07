@@ -33,7 +33,9 @@ import MyRequests from "./Pages/My Request/myRequest";
 import ActivBooking from "./Pages/My Bookings/ActiveBooking";
 import SignupForm from "./Pages/Onboarding/SignUp";
 import Login from "./Pages/Onboarding/Login";
-import ForgotPassword, { Resetpassword } from "./Pages/Onboarding/ForgotPassword";
+import ForgotPassword, {
+  Resetpassword,
+} from "./Pages/Onboarding/ForgotPassword";
 import Verification from "./Pages/Onboarding/Verification";
 import OTP from "./Pages/Onboarding/OTP";
 import ChatApp from "./Pages/chat";
@@ -46,7 +48,7 @@ import Step5 from "./Pages/Add Car/Step5";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { refreshToken } from "./store/auth/authThunks";
-import Review from "./components/Review"; 
+import Review from "./components/Review";
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -115,18 +117,17 @@ function App() {
         <Route path="/booking/:id" element={<Booking />} />
         <Route path="/booking-confirmation" element={<BookingConfirmation />} />
         <Route path="login" element={<Login />} />
-        <Route path="/forgot" element={<ForgotPassword/>}/>
-        <Route path="/resetpassword" element={<Resetpassword/>}/>
-
+        <Route path="/forgot" element={<ForgotPassword />} />
+        <Route path="/resetpassword" element={<Resetpassword />} />
         <Route path="verification" element={<Verification />} />
         <Route path="otp" element={<OTP />} />
-
         <Route path="signup" element={<SignupForm />} />
         <Route path="/confirmaccount/:email" element={<OTPInput />} />
         <Route path="/booking_details/:id" element={<BookingDetails />} />
         <Route path="/booking_requests" element={<BookingRequests />} />
         <Route path="/my_requests" element={<MyRequest />} />
-        <Route path="/review" element={<Review />} />        <Route path="*" element={<NotFound />} />
+        <Route path="/review" element={<Review />} />{" "}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );

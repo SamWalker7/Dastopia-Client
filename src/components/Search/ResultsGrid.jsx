@@ -185,10 +185,10 @@ const ResultsGrid = ({
                 </div>
 
                 <div className="flex justify-between items-center px-6 py-4 ">
-                  <div className="flex items-center mr-8 ">
+                  {/* <div className="flex items-center mr-8 ">
                     <FaStar className="text-yellow-400" />
                     <span className="text-base font-medium">4.5</span>
-                  </div>
+                  </div> */}
 
                   <button
                     onClick={() => handleNavigation(vehicle)}
