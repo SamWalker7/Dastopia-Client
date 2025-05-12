@@ -300,7 +300,12 @@ const ActiveRental = () => {
               // console.log(`Filtering out rental ${request.id} due to status: ${request.approvedStatus}`);
               return false; // Not active if status isn't approved/active
             }
-
+            const isPaymentSuccessful =
+              request.isPayed?.toLowerCase() === "success";
+            if (!isPaymentSuccessful) {
+              // console.log(`Filtering out rental ${request.id} due to status: ${request.approvedStatus}`);
+              return false; // Not active if status isn't approved/active
+            }
             // Filter by date range
             const startDate = new Date(request.startDate);
             const endDate = new Date(request.endDate);
@@ -575,8 +580,10 @@ const ActiveRental = () => {
     console.log(
       `Navigating to chat: Customer ID=${currentCustomerId}, Owner ID=${ownerId}, Booking ID=${bookingId}, Car ID=${carId}`
     );
-
-    navigate(chatUrl);
+    navigate(
+      `/chat?renteeId=${ownerId}&reservationId=${ownerId}&given_name=${currentCustomerGivenName}&family_name=${currentCustomerFamilyName}`
+    );
+    // navigate(chatUrl);
   }, [
     navigate,
     customerId,
@@ -706,7 +713,7 @@ const ActiveRental = () => {
                   }`}
                   onClick={() => handleViewDetails(request.id)} // Make the whole card clickable
                 >
-                  <div
+                  {/* <div
                     className={`p-4 flex justify-between items-center mb-3 border border-dashed ${
                       isUrgent ? "border-[#EB4444]" : "border-[#4478EB]"
                     } rounded-sm ${isUrgent ? "bg-[#FDEAEA]" : "bg-[#E9F1FE]"}`}
@@ -721,7 +728,7 @@ const ActiveRental = () => {
                     >
                       {expiresIn}
                     </span>
-                  </div>
+                  </div> */}
 
                   <div className="grid md:grid-cols-2 text-sm text-gray-500 w-full gap-4 mt-4">
                     <div className="flex items-center w-full gap-3 mb-2">

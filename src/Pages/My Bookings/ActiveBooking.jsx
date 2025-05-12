@@ -374,8 +374,10 @@ const ActivBooking = () => {
       console.log(
         `Navigating to chat: Owner ID=${currentOwnerId}, Rentee ID=${renteeId}, Booking ID=${bookingId}, Car ID=${carId}`
       );
-
-      navigate(chatUrl);
+      navigate(
+        `/chat?renteeId=${renteeId}&reservationId=${renteeId}&given_name=${renteeGivenName}&family_name=${renteeFamilyName}`
+      );
+      // navigate(chatUrl);
     },
     [navigate, ownerId] // Depend on navigate and ownerId
   );

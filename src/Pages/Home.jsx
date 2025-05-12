@@ -15,7 +15,7 @@ function Home({ user }) {
   const user1 = useSelector((state) => state.auth.user);
 
   useEffect(() => {
-    console.log("User from Redux:", user1); // Check if Redux has the user
+    console.log("User from Redux:"); // Check if Redux has the user
   }, [user1]);
   return (
     <>
