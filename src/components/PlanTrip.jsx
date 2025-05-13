@@ -5,6 +5,7 @@ import Afordable from "../images/plan/Funding.png";
 import Selection from "../images/plan/Choice.png";
 import Community from "../images/plan/Community.png";
 import ComingSoon from "../images/plan/ComingSoon.png";
+import { Link } from "react-router-dom";
 function PlanTrip() {
   return (
     <>
@@ -29,9 +30,12 @@ function PlanTrip() {
             imperdiet. Eu non turpis facilisis hendrerit velit massa tincidunt
             id. Sed at quis.
           </p>
-          <button className=" bg-white text-md text-black rounded-full px-12 py-2   ">
+          <Link
+            to="/search"
+            className=" bg-white text-md cursor-pointer text-black rounded-full px-12 py-2   "
+          >
             See all available cars
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -54,9 +58,12 @@ function PlanTrip() {
             imperdiet. Eu non turpis facilisis hendrerit velit massa tincidunt
             id. Sed at quis.
           </p>
-          <button className=" bg-[#00173C] text-sm font-normal text-white rounded-full px-12 py-2 mt-4  ">
+          <Link
+            to="/addcar"
+            className=" bg-[#00173C] text-sm cursor-pointer font-normal text-white rounded-full px-12 py-2 mt-4  "
+          >
             List My Car
-          </button>
+          </Link>
         </div>
         <div className="w-fit md:pl-12 items-center justify-center flex">
           {" "}

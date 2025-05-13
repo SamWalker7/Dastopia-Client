@@ -41,7 +41,7 @@ export const refreshToken = () => async (dispatch) => {
   const storedUser = localStorage.getItem("customer");
   const user = storedUser ? JSON.parse(storedUser) : null;
   const refreshToken = user?.RefreshToken;
-  console.log("The customer object from local storage is: ", user.RefreshToken);
+  console.log("The customer object from local storage is: ");
 
   if (!storedUser) return;
 
@@ -56,7 +56,7 @@ export const refreshToken = () => async (dispatch) => {
     );
 
     const json = await response.json();
-    console.log("Refresh token API response:", json.body); // Log API response
+    console.log("Refresh token API response:"); // Log API response
 
     if (response.ok) {
       const { body, ...restJson } = json; // Extract 'body' and keep the rest of json
@@ -67,7 +67,7 @@ export const refreshToken = () => async (dispatch) => {
       localStorage.setItem("tokenExpiry", expiryTime);
 
       dispatch(refreshTokenSuccess(json.body)); // Dispatch the success action
-      console.log("Token refreshed successfully", updatedUser);
+      console.log("Token refreshed successfully");
     } else {
       dispatch(refreshTokenFailure("Failed to refresh token"));
       console.error("Failed to refresh token");
