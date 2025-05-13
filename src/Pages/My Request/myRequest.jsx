@@ -1,306 +1,323 @@
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { FaRegCircle } from "react-icons/fa";
-import image from "../../images/testimonials/avatar.png"; // Make sure this path is correct
+import image from "../../images/testimonials/avatar.png"; // Ensure this path is correct
 import {
   IoChatboxOutline,
+  IoFileTray,
   IoLocationOutline,
   IoPersonOutline,
 } from "react-icons/io5";
 import { MdOutlineLocalPhone, MdOutlineMail } from "react-icons/md";
-import { useState, useEffect, useCallback, useMemo } from "react";
+// import useVehicleFormStore from "../../store/useVehicleFormStore"; // Assuming this is needed
 import { useNavigate } from "react-router-dom";
-import { Typography } from "@mui/material";
-import moment from "moment"; // Using moment for easier date comparison and duration calculation
+import moment from "moment";
+
+const formatExpiryTime = (seconds) => {
+  if (isNaN(seconds) || seconds < 0) return "Expired";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60); // Ensure 's' is integer
+  return [h, m, s].map((unit) => String(unit).padStart(2, "0")).join(":");
+};
 
 const MyRequests = () => {
   const navigate = useNavigate();
+  // const { apiCallWithRetry } = useVehicleFormStore();
 
   const [rentalRequests, setRentalRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [carDetailsMap, setCarDetailsMap] = useState({});
-  const [ownerDetailsMap, setOwnerDetailsMap] = useState({}); // Use ownerDetailsMap
+  const [ownerDetailsMap, setOwnerDetailsMap] = useState({});
   const [isInitiatingPayment, setIsInitiatingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
 
-  // Assuming 'customer' in localStorage is the logged-in user (the rentee in this context)
+  // --- NEW STATE for live countdown ---
+  const [currentTime, setCurrentTime] = useState(moment());
+
   const customer = JSON.parse(localStorage.getItem("customer")) || {};
   const accessToken = customer?.AccessToken;
-
-  // The logged-in user's ID (the rentee's ID for these requests)
   const currentUserId = customer?.username || customer?.id;
 
-  // --- Utility functions and derived values ---
+  const apiCallWithRetry = useCallback(async (url, options) => {
+    const response = await fetch(url, options);
+    if (!response.ok && response.status !== 404) {
+      const errorBody = await response.text();
+      let message = `HTTP error! status: ${response.status}`;
+      try {
+        const jsonData = JSON.parse(errorBody);
+        message = jsonData.message || jsonData.error || message;
+      } catch (e) {
+        /* ignore */
+      }
+      throw new Error(message);
+    }
+    if (response.status === 404)
+      return { ok: false, status: 404, json: async () => ({}) };
+    return {
+      ok: true,
+      status: response.status,
+      json: async () => response.json(),
+      text: async () => response.text(),
+    };
+  }, []);
+
+  // --- Effect for the live timer ---
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      setCurrentTime(moment());
+    }, 1000); // Update every second
+
+    return () => clearInterval(timerId); // Cleanup on unmount
+  }, []);
 
   const handleViewDetails = useCallback((request) => {
-    console.log("Viewing details for request:", request.id);
     setSelectedRequest(request);
-    setPaymentError(null); // Clear any previous payment error when changing requests
-  }, []); // Dependencies: None needed for setting state directly
+    setPaymentError(null);
+  }, []);
 
   const formatDateAndTime = useCallback((dateString) => {
     if (!dateString) return "N/A";
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        throw new Error("Invalid date value");
-      }
-      return moment(date).format("YYYY-MM-DD HH:mm");
+      return moment(dateString).format("MMM DD, YYYY HH:mm");
     } catch (e) {
-      console.error("Error formatting date:", dateString, e);
       return "N/A";
     }
-  }, []); // Dependencies: None
+  }, []);
 
   const formatDate = useCallback((dateString) => {
     if (!dateString) return "N/A";
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        throw new Error("Invalid date value");
-      }
-      return moment(date).format("YYYY-MM-DD");
+      return moment(dateString).format("MMM DD, YYYY");
     } catch (e) {
-      console.error("Error formatting date:", dateString, e);
       return "N/A";
     }
-  }, []); // Dependencies: None
+  }, []);
 
-  const isRequestExpired = useCallback((createdAt, approvedStatus) => {
-    // Only pending requests can expire after 24 hours
-    if (approvedStatus?.toLowerCase()?.trim() !== "pending" || !createdAt) {
-      return false;
-    }
-    try {
-      const requestDate = moment(createdAt);
-      const twentyFourHoursAgo = moment().subtract(24, "hours");
-      return requestDate.isBefore(twentyFourHoursAgo);
-    } catch (e) {
-      console.error("Error checking request expiration:", createdAt, e);
-      return false; // Default to not expired if date is invalid or calculation fails
-    }
-  }, []); // Dependencies: None (moment is global/imported)
+  // This function now calculates remaining seconds based on current time
+  const calculateLiveExpiresInSeconds = useCallback(
+    (createdAt) => {
+      if (!createdAt) return 0;
+      try {
+        const requestMoment = moment(createdAt);
+        const expiryMoment = requestMoment.add(24, "hours");
+        // Use the currentTime state for live calculation
+        const diffSeconds = expiryMoment.diff(currentTime, "seconds");
+        return Math.max(0, diffSeconds);
+      } catch (e) {
+        return 0;
+      }
+    },
+    [currentTime]
+  ); // Dependency on currentTime
 
-  // --- Utility function for status display ---
-  // Placed relatively high so it can be used by other functions/callbacks
+  const isRequestActuallyExpired = useCallback(
+    (liveExpiresInSeconds, approvedStatus) => {
+      return (
+        approvedStatus?.toLowerCase() === "pending" && liveExpiresInSeconds <= 0
+      );
+    },
+    []
+  );
+
   const getStatusDisplay = useCallback(
-    (request) => {
+    (request, liveCurrentTime) => {
+      // Pass liveCurrentTime for calculation
       const status = request.approvedStatus?.toLowerCase()?.trim();
       const paidStatus = request.isPayed?.toLowerCase()?.trim();
-      const expired = isRequestExpired(request.createdAt, status); // Uses isRequestExpired
+      // Calculate live expiry based on the passed currentTime
+      const liveExpiresIn = calculateLiveExpiresInSeconds(request.createdAt);
+      const isExpired = isRequestActuallyExpired(liveExpiresIn, status);
 
-      // Prioritize expired status for pending requests
-      if (expired) {
+      if (isExpired)
         return {
           text: "Expired",
           bgColor: "bg-red-100",
-          textColor: "text-red-600",
+          textColor: "text-red-700",
+          isActionable: false,
           isExpired: true,
+          liveExpiresIn,
           key: "expired",
         };
-      }
-
-      if (status === "pending") {
-        // Already handled by 'expired' check if > 24h
-        // Otherwise, it's pending and not expired
+      if (status === "pending")
         return {
-          text: "Waiting for Approval",
-          bgColor: "bg-[#E9F1FE]",
-          textColor: "text-[#4478EB]",
+          text: "Approval Pending",
+          bgColor: "bg-blue-100",
+          textColor: "text-blue-600",
+          isActionable: true,
           isPending: true,
+          liveExpiresIn,
           key: "pending",
         };
-      }
-
-      // Now check approved states
       if (status === "approved") {
-        if (paidStatus === "success") {
+        if (paidStatus === "success")
           return {
-            text: "Approved (Paid)",
+            text: "Paid & Confirmed",
             bgColor: "bg-green-100",
             textColor: "text-green-600",
-            isApprovedPaid: true,
+            isActionable: false,
+            liveExpiresIn,
             key: "approved-paid",
           };
-        }
-
         if (paidStatus === "pending") {
-          // This is the "Payment Pending" case. Check the start date.
-          // Ensure start date is valid before comparing
           const startDateMoment = moment(request.startDate);
-          const now = moment();
-
-          // If start date is valid and it's BEFORE the current moment
-          if (startDateMoment.isValid() && startDateMoment.isBefore(now)) {
+          if (
+            startDateMoment.isValid() &&
+            startDateMoment.isBefore(liveCurrentTime)
+          )
             return {
-              text: "Payment Missed (Start Date Passed)", // More specific text
-              bgColor: "bg-red-100", // Use red to indicate issue
-              textColor: "text-red-700",
-              isPastStartDatePaymentDue: true, // New flag for specific handling
-              key: "payment-missed-past-start",
+              text: "Payment Window Missed",
+              bgColor: "bg-orange-100",
+              textColor: "text-orange-700",
+              isActionable: false,
+              isPastStartDatePaymentDue: true,
+              liveExpiresIn,
+              key: "payment-missed",
             };
-          } else {
-            // Start date is not in the past, it's genuinely payment pending
-            return {
-              text: "Payment Pending",
-              bgColor: "bg-yellow-100",
-              textColor: "text-yellow-700",
-              isPaymentPending: true, // Keep this flag for the "Pay Now" button
-              key: "payment-pending",
-            };
-          }
+          return {
+            text: "Payment Due",
+            bgColor: "bg-yellow-100",
+            textColor: "text-yellow-700",
+            isActionable: true,
+            isPaymentPending: true,
+            liveExpiresIn,
+            key: "payment-pending",
+          };
         }
-        // Handle other 'approved' paidStatus values if any
         return {
-          text: `Approved (Payment: ${paidStatus || "Unknown"})`,
+          text: `Approved (Pay: ${paidStatus || "N/A"})`,
           bgColor: "bg-gray-100",
           textColor: "text-gray-600",
-          isOtherApproved: true,
-          key: "approved-other-payment",
+          isActionable: false,
+          liveExpiresIn,
+          key: "approved-other",
         };
       }
-
-      // Check rejected
-      if (status === "rejected") {
+      if (status === "rejected")
         return {
-          text: "Rejected",
+          text: "Rejected by Owner",
           bgColor: "bg-red-100",
-          textColor: "text-red-600",
-          isRejected: true,
+          textColor: "text-red-700",
+          isActionable: false,
+          liveExpiresIn,
           key: "rejected",
         };
-      }
-
-      // Check cancelled
-      if (status === "cancelled") {
+      if (status === "cancelled")
         return {
           text: "Cancelled",
-          bgColor: "bg-gray-100", // Or maybe yellow/red depending on who cancelled
-          textColor: "text-gray-600", // Or specific color
-          isCancelled: true,
+          bgColor: "bg-gray-100",
+          textColor: "text-gray-600",
+          isActionable: false,
+          liveExpiresIn,
           key: "cancelled",
         };
-      }
-
-      // Default for unknown status
       return {
-        text: status || "Unknown Status",
+        text: status || "Unknown",
         bgColor: "bg-gray-100",
-        textColor: "text-gray-600",
-        isOther: true,
+        textColor: "text-gray-500",
+        isActionable: false,
+        liveExpiresIn,
         key: "unknown",
       };
     },
-    [isRequestExpired] // Dependency on isRequestExpired
+    [isRequestActuallyExpired, calculateLiveExpiresInSeconds] // Dependencies
   );
 
-  // --- Data Fetching functions ---
-  // Modified to fetch car and owner details
   const fetchCarAndOwnerDetails = useCallback(
     async (vehicleID) => {
       if (!vehicleID || !accessToken) return { car: null, owner: null };
       try {
-        const response = await fetch(
+        const response = await apiCallWithRetry(
           `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/getCarInfo/${vehicleID}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${accessToken}` } }
         );
         if (!response.ok) {
-          console.error(
-            `Error fetching car ${vehicleID}: HTTP error! status: ${response.status}`
-          );
+          console.error(`Error car ${vehicleID}: ${response.status}`);
           return { car: null, owner: null };
         }
+
         const data = await response.json();
         const carData = data.body || data;
 
-        // Extract owner details from the car response
+        if (!carData || Object.keys(carData).length === 0) {
+          console.warn(`No car data found for vehicleID: ${vehicleID}`);
+          return { car: null, owner: null };
+        }
+
         const ownerData = {
-          id: carData?.owenerId, // Note the typo 'owenerId' from the payload
+          id: carData?.owenerId,
           name:
-            carData?.ownerGivenName && carData?.ownerSurName
-              ? `${carData.ownerGivenName} ${carData.ownerSurName}`.trim()
-              : "N/A",
+            `${carData?.ownerGivenName || ""} ${
+              carData?.ownerSurName || ""
+            }`.trim() || "N/A",
           phone: carData?.ownerPhone || "N/A",
           email: carData?.ownerEmail || "N/A",
-          // No address or profile picture in this specific car payload for the owner
-          profilePicture: null, // Placeholder
+          profilePicture: null,
           given_name: carData?.ownerGivenName || "",
           family_name: carData?.ownerSurName || "",
         };
-
-        // Return both car and owner data
         return {
-          car: carData ? { [vehicleID]: carData } : {},
+          car: { [vehicleID]: carData },
           owner: ownerData.id ? { [ownerData.id]: ownerData } : {},
         };
       } catch (error) {
-        console.error(`Error fetching car ${vehicleID}:`, error);
+        console.error(`Fetch car ${vehicleID} error:`, error);
         return { car: null, owner: null };
       }
     },
-    [accessToken] // Dependency on accessToken
+    [accessToken, apiCallWithRetry]
   );
 
   const fetchRentalRequests = useCallback(async () => {
     setLoading(true);
-    setError(null);
-    setRentalRequests([]);
-    setCarDetailsMap({}); // Clear maps on fresh fetch
-    setOwnerDetailsMap({}); // Clear maps on fresh fetch
-    setSelectedRequest(null); // Clear selection
+    setError(null); // Don't clear rentalRequests here to avoid flicker
+
+    // Clear maps only if not just refreshing an existing list
+    if (rentalRequests.length === 0) {
+      setCarDetailsMap({});
+      setOwnerDetailsMap({});
+      setSelectedRequest(null);
+    }
 
     if (!accessToken) {
-      setError("Authentication failed: Please log in again.");
+      setError("Authentication failed.");
       setLoading(false);
       return;
     }
 
     try {
-      // This endpoint fetches bookings where the logged-in user is the 'rentee'
-      const response = await fetch(
+      const response = await apiCallWithRetry(
         "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/get_all_rentee_booking",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${accessToken}` } }
       );
 
       if (!response.ok) {
-        const errorBody = await response.text();
-        console.error("Requests fetch HTTP error:", response.status, errorBody);
-        // Attempt to parse JSON error if available, otherwise use status text
-        let userMessage = `Failed to fetch requests: ${response.statusText}`;
+        const errorText = await response
+          .text()
+          .catch(() => "Unknown error fetching requests");
+        let userMessage = `Failed to fetch requests: ${response.status}`;
         try {
-          const errorJson = JSON.parse(errorBody);
-          if (errorJson.message) userMessage = errorJson.message;
-          else if (errorJson.error) userMessage = errorJson.error;
+          const errorJson = JSON.parse(errorText);
+          userMessage = errorJson.message || errorJson.error || userMessage;
         } catch (e) {
-          /* ignore parse error */
+          /* ignore */
         }
         throw new Error(userMessage);
       }
 
       const data = await response.json();
-      let requests = Array.isArray(data.body) ? data.body : [];
+      let requests = Array.isArray(data.body)
+        ? data.body
+        : Array.isArray(data)
+        ? data
+        : [];
 
-      // We only want requests that are 'pending', 'approved' with 'pending' payment, 'rejected', or 'cancelled'
-      // We filter out approved+success payment as they are completed and no longer require action from the rentee
       const relevantRequests = requests.filter(
         (req) =>
           req.approvedStatus?.toLowerCase() !== "approved" ||
           req.isPayed?.toLowerCase() !== "success"
       );
-
-      // Optional: Sort requests by creation date descending
       relevantRequests.sort(
         (a, b) => moment(b.createdAt).valueOf() - moment(a.createdAt).valueOf()
       );
@@ -308,56 +325,111 @@ const MyRequests = () => {
       const carIds = [
         ...new Set(relevantRequests.map((req) => req.carId).filter(Boolean)),
       ];
-
-      // Fetch car and owner details for all unique car IDs in parallel
       const detailResults = await Promise.all(
         carIds.map((id) => fetchCarAndOwnerDetails(id))
       );
-
       const fetchedCarDetails = {};
       const fetchedOwnerDetails = {};
-
       detailResults.forEach((result) => {
-        if (result?.car) {
-          Object.assign(fetchedCarDetails, result.car);
-        }
-        if (result?.owner) {
-          Object.assign(fetchedOwnerDetails, result.owner);
-        }
+        if (result?.car) Object.assign(fetchedCarDetails, result.car);
+        if (result?.owner) Object.assign(fetchedOwnerDetails, result.owner);
       });
 
-      // Update states in one go
-      setRentalRequests(relevantRequests);
+      const processedRequests = relevantRequests.map((request) => {
+        // Initial calculation (can be removed if calculateLiveExpiresInSeconds is always used directly in render)
+        // const expiresInSeconds = calculateLiveExpiresInSeconds(request.createdAt, moment());
+
+        let displayPickUp = "Location not specified";
+        if (
+          request.pickUp &&
+          Array.isArray(request.pickUp) &&
+          request.pickUp.length > 0
+        ) {
+          if (
+            typeof request.pickUp[0] === "object" &&
+            request.pickUp[0] !== null &&
+            "lng" in request.pickUp[0]
+          ) {
+            displayPickUp =
+              request.pickUp.length > 1 && typeof request.pickUp[1] === "string"
+                ? request.pickUp[1]
+                : "Coordinates available";
+          } else if (typeof request.pickUp[0] === "string") {
+            displayPickUp = request.pickUp[0];
+          }
+        } else if (typeof request.pickUp === "string") {
+          displayPickUp = request.pickUp;
+        } else if (
+          request.pickUp &&
+          typeof request.pickUp === "object" &&
+          request.pickUp.name
+        ) {
+          displayPickUp = request.pickUp.name;
+        }
+
+        let displayDropOff = "Location not specified";
+        if (
+          request.dropOff &&
+          Array.isArray(request.dropOff) &&
+          request.dropOff.length > 0
+        ) {
+          if (
+            typeof request.dropOff[0] === "object" &&
+            request.dropOff[0] !== null &&
+            "lng" in request.dropOff[0]
+          ) {
+            displayDropOff =
+              request.dropOff.length > 1 &&
+              typeof request.dropOff[1] === "string"
+                ? request.dropOff[1]
+                : "Coordinates available";
+          } else if (typeof request.dropOff[0] === "string") {
+            displayDropOff = request.dropOff[0];
+          }
+        } else if (typeof request.dropOff === "string") {
+          displayDropOff = request.dropOff;
+        } else if (
+          request.dropOff &&
+          typeof request.dropOff === "object" &&
+          request.dropOff.name
+        ) {
+          displayDropOff = request.dropOff.name;
+        }
+
+        // We only need createdAt, the live calculation will happen in render
+        return {
+          ...request,
+          displayPickUpLocation: displayPickUp,
+          displayDropOffLocation: displayDropOff,
+        };
+      });
+
+      setRentalRequests(processedRequests);
       setCarDetailsMap(fetchedCarDetails);
-      setOwnerDetailsMap(fetchedOwnerDetails); // Use ownerDetailsMap
+      setOwnerDetailsMap(fetchedOwnerDetails);
     } catch (err) {
       setError(err.message);
-      console.error("Error fetching rental requests:", err);
-      setRentalRequests([]);
-      setCarDetailsMap({});
-      setOwnerDetailsMap({}); // Clear owner map on error
-      setSelectedRequest(null);
+      console.error("Error fetching requests:", err);
     } finally {
       setLoading(false);
     }
-  }, [accessToken, fetchCarAndOwnerDetails]); // Dependency on accessToken, fetchCarAndOwnerDetails
+  }, [
+    accessToken,
+    apiCallWithRetry,
+    fetchCarAndOwnerDetails,
+    rentalRequests.length,
+  ]); // Added rentalRequests.length to conditionally clear maps
 
-  // --- Effects ---
   useEffect(() => {
     fetchRentalRequests();
-  }, [fetchRentalRequests]); // Dependency on fetchRentalRequests
+  }, [fetchRentalRequests]);
 
   useEffect(() => {
-    // Auto-select the first request if the list loads and has items, and nothing is selected
-    // If the previously selected request is no longer in the list, deselect and re-select the first.
     if (!loading && rentalRequests.length > 0) {
       if (
         selectedRequest === null ||
         !rentalRequests.some((req) => req.id === selectedRequest.id)
       ) {
-        console.log(
-          `Auto-selecting first request: ${rentalRequests[0]?.id}. Previous selected: ${selectedRequest?.id}`
-        );
         setSelectedRequest(rentalRequests[0]);
       }
     } else if (
@@ -365,784 +437,527 @@ const MyRequests = () => {
       rentalRequests.length === 0 &&
       selectedRequest !== null
     ) {
-      // Deselect if the list becomes empty while a request was selected
-      console.log("Rental list is empty, deselecting current request.");
       setSelectedRequest(null);
     }
-    // Note: Adding selectedRequest to dependency array here causes an infinite loop
-    // because setting selectedRequest inside this effect triggers the effect again.
-    // The logic is designed to run only when loading or rentalRequests change,
-    // handling selection/deselection based on the *new* state.
-  }, [loading, rentalRequests]); // Dependencies: loading, rentalRequests
+  }, [loading, rentalRequests, selectedRequest]);
 
-  // --- Action Handlers ---
-  // handlePayNow can now access getStatusDisplay because it's declared above it
   const handlePayNow = useCallback(async () => {
     if (!selectedRequest?.id) {
-      console.error("Pay Now Error: No selected request ID.");
-      setPaymentError("Cannot initiate payment: Request details missing.");
+      setPaymentError("Request details missing.");
       return;
     }
-    // Get the current status display *inside* the callback
-    const status = getStatusDisplay(selectedRequest);
-    // Check if status is genuinely payment pending AND not expired
-    if (!status.isPaymentPending || status.isExpired) {
-      console.warn(
-        "Attempted to pay for a request not in 'Payment Pending' status or is expired:",
-        selectedRequest.id,
-        status.text
-      );
-      // Provide a user-friendly error if the status is not valid for payment
-      const errorMsg = status.isExpired
-        ? "Cannot pay: The request has expired."
-        : status.isPastStartDatePaymentDue
-        ? "Cannot pay: The rental start date has passed."
-        : `Cannot pay: Current status is "${status.text}".`;
-      setPaymentError(errorMsg);
+    // Pass currentTime to get the most up-to-date status for the check
+    const statusInfo = getStatusDisplay(selectedRequest, currentTime);
+    if (
+      !statusInfo.isPaymentPending ||
+      statusInfo.isExpired ||
+      statusInfo.isPastStartDatePaymentDue
+    ) {
+      setPaymentError(`Cannot pay: ${statusInfo.text}.`);
       return;
     }
-
     if (!accessToken) {
-      console.error("Pay Now Error: Access token missing.");
-      setPaymentError("Authentication failed. Please log in again.");
+      setPaymentError("Authentication failed.");
       return;
     }
-
     setIsInitiatingPayment(true);
-    setPaymentError(null); // Clear previous errors
-
+    setPaymentError(null);
     try {
-      const response = await fetch(
+      const response = await apiCallWithRetry(
         `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/checkout/${selectedRequest.id}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-
       if (!response.ok) {
-        const errorBody = await response.text();
-        console.error(
-          `Checkout API error for ID ${selectedRequest.id}:`,
-          response.status,
-          errorBody
-        );
-        let errorMessage = `Failed to initiate payment: ${response.statusText}`;
+        const errorText = await response
+          .text()
+          .catch(() => `Payment failed: ${response.status}`);
+        let errorMessage = errorText;
         try {
-          const errorJson = JSON.parse(errorBody);
-          if (errorJson.message) {
-            errorMessage = errorJson.message;
-          } else if (errorJson.error) {
-            errorMessage = errorJson.error;
-          }
-        } catch (parseError) {
-          console.error("Failed to parse error body:", parseError);
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.message || errorJson.error || errorMessage;
+        } catch (e) {
+          /* ignore */
         }
         throw new Error(errorMessage);
       }
-
       const data = await response.json();
-
       if (data.body) {
-        console.log("Redirecting to payment URL:", data.body);
-        // Redirect the user - state is lost here, subsequent actions depend on the return page
         window.location.href = data.body;
       } else {
-        console.error("Checkout API response missing URL:", data);
-        throw new Error("Payment URL not received from the server.");
+        throw new Error("Payment URL not received.");
       }
     } catch (err) {
-      console.error("Error initiating payment:", err);
       setPaymentError(err.message);
-      setIsInitiatingPayment(false); // Turn off loading on error
+      setIsInitiatingPayment(false);
     }
-    // No finally block turning off loading, assuming redirect happens on success
-  }, [accessToken, selectedRequest, getStatusDisplay]); // Dependencies: accessToken, selectedRequest (for id), getStatusDisplay
+  }, [
+    accessToken,
+    selectedRequest,
+    getStatusDisplay,
+    apiCallWithRetry,
+    currentTime,
+  ]); // Added currentTime
 
-  // Renamed and modified handler for chatting with the car owner
-  // Now fetches necessary details *inside* the callback using state variables
-  // Removed selectedCarDetails from dependencies
   const handleChatWithOwner = useCallback(() => {
-    // Ensure selectedRequest exists before proceeding
     if (!selectedRequest) {
-      console.error("Chat Error: No request selected.");
-      alert("Please select a request to chat.");
+      alert("Please select a request.");
       return;
     }
-
     const carId = selectedRequest.carId;
     const bookingId = selectedRequest.id;
-
-    // Get car details and owner ID from the map
-    const carDetails = carDetailsMap[carId]; // Access carDetailsMap state
-    const ownerId = carDetails?.owenerId; // Get owner ID from car details
-
-    // Get owner details from the map
-    const ownerDetails = ownerDetailsMap[ownerId]; // Access ownerDetailsMap state
-
-    const ownerGivenName = ownerDetails?.given_name || "Unknown";
+    const carDetails = carDetailsMap[carId];
+    const ownerId = carDetails?.owenerId;
+    const ownerDetails = ownerDetailsMap[ownerId];
+    const ownerGivenName = ownerDetails?.given_name || "Owner";
     const ownerFamilyName = ownerDetails?.family_name || "";
 
-    const currentLoggedInUserId = currentUserId; // This user (the rentee)
-
-    if (!currentLoggedInUserId) {
-      console.error("Chat Error: Your user ID (rentee ID) not found.");
-      alert("Your user ID is missing. Cannot initiate chat.");
+    if (!currentUserId) {
+      alert("Your user ID is missing.");
       return;
     }
     if (!ownerId) {
-      console.error("Chat Error: Owner ID not found for this car.");
-      alert("Car owner details missing. Cannot initiate chat.");
+      alert("Car owner details missing.");
       return;
     }
-    if (!ownerDetails) {
-      console.warn(
-        "Chat Warning: Owner details not fully loaded, proceeding with chat ID."
-      );
-    }
-    if (!bookingId) {
-      console.warn("Chat Warning: Booking ID not found.");
-    }
-    if (!carId) {
-      console.warn("Chat Warning: Vehicle ID not found.");
-    }
 
-    // Construct chat URL - userId1 is the logged-in user (rentee), userId2 is the owner
-    const chatUrl =
-      `/chat?userId1=${encodeURIComponent(currentLoggedInUserId || "")}` +
-      `&userId2=${encodeURIComponent(ownerId || "")}` + // Use ownerId here
-      `&bookingId=${encodeURIComponent(bookingId || "")}` +
-      `&carId=${encodeURIComponent(carId || "")}` +
-      `&otherUserGivenName=${encodeURIComponent(ownerGivenName || "")}` + // Use owner's name
-      `&otherUserFamilyName=${encodeURIComponent(ownerFamilyName || "")}`; // Use owner's name
-
-    console.log(
-      `Navigating to chat: Rentee ID=${currentLoggedInUserId}, Owner ID=${ownerId}, Booking ID=${bookingId}, Car ID=${carId}`
+    navigate(
+      `/chat?userId1=${encodeURIComponent(
+        currentUserId
+      )}&userId2=${encodeURIComponent(ownerId)}&bookingId=${encodeURIComponent(
+        bookingId
+      )}&carId=${encodeURIComponent(carId)}&given_name=${encodeURIComponent(
+        ownerGivenName
+      )}&family_name=${encodeURIComponent(ownerFamilyName)}`
     );
-
-    navigate(chatUrl);
   }, [
     navigate,
     selectedRequest,
     carDetailsMap,
     ownerDetailsMap,
     currentUserId,
-  ]); // Dependencies: hooks and state used inside
+  ]);
 
-  // --- Derived values used for rendering ---
-  // These are calculated using state and are needed for the JSX below.
-  // Declare them here, after state and useCallback hooks, but before return.
-  // This is the correct place for these variables.
   const selectedCarDetails = carDetailsMap[selectedRequest?.carId];
-  const selectedOwnerDetails = ownerDetailsMap[selectedCarDetails?.owenerId]; // Use ownerDetailsMap
-  const selectedRequestStatus = selectedRequest
-    ? getStatusDisplay(selectedRequest)
+  const selectedOwnerDetails = ownerDetailsMap[selectedCarDetails?.owenerId];
+  // For selectedRequestStatusInfo, pass currentTime to get live status
+  const selectedRequestStatusInfo = selectedRequest
+    ? getStatusDisplay(selectedRequest, currentTime)
     : null;
-  const isSelectedRequestExpired = selectedRequestStatus?.isExpired;
-  // New flag for the "Payment Missed (Start Date Passed)" status
-  const isPastStartDatePaymentDue =
-    selectedRequestStatus?.isPastStartDatePaymentDue;
 
-  // --- Calculate Total Amount and Duration for Display ---
   const { calculatedTotalAmount, rentalDurationText } = useMemo(() => {
-    let calculatedTotalAmount = "N/A";
-    let rentalDurationText = "N/A";
-
-    // Calculate only if a request is selected and has necessary data
     if (
-      selectedRequest &&
-      selectedRequest.startDate &&
-      selectedRequest.endDate &&
-      selectedRequest.amount !== undefined &&
-      selectedRequest.amount !== null
+      !selectedRequest?.startDate ||
+      !selectedRequest.endDate ||
+      selectedRequest.amount === undefined
     ) {
-      try {
-        const startDateMoment = moment(selectedRequest.startDate);
-        const endDateMoment = moment(selectedRequest.endDate);
-        const amount = parseFloat(selectedRequest.amount); // Ensure amount is a number
-
-        // Check for valid dates and a positive, valid amount
-        if (
-          startDateMoment.isValid() &&
-          endDateMoment.isValid() &&
-          amount >= 0 &&
-          !isNaN(amount)
-        ) {
-          // Calculate duration inclusive of start and end day
-          const durationInDays =
-            endDateMoment.diff(startDateMoment, "days") + 1;
-
-          if (durationInDays > 0) {
-            // Calculate total only if duration is positive
-            calculatedTotalAmount = `${(amount * durationInDays).toFixed(2)}`;
-            rentalDurationText = `${durationInDays} Day${
-              durationInDays !== 1 ? "s" : ""
-            }`;
-          } else if (durationInDays === 0 && amount > 0) {
-            // Handle same start/end date, treat as 1 day
-            calculatedTotalAmount = `${amount.toFixed(2)}`; // Amount for 1 day
-            rentalDurationText = `1 Day`;
-          } else {
-            // Handle zero amount or invalid duration calculation results
-            calculatedTotalAmount = "Invalid Calculation";
-            rentalDurationText = "Invalid Dates";
-          }
-        } else {
-          // Handle invalid amount or dates from the source data
-          calculatedTotalAmount = "Invalid Data";
-          rentalDurationText = "Invalid Data";
-        }
-      } catch (e) {
-        console.error("Error calculating total amount or duration:", e);
-        calculatedTotalAmount = "Calculation Error";
-        rentalDurationText = "Error";
-      }
+      return { calculatedTotalAmount: "N/A", rentalDurationText: "N/A" };
     }
+    try {
+      const startDateMoment = moment(selectedRequest.startDate);
+      const endDateMoment = moment(selectedRequest.endDate);
+      const amount = parseFloat(selectedRequest.amount);
+      if (
+        !startDateMoment.isValid() ||
+        !endDateMoment.isValid() ||
+        isNaN(amount) ||
+        amount < 0
+      ) {
+        return {
+          calculatedTotalAmount: "Invalid Data",
+          rentalDurationText: "Invalid Data",
+        };
+      }
+      const durationInDays = endDateMoment.diff(startDateMoment, "days") + 1;
+      if (durationInDays <= 0) {
+        return {
+          calculatedTotalAmount: amount > 0 ? `${amount.toFixed(2)}` : "N/A",
+          rentalDurationText: amount > 0 ? "1 Day (Fixed)" : "Invalid Dates",
+        };
+      }
+      return {
+        calculatedTotalAmount: `${amount.toFixed(2)}`,
+        rentalDurationText: `${durationInDays} Day${
+          durationInDays !== 1 ? "s" : ""
+        }`,
+      };
+    } catch (e) {
+      return { calculatedTotalAmount: "Error", rentalDurationText: "Error" };
+    }
+  }, [selectedRequest]);
 
-    return { calculatedTotalAmount, rentalDurationText };
-  }, [selectedRequest]); // Recalculate whenever the selected request changes
-
-  // --- Render Logic ---
-
-  // MODIFIED: Loading state condition - Show full loader only if no requests AND still loading
   if (loading && rentalRequests.length === 0) {
     return (
-      <div className="flex justify-center md:pt-40 p-8 bg-[#F8F8FF] min-h-screen">
-        <div className="bg-white p-6 rounded-xl shadow-md text-center">
-          <h2 className="text-2xl font-semibold text-[#00113D] mb-4">
-            Loading your requests...
-          </h2>
-          <div className="animate-pulse space-y-4 max-w-sm mx-auto">
-            <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-4 bg-gray-200 rounded w-full"></div>
-            <div className="h-6 bg-gray-200 rounded w-2/3"></div>
-          </div>
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        Loading rental requests...
       </div>
     );
   }
 
-  // Show full error screen only if no requests were loaded AND there's an error
   if (error && rentalRequests.length === 0) {
     return (
-      <div className="flex justify-center md:pt-40 p-8 bg-[#F8F8FF] min-h-screen">
-        <div className="bg-white p-6 rounded-xl shadow-md text-center">
-          <h2 className="text-2xl font-semibold text-red-600 mb-4">
-            Error Loading Requests
-          </h2>
-          <p className="text-lg text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={fetchRentalRequests}
-            className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Retry Loading
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Show empty state if list is loaded (not loading) and has no items
-  if (!loading && rentalRequests.length === 0 && selectedRequest === null) {
-    return (
-      <div className="flex justify-center md:pt-40 p-8 bg-[#F8F8FF] min-h-screen">
-        <div className="bg-white p-6 rounded-xl shadow-md text-center">
-          <h2 className="text-2xl font-semibold text-[#00113D] mb-4">
-            My Requests
-          </h2>
-          <p className="text-lg text-gray-600">
-            You have no active or pending rental requests.
-          </p>
-        </div>
+      <div className="flex justify-center items-center min-h-screen text-red-600">
+        Error: {error}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col md:flex-row  justify-center md:pt-20 p-4 md:p-8 bg-[#F8F8FF] min-h-screen gap-10">
-      {/* Left Panel: Request List */}
-      <div className="w-full md:w-1/3 h-fit md:scale-90 bg-white p-4 md:p-6 rounded-xl shadow-md space-y-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-[#00113D]">
-          My Requests
+    <div className="flex md:flex-row flex-col justify-center md:pt-32 px-4 sm:px-10 md:px-20 p-6 pt-28 bg-[#F8F8FF] min-h-screen">
+      <div className="md:w-1/3 w-full bg-white p-6 rounded-xl shadow-md space-y-4 overflow-y-auto md:max-h-[calc(100vh-10rem)] mb-6 md:mb-0">
+        <h2 className="text-xl font-bold text-[#00113D]">
+          My Rental Requests ({rentalRequests.length})
         </h2>
 
-        {/* Show loading indicator specifically for the list if it's fetching data but already has some */}
         {loading && rentalRequests.length > 0 && (
-          <div className="flex justify-center items-center p-4">
-            <svg
-              className="animate-spin h-8 w-8 text-[#00113D]"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-          </div>
+          <p className="text-center text-gray-500">Updating...</p>
         )}
-        {/* Show error message for the list if loading failed but it's not the initial load */}
         {error && rentalRequests.length > 0 && (
-          <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm mt-2">
-            Error updating requests: {error}
-          </div>
+          <p className="text-center text-red-500">Error: {error}</p>
         )}
 
-        <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto custom-scrollbar">
-          {rentalRequests.map((request) => {
-            // Use request.id as key
-            const statusDisplay = getStatusDisplay(request); // Uses getStatusDisplay
-            // Get car details for display in the list item
-            const listItemCarDetails = carDetailsMap[request.carId];
+        {rentalRequests.length === 0 && !loading ? (
+          <div className="text-center py-8">
+            <IoFileTray className="mx-auto text-4xl text-gray-400 mb-2" />
+            <p className="text-gray-500">You have no rental requests.</p>
+          </div>
+        ) : (
+          rentalRequests.map((request) => {
+            // --- Get live status and expiry for list item ---
+            const liveExpiresIn = calculateLiveExpiresInSeconds(
+              request.createdAt
+            );
+            const statusInfo = getStatusDisplay(request, currentTime); // Pass currentTime
+            const carInfo = carDetailsMap[request.carId];
+            const isListItemExpired = statusInfo.isExpired;
 
             return (
               <div
                 key={request.id}
-                className={`p-4 space-y-2 rounded-lg shadow-md cursor-pointer transition-all ${
+                className={`p-4 w-full space-y-3 rounded-lg shadow-blue-100 shadow-md cursor-pointer transition-all duration-150 ${
                   selectedRequest?.id === request.id
-                    ? "border-2 border-[#00113D] bg-blue-50"
-                    : "hover:bg-gray-50"
+                    ? "border-2 border-[#00113D] bg-blue-50 scale-105"
+                    : isListItemExpired
+                    ? "border-2 border-red-300 bg-red-50 hover:bg-red-100"
+                    : "hover:bg-gray-50 hover:shadow-lg"
                 }`}
                 onClick={() => handleViewDetails(request)}
               >
-                <div className="text-lg space-y-2 w-full text-gray-500">
-                  <div className="grid grid-cols-2 gap-4 w-full mt-2">
-                    <div className="pl-2">
-                      <label className="font-medium text-black">
-                        Car Brand
-                      </label>
-                      <p className="truncate text-sm md:text-base">
-                        {listItemCarDetails?.make ||
-                          listItemCarDetails?.brand ||
-                          "Unavailable"}
-                      </p>
-                    </div>
+                <div
+                  className={`p-3 flex justify-between items-center border border-dashed 
+                ${
+                  isListItemExpired
+                    ? "border-red-500 bg-red-100 text-red-600"
+                    : liveExpiresIn <= 0 && statusInfo.isPending
+                    ? "border-red-500 bg-red-50 text-red-600"
+                    : "border-blue-500 bg-blue-50 text-blue-600"
+                } 
+                rounded-lg`}
+                >
+                  <span
+                    className={`font-semibold text-sm ${
+                      isListItemExpired ||
+                      (liveExpiresIn <= 0 && statusInfo.isPending)
+                        ? "text-red-700"
+                        : "text-black"
+                    }`}
+                  >
+                    {isListItemExpired ||
+                    (liveExpiresIn <= 0 && statusInfo.isPending)
+                      ? "Expired"
+                      : statusInfo.isPending
+                      ? "Expires in"
+                      : "Status"}
+                  </span>
+                  {statusInfo.isPending &&
+                    !isListItemExpired &&
+                    liveExpiresIn > 0 && (
+                      <span
+                        className={`px-3 py-1 text-xs font-medium rounded-full text-white bg-blue-800`}
+                      >
+                        {formatExpiryTime(liveExpiresIn)}
+                      </span>
+                    )}
+                  {(!statusInfo.isPending ||
+                    isListItemExpired ||
+                    (liveExpiresIn <= 0 && statusInfo.isPending)) && (
+                    <span
+                      className={`px-3 py-1 text-xs font-medium rounded-full ${
+                        statusInfo.textColor
+                      } ${statusInfo.bgColor} border ${
+                        isListItemExpired ||
+                        (liveExpiresIn <= 0 && statusInfo.isPending)
+                          ? "border-red-300"
+                          : "border-transparent"
+                      }`}
+                    >
+                      {statusInfo.text}
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 text-xs text-gray-600 w-full gap-3 mt-2">
+                  <div className="flex items-center w-full gap-2">
+                    <img
+                      src={carInfo?.photos?.[0] || image}
+                      alt={carInfo?.make || "Car"}
+                      className="w-10 h-10 rounded-md object-cover"
+                    />
                     <div className="w-full">
-                      <label className="font-medium text-black">
-                        Car Model
-                      </label>
-                      <p className="truncate text-sm md:text-base">
-                        {listItemCarDetails?.model || "Unavailable"}
-                      </p>
-                    </div>
-                    <div className="pl-2">
-                      <label className="font-medium text-black">
-                        Request Date
-                      </label>
-                      <p className="truncate text-sm md:text-base">
-                        {formatDateAndTime(request.createdAt)}
-                      </p>
-                    </div>
-                    <div className="w-full">
-                      <label className="font-medium text-black">
-                        Rent Duration
-                      </label>
-                      <p className="truncate text-sm md:text-base">
-                        {formatDate(request.startDate)} -{" "}
-                        {formatDate(request.endDate)}
+                      <span className="font-medium text-sm text-black block truncate">
+                        Car
+                      </span>
+                      <p className="truncate">
+                        {carInfo?.make || "N/A"} {carInfo?.model || ""}
                       </p>
                     </div>
                   </div>
+                  <div className="h-full flex flex-col justify-center w-full">
+                    <span className="font-medium text-sm text-black block">
+                      Duration
+                    </span>
+                    <p>
+                      {moment(request.startDate).format("MMM D")} -{" "}
+                      {moment(request.endDate).format("MMM D, YYYY")}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex justify-between items-center mt-2">
-                  <div>
-                    <label className="font-medium text-black">Status</label>
-                    <div
-                      className={`w-fit px-3 py-1 text-sm rounded-xl font-semibold mt-1 ${statusDisplay.bgColor} ${statusDisplay.textColor}`}
-                    >
-                      {statusDisplay.text}
+                <div className="text-xs mt-2 space-y-1 w-full text-gray-600">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="font-medium text-sm text-black block">
+                        Status
+                      </span>
+                      <p
+                        className={`px-2 py-0.5 text-xs rounded-full w-fit ${statusInfo.bgColor} ${statusInfo.textColor}`}
+                      >
+                        {statusInfo.text}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-sm text-black block">
+                        Total Payment
+                      </span>
+                      <p className="font-semibold text-black">
+                        {request.amount
+                          ? `${parseFloat(request.amount).toFixed(2)} ETB`
+                          : "N/A"}
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
             );
-          })}
-        </div>
+          })
+        )}
       </div>
 
-      {/* Right Panel: Details */}
-      <div className="w-full md:scale-90 md:w-2/3 space-y-4">
-        {/* Render right panel only if selectedRequest is not null */}
+      <div className="md:w-2/3 md:pl-6 flex w-full space-y-6 flex-col">
         {selectedRequest ? (
           <>
-            <div className="flex flex-col md:flex-row gap-8">
-              <section className="w-full md:w-1/2 bg-white p-4 md:p-6 rounded-xl shadow-md">
-                <h2 className="text-xl md:text-2xl font-semibold text-[#00113D] mb-4">
+            <div className="flex md:flex-row flex-col gap-6">
+              <section className="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-lg">
+                <h2 className="text-lg font-semibold text-[#00113D] mb-6">
                   Request Summary
                 </h2>
-
-                <div className="space-y-4">
-                  <div className="flex flex-col md:flex-row justify-between gap-4 md:gap-8">
-                    <div>
-                      <label className="font-medium text-[#00113D]">
-                        Current Status
-                      </label>
-                      {/* Use selectedRequestStatus here */}
-                      <div
-                        key={selectedRequestStatus?.key}
-                        className={`w-fit px-3 py-1 text-sm rounded-xl font-semibold mt-1 ${selectedRequestStatus?.bgColor} ${selectedRequestStatus?.textColor}`}
-                      >
-                        {selectedRequestStatus?.text}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="font-medium text-[#00113D]">
-                        Request Date
-                      </label>
-                      <p className="text-[#5A5A5A] text-sm md:text-base">
-                        {formatDateAndTime(selectedRequest.createdAt)}
-                      </p>
-                    </div>
+                <div className="flex items-start justify-between mb-4 text-sm">
+                  <div>
+                    <p className="font-medium text-[#00113D]">Status</p>
+                    <p
+                      className={`px-2 py-0.5 text-xs rounded-full w-fit mt-1 ${selectedRequestStatusInfo?.bgColor} ${selectedRequestStatusInfo?.textColor}`}
+                    >
+                      {selectedRequestStatusInfo?.text || "N/A"}
+                    </p>
                   </div>
-
-                  {/* Display expiration message if applicable */}
-                  {isSelectedRequestExpired && ( // Uses isSelectedRequestExpired
-                    <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
-                      <p className="font-medium text-sm md:text-base">
-                        This pending request has expired.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Display message if payment is pending but start date has passed */}
-                  {isPastStartDatePaymentDue && (
-                    <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
-                      <p className="font-medium text-sm md:text-base">
-                        Payment was pending, but the rental start date has
-                        passed. You cannot proceed with payment for this
-                        request. Please contact the owner if needed.
-                      </p>
-                    </div>
-                  )}
+                  <div className="text-right">
+                    <p className="font-medium text-[#00113D]">Request Date</p>
+                    <p className="text-[#5A5A5A]">
+                      {formatDateAndTime(selectedRequest.createdAt)}
+                    </p>
+                  </div>
+                </div>
+                {/* Live countdown/status for selected request details */}
+                <div
+                  className={`w-full text-center py-2 px-4 text-sm rounded-lg mt-4 
+                    ${
+                      selectedRequestStatusInfo?.isExpired
+                        ? "bg-red-100 text-red-700"
+                        : selectedRequestStatusInfo?.liveExpiresIn <= 0 &&
+                          selectedRequestStatusInfo?.isPending
+                        ? "bg-red-100 text-red-700"
+                        : "bg-[#E9F1FE] text-[#4478EB]"
+                    }`}
+                >
+                  {selectedRequestStatusInfo?.isExpired
+                    ? "Request Expired"
+                    : selectedRequestStatusInfo?.isPending
+                    ? selectedRequestStatusInfo?.liveExpiresIn <= 0
+                      ? "Expired"
+                      : `Expires in: ${formatExpiryTime(
+                          selectedRequestStatusInfo?.liveExpiresIn
+                        )}`
+                    : "Status Confirmed"}
                 </div>
 
-                <h2 className="text-xl md:text-2xl mt-8 mb-4 font-semibold text-[#00113D]">
+                <h2 className="text-lg mt-8 mb-4 font-semibold text-[#00113D]">
                   Car Details
                 </h2>
-
-                {selectedCarDetails ? ( // Uses selectedCarDetails
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm md:text-base">
+                {selectedCarDetails ? (
+                  <div className="text-sm space-y-2 text-gray-600">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="font-medium text-black">Brand</label>
-                        <p>
-                          {selectedCarDetails.make ||
-                            selectedCarDetails.brand ||
-                            "Unavailable"}
-                        </p>
+                        <span className="font-medium text-black block">
+                          Brand
+                        </span>
+                        <p>{selectedCarDetails.make || "N/A"}</p>
                       </div>
                       <div>
-                        <label className="font-medium text-black">Model</label>
-                        <p>{selectedCarDetails.model || "Unavailable"}</p>
+                        <span className="font-medium text-black block">
+                          Model
+                        </span>
+                        <p>{selectedCarDetails.model || "N/A"}</p>
                       </div>
                       <div>
-                        <label className="font-medium text-black">Year</label>
-                        {/* Assuming 'year' from API is a date string, display year part */}
+                        <span className="font-medium text-black block">
+                          Year
+                        </span>
                         <p>
                           {selectedCarDetails.year
                             ? moment(selectedCarDetails.year).format("YYYY")
-                            : "Unavailable"}
+                            : "N/A"}
                         </p>
                       </div>
                       <div>
-                        <label className="font-medium text-black">
-                          Plate Number
-                        </label>
-                        <p>{selectedCarDetails.plateNumber || "Unavailable"}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <label className="font-medium text-black">Color</label>
-                        <p>{selectedCarDetails.color || "Unavailable"}</p>
+                        <span className="font-medium text-black block">
+                          Plate No.
+                        </span>
+                        <p>{selectedCarDetails.vehicleNumber || "N/A"}</p>
                       </div>
                     </div>
                   </div>
-                ) : loading && rentalRequests.length > 0 ? (
-                  <div className="flex items-center gap-2 text-gray-500 text-sm md:text-base">
-                    <svg
-                      className="animate-spin h-4 w-4 text-gray-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Loading car details...
-                  </div>
                 ) : (
-                  <div className="text-gray-500 text-sm md:text-base">
-                    Car details not available.
-                  </div>
+                  <p className="text-gray-500">Loading car details...</p>
                 )}
               </section>
 
-              <section className="w-full md:w-1/2 bg-white p-4 md:p-6 rounded-xl shadow-md">
-                <h2 className="text-xl md:text-2xl font-semibold text-[#00113D] mb-4">
+              <section className="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-lg">
+                <h2 className="text-lg font-semibold text-[#00113D] mb-6">
                   Rental Details
                 </h2>
-
-                <div className="space-y-6 text-sm md:text-base">
-                  <div className="flex flex-col">
-                    <div className="flex items-start gap-2">
-                      <FaRegCircle className="text-gray-400 mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">
-                          Pick-up: {formatDate(selectedRequest.startDate)}
-                        </p>
-                        <div className="ml-4 pl-4 border-l border-gray-300 my-2">
-                          <p className="font-semibold">
-                            {selectedRequest.pickUp?.[0] ||
-                              "Location not specified"}
-                          </p>
-                          {selectedRequest.pickUpNotes && (
-                            <p className="text-sm text-gray-500 mt-1">
-                              Notes: {selectedRequest.pickUpNotes}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2 mt-4">
-                      <FaRegCircle className="text-gray-400 mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">
-                          Drop-off: {formatDate(selectedRequest.endDate)}
-                        </p>
-                        <div className="ml-4 pl-4 my-2">
-                          <p className="font-semibold">
-                            {selectedRequest.dropOff?.[0] ||
-                              "Location not specified"}
-                          </p>
-                          {selectedRequest.dropOffNotes && (
-                            <p className="text-sm text-gray-500 mt-1">
-                              Notes: {selectedRequest.dropOffNotes}
-                            </p>
-                          )}
-                        </div>
-                      </div>
+                <div className="flex flex-col text-sm text-[#5A5A5A]">
+                  <div className="flex items-start gap-3 mb-4 relative">
+                    <FaRegCircle className="text-blue-500 mt-1 flex-shrink-0" />
+                    <div className="absolute left-[5.5px] top-5 bottom-[-1.5rem] w-px bg-gray-300"></div>
+                    <div className="flex-grow">
+                      <p className="font-semibold text-black">
+                        Pick Up: {formatDate(selectedRequest.startDate)}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {selectedRequest.displayPickUpLocation}
+                      </p>
                     </div>
                   </div>
-
-                  {/* Display Calculated Duration */}
-                  <div>
-                    <label className="font-medium text-black">
-                      Rental Duration
-                    </label>
-                    <p className="text-[#5A5A5A] mt-1">{rentalDurationText}</p>
+                  <div className="flex items-start gap-3 mt-4 relative">
+                    <FaRegCircle className="text-green-500 mt-1 flex-shrink-0" />
+                    <div className="flex-grow">
+                      <p className="font-semibold text-black">
+                        Drop Off: {formatDate(selectedRequest.endDate)}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {selectedRequest.displayDropOffLocation}
+                      </p>
+                    </div>
                   </div>
-
-                  {/* Display Amount Per Day (from API) */}
-                  <div>
-                    <label className="font-medium text-black">
-                      Amount Per Day
-                    </label>
-                    <p className="text-[#5A5A5A] mt-1">
-                      {selectedRequest.amount !== undefined &&
-                      selectedRequest.amount !== null &&
-                      !isNaN(parseFloat(selectedRequest.amount))
-                        ? `${parseFloat(selectedRequest.amount).toFixed(2)}`
-                        : "N/A"}{" "}
-                      Birr
-                    </p>
-                  </div>
-
-                  {/* Display Calculated Total Amount */}
-                  <div>
-                    <label className="font-medium text-black">
-                      Total Estimated Amount
-                    </label>
-                    <p className="text-[#5A5A5A] mt-1 font-semibold text-base md:text-lg">
-                      {calculatedTotalAmount} Birr
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="font-medium text-black">
-                      Special Requests
-                    </label>
-                    <p className="text-gray-500 mt-1">
-                      {selectedRequest.specialRequests || "None"}
-                    </p>
-                  </div>
+                </div>
+                <div className="mt-6 text-sm">
+                  <span className="font-medium text-black block">Duration</span>
+                  <p className="text-gray-600">{rentalDurationText}</p>
+                </div>
+                <div className="mt-4 text-sm">
+                  <span className="font-medium text-black block">
+                    Total Payment
+                  </span>
+                  <p className="text-gray-600 font-semibold">
+                    {calculatedTotalAmount} ETB
+                  </p>
                 </div>
               </section>
             </div>
 
-            {/* Renamed from Rentee Details to Owner Details */}
-            <section className="bg-white p-4 md:p-6 rounded-xl shadow-md">
-              <h2 className="text-xl md:text-2xl font-semibold text-[#00113D] mb-4">
+            <section className="h-fit bg-white p-6 space-y-6 rounded-xl shadow-lg">
+              <h2 className="text-lg font-semibold text-[#00113D] mb-6">
                 Car Owner Details
               </h2>
-
-              {selectedOwnerDetails ? ( // Uses selectedOwnerDetails
-                <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-                  {/* Placeholder for owner profile picture as it's not in the car payload */}
+              {selectedOwnerDetails ? (
+                <div className="items-center flex md:flex-row flex-col gap-6 md:gap-8">
                   <img
-                    src={image} // Using generic avatar
-                    alt="Owner Profile"
-                    className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover flex-shrink-0"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = image;
-                    }}
+                    src={selectedOwnerDetails.profilePicture || image}
+                    alt="Owner"
+                    className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover"
                   />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 text-sm md:text-base w-full md:w-auto">
-                    <div className="flex items-center gap-3">
-                      <IoPersonOutline
-                        size={18}
-                        className="text-gray-500 flex-shrink-0"
-                      />
-                      <div>
-                        <label className="font-medium text-black">Name</label>
-                        <p className="text-gray-600">
-                          {selectedOwnerDetails.name || "N/A"}
-                        </p>
-                      </div>
+                  <div className="grid gap-x-6 gap-y-3 md:grid-cols-2 grid-cols-1 w-full">
+                    <div className="flex items-center gap-3 text-sm">
+                      <IoPersonOutline size={18} className="text-gray-500" />
+                      <span>{selectedOwnerDetails.name}</span>
                     </div>
-
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 text-sm">
                       <MdOutlineLocalPhone
                         size={18}
-                        className="text-gray-500 flex-shrink-0"
+                        className="text-gray-500"
                       />
-                      <div>
-                        <label className="font-medium text-black">Phone</label>
-                        <p className="text-gray-600">
-                          {selectedOwnerDetails.phone || "N/A"}
-                        </p>
-                      </div>
+                      <span>{selectedOwnerDetails.phone}</span>
                     </div>
-
-                    <div className="flex items-center gap-3">
-                      <MdOutlineMail
-                        size={18}
-                        className="text-gray-500 flex-shrink-0"
-                      />
-                      <div>
-                        <label className="font-medium text-black">Email</label>
-                        <p className="text-gray-600">
-                          {selectedOwnerDetails.email || "N/A"}
-                        </p>
-                      </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <MdOutlineMail size={18} className="text-gray-500" />
+                      <span>{selectedOwnerDetails.email}</span>
                     </div>
-                    {/* Address is not available for owner in the provided payload, omit */}
                   </div>
-
-                  <div className="w-full md:w-auto flex justify-center md:justify-start">
-                    {/* Use handleChatWithOwner */}
-                    <button
-                      className="flex items-center gap-2 px-6 py-3 text-base border rounded-full border-[#00113D] text-[#00113D] bg-white hover:bg-[#00113D] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto justify-center"
-                      onClick={handleChatWithOwner} // Correct handler
-                      // Check that selectedRequest, ownerId, and currentUserId exist
-                      disabled={
-                        !selectedRequest ||
-                        !selectedOwnerDetails?.id ||
-                        !currentUserId
-                      }
-                    >
-                      <IoChatboxOutline size={16} />
-                      Chat With Owner
-                    </button>
-                  </div>
-                </div>
-              ) : loading && rentalRequests.length > 0 ? (
-                <div className="flex items-center gap-2 text-gray-500 text-sm md:text-base">
-                  <svg
-                    className="animate-spin h-4 w-4 text-gray-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Loading owner details...
                 </div>
               ) : (
-                <div className="text-gray-500 text-sm md:text-base">
-                  Car owner details not available.
-                </div>
+                <p className="text-sm text-gray-500">
+                  Loading owner details...
+                </p>
               )}
 
-              {/* Action Buttons Area */}
-              <div className="flex flex-col gap-4 mt-6">
-                {/* Pay Now button displayed only if status is Payment Pending AND not expired AND NOT past start date */}
-                {selectedRequestStatus?.isPaymentPending &&
-                  !isSelectedRequestExpired &&
-                  !isPastStartDatePaymentDue && ( // Uses selectedRequestStatus, isSelectedRequestExpired, isPastStartDatePaymentDue
-                    <>
-                      <button
-                        onClick={handlePayNow} // Uses handlePayNow
-                        className="w-full py-3 rounded-full bg-[#00113D] text-white hover:bg-[#1a3263] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        // Disabled if initiating payment or request ID is missing, OR status is not genuinely payment pending
-                        disabled={
-                          isInitiatingPayment ||
-                          !selectedRequest?.id ||
-                          !selectedRequestStatus?.isPaymentPending
-                        }
-                      >
-                        {isInitiatingPayment
-                          ? "Initiating Payment..."
-                          : "Pay Now"}
-                      </button>
-                      {paymentError && (
-                        <p className="text-red-600 text-sm text-center">
-                          {paymentError}
-                        </p>
-                      )}
-                    </>
+              <div className="flex flex-col sm:flex-row text-base gap-4 pt-4 border-t border-gray-200">
+                <button
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border rounded-full border-[#00113D] text-[#00113D] hover:bg-[#00113D] hover:text-white transition-colors disabled:opacity-50"
+                  onClick={handleChatWithOwner}
+                  disabled={
+                    !selectedRequest ||
+                    !selectedOwnerDetails?.id ||
+                    !currentUserId
+                  }
+                >
+                  <IoChatboxOutline size={18} /> Chat With Owner
+                </button>
+
+                {selectedRequestStatusInfo?.isPaymentPending &&
+                  !selectedRequestStatusInfo?.isExpired &&
+                  !selectedRequestStatusInfo?.isPastStartDatePaymentDue && (
+                    <button
+                      onClick={handlePayNow}
+                      className="flex-1 py-2.5 px-4 rounded-full bg-[#00113D] text-white hover:bg-blue-800 transition-colors disabled:opacity-50"
+                      disabled={isInitiatingPayment || !selectedRequest?.id}
+                    >
+                      {isInitiatingPayment ? "Processing..." : "Pay Now"}
+                    </button>
                   )}
-                {/* No Pay Now button if status is Expired, Past Start Date Payment Due, Pending, Approved (Paid), Rejected, or Cancelled */}
               </div>
+              {paymentError && (
+                <p className="text-red-500 text-sm text-center mt-2">
+                  {paymentError}
+                </p>
+              )}
             </section>
           </>
         ) : (
-          // Message when requests are loaded but none is selected
           !loading &&
           rentalRequests.length > 0 && (
-            <div className="flex flex-col w-full items-center justify-center text-center py-16 bg-white rounded-xl shadow-md">
-              <Typography variant="h6" color="text.secondary">
-                Select a request from the left panel to view details.
-              </Typography>
+            <div className="md:w-2/3 w-full bg-white p-6 rounded-xl shadow-lg h-[400px] flex justify-center items-center">
+              <p className="text-gray-500">
+                Select a request from the left to see details.
+              </p>
             </div>
           )
         )}

@@ -64,7 +64,10 @@ function BookCar() {
           >
             <div className="flex">
               {error && (
-                <div style={{ color: "red", marginBottom: "10px" }}>
+                <div
+                  className="text-sm"
+                  style={{ color: "red", marginBottom: "10px" }}
+                >
                   {error}
                 </div>
               )}

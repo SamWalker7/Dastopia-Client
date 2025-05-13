@@ -12,61 +12,47 @@ import { MdOutlineLocalPhone, MdOutlineMail } from "react-icons/md";
 import useVehicleFormStore from "../../store/useVehicleFormStore";
 import { useNavigate } from "react-router-dom";
 
-// getDownloadUrl is no longer needed if we only use renteeInfo from booking response
-// import { getDownloadUrl } from "../api"; // Assuming this is the same function as in Account1.js
-
 const formatTime = (seconds) => {
   if (isNaN(seconds) || seconds < 0) return "Expired";
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
+  const s = Math.floor(seconds % 60); // Ensure 's' is an integer for padStart
   return [h, m, s].map((unit) => String(unit).padStart(2, "0")).join(":");
 };
 
 const RentalRequests = () => {
   const navigate = useNavigate();
-  // Remove unused state variables related to old modal/checkbox logic
-  // const [isModalVisible, setIsModalVisible] = useState(false);
-  // const [approved, setApproved] = useState(false);
-  // const [isChecked, setIsChecked] = useState(false);
 
   const [rentalRequests, setRentalRequests] = useState([]);
   const [vehicleDetailsMap, setVehicleDetailsMap] = useState({});
-  // Remove renteeDetailsMap as we'll use renteeInfo directly from the request object
-  // const [renteeDetailsMap, setRenteeDetailsMap] = useState({});
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [actionError, setActionError] = useState(null);
   const { apiCallWithRetry } = useVehicleFormStore();
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const customer = JSON.parse(localStorage.getItem("customer")) || {};
 
-  const ownerId = customer?.username || customer?.id;
-  const ownerGivenName = customer?.given_name || customer?.firstName || "";
-  const ownerFamilyName = customer?.family_name || customer?.lastName || "";
+  const customer = useMemo(
+    () => JSON.parse(localStorage.getItem("customer")) || {},
+    []
+  );
 
-  // Remove unused constants
-  // const conditions = [ ... ];
-  // Remove unused handlers
-  // const handleCheckboxChange = useCallback(() => { ... }, []);
-  // const handleConfirmBooking = async () => { ... };
-  // const handleCancelBooking = async () => { ... };
+  const ownerId = useMemo(() => customer?.username || customer?.id, [customer]);
+  // ownerGivenName and ownerFamilyName are not used in handleChatWithRentee if not part of URL
+  // const ownerGivenName = useMemo(() => customer?.given_name || customer?.firstName || "", [customer]);
+  // const ownerFamilyName = useMemo(() => customer?.family_name || customer?.lastName || "", [customer]);
 
-  // Chat handler modified to use renteeInfo from the booking object
   const handleChatWithRentee = useCallback(
     (booking) => {
       const renteeId = booking?.renteeId;
       const bookingId = booking?.id;
       const carId = booking?.carId;
-      // Access renteeInfo directly from the booking object
       const renteeInfo = booking?.renteeInfo;
       const renteeGivenName = renteeInfo?.given_name || "";
       const renteeFamilyName = renteeInfo?.family_name || "";
+      console.error("Chat with rentee clicked", renteeId);
 
-      const currentOwnerId = ownerId;
-      const currentOwnerGivenName = ownerGivenName; // Still need owner name for chat context if backend uses it
-      const currentOwnerFamilyName = ownerFamilyName; // Still need owner name for chat context
-
-      if (!currentOwnerId) {
+      if (!ownerId) {
         console.error("Chat Error: Owner ID not found in localStorage.");
         alert("Your user ID is missing. Cannot initiate chat.");
         return;
@@ -76,46 +62,36 @@ const RentalRequests = () => {
         alert("Rentee details missing. Cannot initiate chat.");
         return;
       }
-      if (!renteeInfo) {
-        console.warn("Chat Warning: renteeInfo missing for this request.");
-        // Continue, but maybe show a warning to the user or log
-      }
 
-      const chatUrl = `/chat?userId1=${encodeURIComponent(
-        currentOwnerId || ""
-      )}&userId2=${encodeURIComponent(
-        renteeId || ""
-      )}&bookingId=${encodeURIComponent(
-        bookingId || ""
-      )}&carId=${encodeURIComponent(
-        carId || ""
-      )}&given_name=${encodeURIComponent(
-        renteeGivenName || "" // Use given_name from renteeInfo
-      )}&family_name=${encodeURIComponent(
-        renteeFamilyName || "" // Use family_name from renteeInfo
-      )}`;
+      // const chatUrl = `/chat?userId1=${encodeURIComponent(
+      //   ownerId
+      // )}&userId2=${encodeURIComponent(renteeId)}&bookingId=${encodeURIComponent(
+      //   bookingId
+      // )}&carId=${encodeURIComponent(carId)}&given_name=${encodeURIComponent(
+      //   renteeGivenName
+      // )}&family_name=${encodeURIComponent(renteeFamilyName)}`;
 
-      console.log(
-        `Navigating to chat: Owner ID=${currentOwnerId}, Rentee ID=${renteeId}, Booking ID=${bookingId}, Car ID=${carId}`
+      // console.log(
+      //   `Navigating to chat: Owner ID=${ownerId}, Rentee ID=${renteeId}, Booking ID=${bookingId}, Car ID=${carId}`
+      // );
+      navigate(
+        `/chat?renteeId=${renteeId}&reservationId=${renteeId}&given_name=${renteeGivenName}&family_name=${renteeFamilyName}`
       );
-
-      navigate(chatUrl);
+      // navigate(chatUrl);
     },
-    [navigate, ownerId, ownerGivenName, ownerFamilyName] // Dependencies updated
+    [navigate, ownerId]
   );
 
-  // Re-implement approval/rejection handlers as they were removed in prompt
   const handleApproveRequest = useCallback(
     async (bookingId) => {
-      setLoading(true); // Maybe use a separate loading state for actions
-      setError(null);
+      setActionLoading(true);
+      setActionError(null);
       try {
         const response = await apiCallWithRetry(
           `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/approve_booking/${bookingId}`,
           {
-            method: "GET", // Or POST, depending on your API
+            method: "GET",
             headers: {
-              "Content-Type": "application/json", // Needed for POST, maybe not GET
               Authorization: `Bearer ${customer.AccessToken}`,
             },
           }
@@ -123,43 +99,39 @@ const RentalRequests = () => {
 
         if (response && response.statusCode === 200) {
           console.log(`Booking ${bookingId} approved successfully.`);
-          // Remove the approved request from the list
           setRentalRequests((prevRequests) =>
             prevRequests.filter((request) => request.id !== bookingId)
           );
-          setSelectedRequest(null); // Deselect the request
+          if (selectedRequest?.id === bookingId) {
+            setSelectedRequest(null);
+          }
         } else {
+          const errorMessage = `Failed to approve booking ${bookingId}. ${
+            response?.body?.message || "Unknown error"
+          }`;
           console.error("Approve failed:", response);
-          // Assuming response includes an error message
-          setError(
-            `Failed to approve booking ${bookingId}. ${
-              response?.body?.message || ""
-            }`
-          );
+          setActionError(errorMessage);
         }
       } catch (err) {
         console.error("Error approving booking:", err);
-        setError(`Error approving booking ${bookingId}: ${err.message}`);
+        setActionError(`Error approving booking ${bookingId}: ${err.message}`);
       } finally {
-        // Instead of setting main loading to false, update the request status in place
-        // or refetch the list to show changes. Removing from list is simpler here.
-        // setLoading(false); // Don't turn off main loading unless it's the only thing happening
+        setActionLoading(false);
       }
     },
-    [apiCallWithRetry, customer?.AccessToken]
+    [apiCallWithRetry, customer?.AccessToken, selectedRequest?.id]
   );
 
   const handleRejectRequest = useCallback(
     async (bookingId) => {
-      setLoading(true); // Maybe use a separate loading state for actions
-      setError(null);
+      setActionLoading(true);
+      setActionError(null);
       try {
         const response = await apiCallWithRetry(
           `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/deny_booking/${bookingId}`,
           {
-            method: "GET", // Or POST
+            method: "GET",
             headers: {
-              "Content-Type": "application/json",
               Authorization: `Bearer ${customer.AccessToken}`,
             },
           }
@@ -167,30 +139,29 @@ const RentalRequests = () => {
 
         if (response && response.statusCode === 200) {
           console.log(`Booking ${bookingId} rejected successfully.`);
-          // Remove the rejected request from the list
           setRentalRequests((prevRequests) =>
             prevRequests.filter((request) => request.id !== bookingId)
           );
-          setSelectedRequest(null); // Deselect the request
+          if (selectedRequest?.id === bookingId) {
+            setSelectedRequest(null);
+          }
         } else {
+          const errorMessage = `Failed to reject booking ${bookingId}. ${
+            response?.body?.message || "Unknown error"
+          }`;
           console.error("Reject failed:", response);
-          setError(
-            `Failed to reject booking ${bookingId}. ${
-              response?.body?.message || ""
-            }`
-          );
+          setActionError(errorMessage);
         }
       } catch (err) {
         console.error("Error rejecting booking:", err);
-        setError(`Error rejecting booking ${bookingId}: ${err.message}`);
+        setActionError(`Error rejecting booking ${bookingId}: ${err.message}`);
       } finally {
-        // setLoading(false); // Don't turn off main loading unless it's the only thing happening
+        setActionLoading(false);
       }
     },
-    [apiCallWithRetry, customer?.AccessToken]
+    [apiCallWithRetry, customer?.AccessToken, selectedRequest?.id]
   );
 
-  // Keep fetchVehicleDetails as it's needed for car details
   const fetchVehicleDetails = useCallback(
     async (carId) => {
       if (!carId || !customer?.AccessToken) return null;
@@ -223,16 +194,13 @@ const RentalRequests = () => {
     [apiCallWithRetry, customer?.AccessToken]
   );
 
-  // Remove fetchRenteeDetails as it's no longer needed
-  // const fetchRenteeDetails = useCallback( ... );
-
   const fetchRentalRequests = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setRentalRequests([]); // Clear existing requests
+    setActionError(null);
+    setRentalRequests([]);
     setVehicleDetailsMap({});
-    // setRenteeDetailsMap({}); // No longer needed
-    setSelectedRequest(null); // Deselect any request
+    setSelectedRequest(null);
 
     if (!customer?.AccessToken) {
       setError("Authentication failed: Please log in again.");
@@ -256,29 +224,26 @@ const RentalRequests = () => {
           (request) => request.approvedStatus?.toLowerCase() === "pending"
         );
 
-        // Collect unique vehicle IDs (still needed)
+        pendingRequests.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
         const vehicleIds = [
           ...new Set(pendingRequests.map((req) => req.carId).filter(Boolean)),
         ];
-        // No need to collect renteeIds or fetch rentee details separately
 
-        // Fetch vehicle details in parallel
         const vehicleResults = await Promise.all(
           vehicleIds.map(fetchVehicleDetails)
         );
 
-        // Create map for vehicle details
         const fetchedVehicleDetailsMap = {};
         vehicleResults.filter(Boolean).forEach((detail) => {
           if (detail?.id) fetchedVehicleDetailsMap[detail.id] = detail;
         });
         setVehicleDetailsMap(fetchedVehicleDetailsMap);
 
-        // No map needed for rentee details - they are already in renteeInfo
-
         const requestsWithExpiryAndDetails = pendingRequests.map((request) => {
           const createdAt = new Date(request.createdAt);
-          // Assuming expiry is 24 hours from creation time
           const expiryTime = new Date(
             createdAt.getTime() + 24 * 60 * 60 * 1000
           );
@@ -287,80 +252,139 @@ const RentalRequests = () => {
             Math.floor((expiryTime.getTime() - new Date().getTime()) / 1000)
           );
 
-          // Access renteeInfo directly from the request object
-          const renteeName =
-            (request.renteeInfo?.given_name || "") +
-            " " +
-            (request.renteeInfo?.family_name || "");
+          const renteeName = `${request.renteeInfo?.given_name || ""} ${
+            request.renteeInfo?.family_name || ""
+          }`.trim();
+
+          // --- START: Location Data Processing ---
+          let displayPickUp = "Location not specified";
+          if (
+            request.pickUp &&
+            Array.isArray(request.pickUp) &&
+            request.pickUp.length > 0
+          ) {
+            if (
+              typeof request.pickUp[0] === "object" &&
+              request.pickUp[0] !== null &&
+              "lng" in request.pickUp[0]
+            ) {
+              // First element is coordinates object
+              if (
+                request.pickUp.length > 1 &&
+                typeof request.pickUp[1] === "string"
+              ) {
+                displayPickUp = request.pickUp[1]; // Assume address string is the second element
+              } else {
+                displayPickUp = "Coordinates available"; // No string address found with coordinates
+              }
+            } else if (typeof request.pickUp[0] === "string") {
+              displayPickUp = request.pickUp[0]; // First element is already a string
+            }
+          } else if (typeof request.pickUp === "string") {
+            displayPickUp = request.pickUp;
+          } else if (
+            request.pickUp &&
+            typeof request.pickUp === "object" &&
+            request.pickUp.name
+          ) {
+            // Check if pickUp is an object with a name property
+            displayPickUp = request.pickUp.name;
+          }
+
+          let displayDropOff = "Location not specified";
+          if (
+            request.dropOff &&
+            Array.isArray(request.dropOff) &&
+            request.dropOff.length > 0
+          ) {
+            if (
+              typeof request.dropOff[0] === "object" &&
+              request.dropOff[0] !== null &&
+              "lng" in request.dropOff[0]
+            ) {
+              if (
+                request.dropOff.length > 1 &&
+                typeof request.dropOff[1] === "string"
+              ) {
+                displayDropOff = request.dropOff[1];
+              } else {
+                displayDropOff = "Coordinates available";
+              }
+            } else if (typeof request.dropOff[0] === "string") {
+              displayDropOff = request.dropOff[0];
+            }
+          } else if (typeof request.dropOff === "string") {
+            displayDropOff = request.dropOff;
+          } else if (
+            request.dropOff &&
+            typeof request.dropOff === "object" &&
+            request.dropOff.name
+          ) {
+            // Check if dropOff is an object with a name property
+            displayDropOff = request.dropOff.name;
+          }
+          // --- END: Location Data Processing ---
 
           return {
-            ...request, // Includes renteeInfo
+            ...request,
             expiresInSeconds,
             vehicleDetail: fetchedVehicleDetailsMap[request.carId],
-            // Add flattened rentee info for list item display convenience
-            renterName: renteeName.trim() || "Unknown Rentee",
+            renterName: renteeName || "Unknown Rentee",
             renterPhone: request.renteeInfo?.phone_number || "Unknown",
-            // Profile picture key is not in renteeInfo, so we can't fetch it.
-            // The list item will just use the fallback image.
-            // The details panel will also use the fallback image.
-            // renterAvatarUrl: request.renteeInfo?.profilePicture || image, // ProfilePicture is not in the renteeInfo object from the booking response
-            renterAvatarUrl: image, // Always use fallback as key is not in renteeInfo
+            renterAvatarUrl: image,
+            displayPickUpLocation: displayPickUp, // Add processed location
+            displayDropOffLocation: displayDropOff, // Add processed location
           };
         });
 
         setRentalRequests(requestsWithExpiryAndDetails);
       } else {
-        console.error(
-          "Failed to fetch rental requests or invalid response format:",
-          response
-        );
-        setError("Failed to fetch rental requests or invalid response format.");
-        setRentalRequests([]); // Ensure list is empty on error/bad format
+        const msg =
+          "Failed to fetch rental requests or invalid response format.";
+        console.error(msg, response);
+        setError(msg);
+        setRentalRequests([]);
       }
     } catch (err) {
-      console.error("Error fetching rental requests:", err);
-      setError("Error fetching rental requests: " + err.message);
-      setRentalRequests([]); // Ensure list is empty on error
+      const msg = "Error fetching rental requests: " + err.message;
+      console.error(msg, err);
+      setError(msg);
+      setRentalRequests([]);
     } finally {
       setLoading(false);
     }
-  }, [
-    apiCallWithRetry,
-    customer?.AccessToken,
-    fetchVehicleDetails, // fetchRenteeDetails is removed
-  ]);
+  }, [apiCallWithRetry, customer?.AccessToken, fetchVehicleDetails]);
 
-  // Effect to fetch requests on component mount or when fetch function changes
   useEffect(() => {
     fetchRentalRequests();
   }, [fetchRentalRequests]);
 
-  // Auto-select the first request when the list loads or changes
   useEffect(() => {
-    // Only auto-select if not currently loading, list has items, and no request is already selected
     if (!loading && rentalRequests.length > 0 && selectedRequest === null) {
-      console.log("Auto-selecting first request:", rentalRequests[0].id);
       setSelectedRequest(rentalRequests[0]);
     } else if (
       !loading &&
       rentalRequests.length === 0 &&
-      selectedRequest !== null // If list becomes empty while a request is selected
+      selectedRequest !== null
     ) {
-      console.log("Rental request list is empty, deselecting current request.");
       setSelectedRequest(null);
     }
-  }, [loading, rentalRequests, selectedRequest]); // Depend on loading, rentalRequests list content, and selectedRequest
+    if (
+      selectedRequest &&
+      !rentalRequests.find((req) => req.id === selectedRequest.id)
+    ) {
+      setSelectedRequest(rentalRequests.length > 0 ? rentalRequests[0] : null);
+    }
+  }, [loading, rentalRequests, selectedRequest]);
 
-  // // Show loading state
-  // if (loading) {
-  //   return (
-  //     <div className="flex justify-center items-center min-h-screen">
-  //       Loading rental requests...
-  //     </div>
-  //   );
-  // }
+  if (loading && rentalRequests.length === 0) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        Loading rental requests...
+      </div>
+    );
+  }
 
-  // Show error state if no requests are loaded and there's an error
   if (error && rentalRequests.length === 0) {
     return (
       <div className="flex justify-center items-center min-h-screen text-red-600">
@@ -370,19 +394,26 @@ const RentalRequests = () => {
   }
 
   return (
-    <div className="flex md:flex-row flex-col justify-center md:pt-32 px-20 p-6 pt-28 bg-[#F8F8FF] min-h-screen">
-      {/* Left Panel: List of Requests */}
-      <div className="md:w-1/3 w-full bg-white p-6 rounded-xl shadow-md space-y-4">
-        <h2 className="text-xl font-bold text-[#00113D]">Rental Requests</h2>
+    <div className="flex md:flex-row flex-col justify-center md:pt-32 px-4 sm:px-10 md:px-20 p-6 pt-28 bg-[#F8F8FF] min-h-screen">
+      <div className="md:w-1/3 w-full bg-white p-6 rounded-xl shadow-lg space-y-4 overflow-y-auto md:max-h-[calc(100vh-10rem)] mb-6 md:mb-0">
+        <h2 className="text-xl font-bold text-[#00113D]">
+          Rental Requests ({rentalRequests.length})
+        </h2>
+        {loading && rentalRequests.length > 0 && (
+          <p className="text-center text-gray-500">Updating list...</p>
+        )}
+        {error && rentalRequests.length > 0 && (
+          <p className="text-center text-red-500">
+            Error updating list: {error}
+          </p>
+        )}
 
-        {/* Display list or empty message */}
-        {rentalRequests.length === 0 ? (
+        {rentalRequests.length === 0 && !loading ? (
           <div className="text-center py-8">
             <IoFileTray className="mx-auto text-4xl text-gray-400 mb-2" />
             <p className="text-gray-500">
               You have no pending rental requests.
             </p>
-            {/* Optionally show error here if loading failed but there might have been previous data */}
             {error && (
               <p className="text-red-500 text-sm mt-2">
                 Could not load requests: {error}
@@ -393,57 +424,50 @@ const RentalRequests = () => {
           rentalRequests.map((request) => (
             <div
               key={request.id}
-              className={`p-4 w-full space-y-8 rounded-lg shadow-blue-100 shadow-md cursor-pointer ${
+              className={`p-4 w-full space-y-3 rounded-lg shadow-blue-100 shadow-md cursor-pointer transition-all duration-150 ${
                 selectedRequest?.id === request.id
-                  ? "border-2 border-[#00113D] bg-blue-50"
-                  : "hover:bg-gray-50"
+                  ? "border-2 border-[#00113D] bg-blue-50 scale-105"
+                  : "hover:bg-gray-50 hover:shadow-lg"
               }`}
-              onClick={() => setSelectedRequest(request)} // Select the request on click
+              onClick={() => setSelectedRequest(request)}
             >
-              {/* Expiry Info */}
               <div
-                className={`p-4 flex justify-between items-center mb-3 border border-dashed ${
+                className={`p-3 flex justify-between items-center border border-dashed ${
                   request.expiresInSeconds <= 0
-                    ? "border-[#EB4444] bg-[#FDEAEA] text-[#EB4444]"
-                    : "border-[#4478EB] bg-[#E9F1FE] text-[#4478EB]"
+                    ? "border-red-500 bg-red-50 text-red-600"
+                    : "border-blue-500 bg-blue-50 text-blue-600"
                 } rounded-lg`}
               >
-                <span className="font-semibold text-base text-[#000000]">
+                <span className="font-semibold text-sm text-black">
                   Expires in
                 </span>
                 <span
-                  className={`px-4 py-2 text-sm font-medium rounded-full text-white ${
-                    request.expiresInSeconds <= 0
-                      ? "bg-[#410002]"
-                      : "bg-[#00173C]"
+                  className={`px-3 py-1 text-xs font-medium rounded-full text-white ${
+                    request.expiresInSeconds <= 0 ? "bg-red-700" : "bg-blue-800"
                   }`}
                 >
-                  {request.expiresInSeconds > 0
-                    ? formatTime(request.expiresInSeconds)
-                    : "Expired"}
+                  {formatTime(request.expiresInSeconds)}
                 </span>
               </div>
-
-              {/* Rentee & Duration Info (using flattened rentee info) */}
-              <div className="grid grid-cols-2 text-sm text-gray-500 w-full gap-4 mt-4">
-                <div className="flex items-center w-full gap-3">
-                  {/* Always use the fallback image as profile picture key is not available in renteeInfo */}
+              <div className="grid grid-cols-2 text-xs text-gray-600 w-full gap-3 mt-2">
+                <div className="flex items-center w-full gap-2">
                   <img
-                    src={image}
+                    src={request.renterAvatarUrl}
                     alt="Renter Profile"
-                    className="w-16 h-16 rounded-full object-cover"
+                    className="w-10 h-10 rounded-full object-cover"
                   />
                   <div className="w-full">
-                    <span className="font-medium text-black">Rentee Name</span>
-                    <p className="">
-                      {/* Access name from flattened rentee info */}
-                      {request.renterName}
-                    </p>
+                    <span className="font-medium text-sm text-black block truncate">
+                      Rentee
+                    </span>
+                    <p className="truncate">{request.renterName}</p>
                   </div>
                 </div>
                 <div className="h-full flex flex-col justify-center w-full">
-                  <span className="font-medium text-black">Rent Duration</span>
-                  <p className="">
+                  <span className="font-medium text-sm text-black block">
+                    Duration
+                  </span>
+                  <p>
                     {request.startDate && request.endDate
                       ? `${Math.ceil(
                           (new Date(request.endDate) -
@@ -454,36 +478,23 @@ const RentalRequests = () => {
                   </p>
                 </div>
               </div>
-
-              {/* Car Details (using vehicleDetail) */}
-              <div className="text-sm mb-4 space-y-2 w-full text-gray-500">
-                <div className="grid grid-cols-2 gap-4 w-3/5 mt-4">
-                  {" "}
-                  {/* Adjusted width */}
-                  <div className="pl-4">
-                    <span className="font-medium text-black">Car Brand</span>
-                    <p className="">
-                      {request.vehicleDetail?.make || "Unknown"}
+              <div className="text-xs mt-2 space-y-1 w-full text-gray-600">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="font-medium text-sm text-black block">
+                      Car
+                    </span>
+                    <p className="truncate">
+                      {request.vehicleDetail?.make || "N/A"}{" "}
+                      {request.vehicleDetail?.model || ""}
                     </p>
                   </div>
-                  <div className="w-full">
-                    <span className="font-medium text-black">Car Model</span>
-                    <p className="">
-                      {request.vehicleDetail?.model || "Unknown"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Payment */}
-              <div className="text-sm mb-4 space-y-2 w-full text-gray-500">
-                <div className="grid grid-cols-2 gap-4 w-full mt-4">
-                  <div className="pl-4">
-                    <span className="font-medium text-black">
+                  <div>
+                    <span className="font-medium text-sm text-black block">
                       Total Payment
                     </span>
-                    <p className="font-medium text-black">
-                      {request.amount} birr
+                    <p className="font-semibold text-black">
+                      {request.amount ? `${request.amount} ETB` : "N/A"}
                     </p>
                   </div>
                 </div>
@@ -493,222 +504,228 @@ const RentalRequests = () => {
         )}
       </div>
 
-      {/* Right Panel: Details of Selected Request */}
-      <div className="md:w-2/3 md:px-10 flex w-full space-y-6 flex-col">
+      <div className="md:w-2/3 md:pl-6 flex w-full space-y-6 flex-col">
         {selectedRequest ? (
           <>
-            {/* Request Summary & Car Details Section */}
-            <div className="flex md:flex-row flex-col gap-10">
-              <section className="md:w-1/2 w-full md:mt-0 mt-4 bg-white p-6 rounded-xl shadow-md">
-                <h2 className="text-lg font-semibold text-[#00113D] mb-8">
+            <div className="flex md:flex-row flex-col gap-6">
+              <section className="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-lg">
+                <h2 className="text-lg font-semibold text-[#00113D] mb-6">
                   Request Summary
                 </h2>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-start justify-between mb-4 text-sm">
                   <div>
-                    <p className="font-medium text-sm text-[#00113D]">
-                      Request Status
-                    </p>
-                    <p className="text-sm text-[#5A5A5A]">
+                    <p className="font-medium text-[#00113D]">Status</p>
+                    <p className="text-[#5A5A5A] capitalize">
                       {selectedRequest.approvedStatus || "N/A"}
                     </p>
                   </div>
-                  <div>
-                    <p className="font-medium text-sm text-[#00113D]">
-                      Request Date and Time
-                    </p>
-                    <p className="text-sm text-[#5A5A5A]">
+                  <div className="text-right">
+                    <p className="font-medium text-[#00113D]">Request Date</p>
+                    <p className="text-[#5A5A5A]">
                       {selectedRequest.createdAt
-                        ? new Date(selectedRequest.createdAt).toLocaleString()
+                        ? new Date(
+                            selectedRequest.createdAt
+                          ).toLocaleDateString()
                         : "N/A"}
+                      <br />
+                      {selectedRequest.createdAt
+                        ? new Date(
+                            selectedRequest.createdAt
+                          ).toLocaleTimeString()
+                        : ""}
                     </p>
-                  </div>
-                  <div className="w-44 flex justify-center items-center py-2 px-4 text-base rounded-xl bg-[#E9F1FE] text-[#4478EB]">
-                    Booking Pending{" "}
-                    {/* This seems static, might need adjustment based on actual status */}
                   </div>
                 </div>
-                <h2 className="text-lg mt-16 mb-4 font-semibold text-[#00113D]">
+                <div
+                  className={`w-full text-center py-2 px-4 text-sm rounded-lg mt-4 ${
+                    selectedRequest.expiresInSeconds <= 0
+                      ? "bg-red-100 text-red-700"
+                      : "bg-[#E9F1FE] text-[#4478EB]"
+                  }`}
+                >
+                  {selectedRequest.expiresInSeconds <= 0
+                    ? "Request Expired"
+                    : `Expires in: ${formatTime(
+                        selectedRequest.expiresInSeconds
+                      )}`}
+                </div>
+                <h2 className="text-lg mt-8 mb-4 font-semibold text-[#00113D]">
                   Car Details
                 </h2>
-                <div className="text-sm space-y-2 w-full text-gray-500">
-                  <div className="grid grid-cols-2 gap-4 w-full mt-4">
-                    {" "}
-                    {/* Adjusted width for full section */}
+                <div className="text-sm space-y-2 text-gray-600">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <span className="font-medium text-black">Car Brand</span>
-                      <p className="">
-                        {selectedRequest.vehicleDetail?.make || "Unknown"}
+                      <span className="font-medium text-black block">
+                        Brand
+                      </span>
+                      <p>{selectedRequest.vehicleDetail?.make || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-black block">
+                        Model
+                      </span>
+                      <p>{selectedRequest.vehicleDetail?.model || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-black block">Year</span>
+                      <p>{selectedRequest.vehicleDetail?.year || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-black block">
+                        Plate No.
+                      </span>
+                      <p>
+                        {selectedRequest.vehicleDetail?.vehicleNumber || "N/A"}
                       </p>
                     </div>
-                    <div className="w-full">
-                      <span className="font-medium text-black">Car Model</span>
-                      <p className="">
-                        {selectedRequest.vehicleDetail?.model || "Unknown"}
-                      </p>
-                    </div>
-                    {/* Add other vehicle details if needed, e.g., Year, Color, etc. */}
                   </div>
                 </div>
               </section>
 
-              {/* Rental Details Section */}
-              <section className="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
-                <h2 className="text-lg font-semibold text-[#00113D] mb-8">
+              <section className="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-lg">
+                <h2 className="text-lg font-semibold text-[#00113D] mb-6">
                   Rental Details
                 </h2>
                 <div className="flex flex-col text-sm text-[#5A5A5A]">
-                  <div className="flex items-start gap-2">
-                    <div>
-                      <p className="flex items-center">
-                        <FaRegCircle className="text-gray-400" />
-                        <span className="px-4">
-                          {selectedRequest.startDate
-                            ? new Date(
-                                selectedRequest.startDate
-                              ).toLocaleString()
-                            : "N/A"}
-                        </span>
-                      </p>
-                      <div className="ml-2 px-6 border-l pb-12 border-gray-300">
-                        <p className="font-semibold">Pick Up Location</p>
-                        <p>
-                          {selectedRequest.pickUp?.[0] || "Unknown location"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div>
-                      <p className="flex items-center">
-                        <FaRegCircle className="text-gray-400" />
-                        <span className="px-4">
-                          {selectedRequest.endDate
-                            ? new Date(selectedRequest.endDate).toLocaleString()
-                            : "N/A"}
-                        </span>
-                      </p>
-                      <div className="ml-2 px-6 pb-8">
-                        <p className="font-semibold">Drop Off Location</p>
-                        <p>
-                          {selectedRequest.dropOff?.[0] || "Unknown location"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 text-sm">
-                  <span className="font-medium text-black">Driver request</span>
-                  <p className="text-gray-500">
-                    {selectedRequest.driverRequest ? "Yes" : "No"}{" "}
-                    {/* Assuming driverRequest exists */}
-                  </p>
-                </div>
-                {/* Add total amount here for clarity */}
-                <div className="mt-4 text-sm">
-                  <span className="font-medium text-black">Total Payment</span>
-                  <p className="text-gray-500">
-                    {selectedRequest.amount || "N/A"} birr
-                  </p>
-                </div>
-              </section>
-            </div>
-
-            {/* Rentee Details & Action Buttons Section */}
-            <div>
-              <section className="h-fit bg-white p-6 space-y-6 rounded-xl shadow-md">
-                <h2 className="text-lg font-semibold text-[#00113D] mb-8">
-                  Rentee Details
-                </h2>
-                <div className="items-center flex md:flex-row flex-col gap-8">
-                  {/* Always use the fallback image as profile picture key is not available in renteeInfo */}
-                  <img
-                    src={image}
-                    alt="Renter Profile"
-                    className="w-32 h-32 rounded-full object-cover"
-                    // No need for onError handler as src is always local image now
-                  />
-                  <div className="grid gap-4 md:grid-cols-2 grid-cols-1 justify-center items-center">
-                    {/* Access rentee details directly from renteeInfo */}
-                    <h3 className="flex gap-4 text-sm text-[#5A5A5A]">
-                      <IoPersonOutline size={18} />
-                      {selectedRequest.renteeInfo?.given_name &&
-                      selectedRequest.renteeInfo?.family_name
-                        ? `${selectedRequest.renteeInfo.given_name} ${selectedRequest.renteeInfo.family_name}`.trim()
-                        : "Unknown Rentee"}
-                    </h3>
-                    <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
-                      <MdOutlineLocalPhone size={18} />
-                      {/* Access phone from renteeInfo */}
+                  <div className="flex items-start gap-3 mb-4">
+                    <FaRegCircle className="text-blue-500 mt-1 flex-shrink-0" />
+                    <div className="flex-grow">
+                      <p className="font-semibold text-black">Pick Up</p>
                       <p>
-                        {selectedRequest.renteeInfo?.phone_number || "Unknown"}
+                        {selectedRequest.startDate
+                          ? new Date(selectedRequest.startDate).toLocaleString()
+                          : "N/A"}
+                      </p>
+                      {/* Use processed location string */}
+                      <p className="text-xs text-gray-500">
+                        {selectedRequest.displayPickUpLocation}
                       </p>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
-                      <MdOutlineMail size={18} />
-                      {/* Access email from renteeInfo */}
-                      <p>{selectedRequest.renteeInfo?.email || "Unknown"}</p>
+                  </div>
+                  <div className="ml-[7px] h-8 w-px bg-gray-300 mb-0"></div>
+                  <div className="flex items-start gap-3">
+                    <FaRegCircle className="text-green-500 mt-1 flex-shrink-0" />
+                    <div className="flex-grow">
+                      <p className="font-semibold text-black">Drop Off</p>
+                      <p>
+                        {selectedRequest.endDate
+                          ? new Date(selectedRequest.endDate).toLocaleString()
+                          : "N/A"}
+                      </p>
+                      {/* Use processed location string */}
+                      <p className="text-xs text-gray-500">
+                        {selectedRequest.displayDropOffLocation}
+                      </p>
                     </div>
-                    {/* Address is not available in the provided renteeInfo structure */}
-                    <div className="flex items-center gap-4 text-sm text-[#5A5A5A] mt-1">
-                      <IoLocationOutline size={18} />
-                      <p>N/A</p> {/* Address not available in renteeInfo */}
-                    </div>
-                    <button
-                      className="flex items-center gap-2 mt-4 px-16 py-3 text-xs border rounded-full border-[#00113D] text-[#00113D] bg-white hover:bg-[#00113D] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      onClick={() => handleChatWithRentee(selectedRequest)}
-                      disabled={
-                        !ownerId ||
-                        !selectedRequest?.renteeId ||
-                        !selectedRequest?.id // Basic check, renteeInfo existence might be better
-                      }
-                    >
-                      <IoChatboxOutline size={16} />
-                      Chat With Rentee
-                    </button>
                   </div>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex text-base gap-4">
-                  <button
-                    onClick={() => handleRejectRequest(selectedRequest.id)} // Pass the ID
-                    className="flex-1 py-2 rounded-full bg-[#FDEAEA] text-red-700 border border-red-700 hover:bg-red-700 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={
-                      !selectedRequest?.id ||
-                      selectedRequest.expiresInSeconds <= 0
-                      // Could also add || loading if you want to disable during action
-                    }
-                  >
-                    Reject Request
-                  </button>
-                  <button
-                    className="flex-1 py-2 rounded-full bg-[#00113D] text-white hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => handleApproveRequest(selectedRequest.id)} // Pass the ID
-                    disabled={
-                      !selectedRequest?.id ||
-                      selectedRequest.expiresInSeconds <= 0
-                      // Could also add || loading if you want to disable during action
-                    }
-                  >
-                    Approve Request
-                  </button>
+                <div className="mt-6 text-sm">
+                  <span className="font-medium text-black block">
+                    Driver Requested
+                  </span>
+                  <p className="text-gray-600">
+                    {selectedRequest.driverRequest ? "Yes" : "No"}
+                  </p>
+                </div>
+                <div className="mt-4 text-sm">
+                  <span className="font-medium text-black block">
+                    Total Payment
+                  </span>
+                  <p className="text-gray-600 font-semibold">
+                    {selectedRequest.amount
+                      ? `${selectedRequest.amount} ETB`
+                      : "N/A"}
+                  </p>
                 </div>
               </section>
             </div>
+
+            <section className="h-fit bg-white p-6 space-y-6 rounded-xl shadow-lg">
+              <h2 className="text-lg font-semibold text-[#00113D] mb-6">
+                Rentee Details
+              </h2>
+              <div className="items-center flex md:flex-row flex-col gap-6 md:gap-8">
+                <img
+                  src={selectedRequest.renterAvatarUrl}
+                  alt="Renter Profile"
+                  className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover"
+                />
+                <div className="grid gap-x-6 gap-y-3 md:grid-cols-2 grid-cols-1 w-full">
+                  <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
+                    <IoPersonOutline size={18} className="text-gray-500" />
+                    <span>{selectedRequest.renterName}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
+                    <MdOutlineLocalPhone size={18} className="text-gray-500" />
+                    <span>{selectedRequest.renterPhone}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
+                    <MdOutlineMail size={18} className="text-gray-500" />
+                    <span>{selectedRequest.renteeInfo?.email || "N/A"}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
+                    <IoLocationOutline size={18} className="text-gray-500" />
+                    <span>Address N/A</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                className="w-full md:w-auto mt-4 px-8 py-3 text-sm border rounded-full border-[#00113D] text-[#00113D] bg-white hover:bg-[#00113D] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                onClick={() => handleChatWithRentee(selectedRequest)}
+                disabled={
+                  !ownerId ||
+                  !selectedRequest?.renteeId ||
+                  !selectedRequest?.id ||
+                  actionLoading
+                }
+              >
+                <IoChatboxOutline size={16} />
+                Chat With Rentee
+              </button>
+              {actionError && (
+                <p className="text-red-500 text-sm text-center mt-2">
+                  {actionError}
+                </p>
+              )}
+              <div className="flex text-base gap-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => handleRejectRequest(selectedRequest.id)}
+                  className="flex-1 py-3 rounded-full bg-red-50 text-red-700 border border-red-600 hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={
+                    actionLoading ||
+                    !selectedRequest?.id ||
+                    selectedRequest.expiresInSeconds <= 0
+                  }
+                >
+                  {actionLoading && selectedRequest.id === selectedRequest?.id
+                    ? "Rejecting..."
+                    : "Reject Request"}
+                </button>
+                <button
+                  className="flex-1 py-3 rounded-full bg-[#00113D] text-white hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handleApproveRequest(selectedRequest.id)}
+                  disabled={
+                    actionLoading ||
+                    !selectedRequest?.id ||
+                    selectedRequest.expiresInSeconds <= 0
+                  }
+                >
+                  {actionLoading && selectedRequest.id === selectedRequest?.id
+                    ? "Approving..."
+                    : "Approve Request"}
+                </button>
+              </div>
+            </section>
           </>
         ) : (
-          // Message when no request is selected
-          <div className="md:w-2/3 w-full bg-white p-6 rounded-xl shadow-md h-[400px] flex justify-center items-center">
+          <div className="md:w-2/3 w-full bg-white p-6 rounded-xl shadow-lg h-[400px] flex justify-center items-center">
             <p className="text-gray-500">
-              Select a rental request from the left to see details.
+              {rentalRequests.length > 0
+                ? "Select a rental request from the left to see details."
+                : "No pending requests."}
             </p>
           </div>
         )}
-        {/* Display action-specific error if any */}
-        {error &&
-          rentalRequests.length > 0 && ( // Show only if list is populated but an action failed
-            <div className="text-red-600 text-center mt-4">Action Error</div>
-          )}
       </div>
     </div>
   );

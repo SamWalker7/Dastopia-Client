@@ -13,10 +13,10 @@ const ContactForm = () => {
       }}
       className=" flex flex-col overflow-hidden bg-auto  "
     >
-      <h2 className="text-center text-xl md:my-28 md:mt-52 md:text-9xl  font-medium text-[#00173C] mb-4">
+      <h2 className="text-center text-xl my-28 mt-52 md:text-9xl  font-medium text-[#00173C] mb-4">
         Contact Us
       </h2>
-      <div className="flex justify-center items-center w-full h-screen bg-white">
+      <div className="flex justify-center mt-10 mb-80 items-center w-full h-screen bg-white">
         <div className="flex flex-wrap gap-20 bg-white rounded-xl shadow-lg shadow-gray-300 w-full mx-20">
           {/* Left Panel */}
           <div
@@ -27,7 +27,7 @@ const ContactForm = () => {
             <div className="absolute inset-0 bg-[#FABD05]  opacity-95"></div>
 
             <h2 className="relative text-5xl font-bold text-[#00113D] mb-4">
-              Contact Information
+              Contact Us
             </h2>
             <p className="relative text-lg text-[#00113D] mb-8">
               Say something to start a chat!
@@ -114,7 +114,7 @@ const ContactForm = () => {
                 <textarea
                   id="message"
                   className="mt-1 block w-full px-4  py-4 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 "
-                  placeholder="Enter total distance in kilometers"
+                  placeholder="Enter message"
                   rows="4"
                 ></textarea>
               </div>
@@ -123,7 +123,7 @@ const ContactForm = () => {
                 type="submit"
                 className="w-full py-3 bg-[#00113D] text-white rounded-full text-lg hover:bg-[#000a29]"
               >
-                Send A Message
+                Send Message
               </button>
             </form>
           </div>
