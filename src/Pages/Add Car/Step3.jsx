@@ -1,15 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import { FiEdit2, FiChevronLeft, FiChevronRight } from "react-icons/fi";
-import useVehicleFormStore from "../../store/useVehicleFormStore"; // Assuming correct path
-
-// Helper to set time to 00:00:00.000 for consistent date comparisons
-const normalizeDate = (date) => {
-  if (!(date instanceof Date) || isNaN(date.getTime())) return null;
-  const newDate = new Date(date);
-  newDate.setHours(0, 0, 0, 0);
-  return newDate;
-};
+import useVehicleFormStore from "../../store/useVehicleFormStore";
 
 const CalendarModal = ({
   showCalendar,
@@ -22,18 +14,18 @@ const CalendarModal = ({
 }) => {
   if (!showCalendar) return null;
 
+  // Create a list of month-year options for the select dropdown
   const monthYearOptions = [];
   const D = new Date();
-  D.setDate(1);
+  D.setDate(1); // Start from the first day of the current month
   for (let i = 0; i < 24; i++) {
+    // Generate options for the next 24 months
     monthYearOptions.push(new Date(D.getFullYear(), D.getMonth() + i));
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full mx-auto">
-        {" "}
-        {/* Adjusted max-width and padding */}
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <div className="bg-white rounded-2xl p-8 max-w-2xl w-fit mx-4">
         <div className="flex items-center justify-between mb-6">
           <select
             value={`${
@@ -58,7 +50,7 @@ const CalendarModal = ({
               );
             })}
           </select>
-          <div className="flex text-sm gap-2 sm:gap-4">
+          <div className="flex text-sm gap-4">
             <button
               onClick={() =>
                 setCurrentMonth(
@@ -69,7 +61,6 @@ const CalendarModal = ({
                 )
               }
               className="p-2 hover:bg-gray-100 rounded-full"
-              aria-label="Previous month"
             >
               <FiChevronLeft className="text-lg" />
             </button>
@@ -83,25 +74,27 @@ const CalendarModal = ({
                 )
               }
               className="p-2 hover:bg-gray-100 rounded-full"
-              aria-label="Next month"
             >
               <FiChevronRight className="text-lg" />
             </button>
           </div>
         </div>
+
         <div className="grid grid-cols-7 gap-0 mb-4">
           {daysOfWeek.map((day) => (
             <div
               key={day}
-              className="w-8 h-8 flex items-center justify-center text-gray-600 text-xs sm:text-sm font-semibold" // smaller text on small screens
+              className="w-8 h-8 flex items-center justify-center text-gray-600 text-sm font-semibold"
             >
               {day}
             </div>
           ))}
         </div>
+
         <div className="grid grid-cols-7 text-sm gap-0 mb-6">
           {renderCalendarDays()}
         </div>
+
         <div className="flex justify-end gap-4">
           <button
             className="px-6 py-3 text-gray-600 text-sm font-medium hover:bg-gray-100 rounded-md"
@@ -112,6 +105,7 @@ const CalendarModal = ({
           <button
             className="px-6 py-3 text-blue-600 text-sm font-medium hover:bg-blue-50 rounded-md"
             onClick={() => {
+              // Potentially finalize any temp selection if needed, though current logic updates selectedRanges directly
               setShowCalendar(false);
             }}
           >
@@ -126,67 +120,44 @@ const CalendarModal = ({
 const Step3 = ({ nextStep, prevStep }) => {
   const { vehicleData, updateVehicleData } = useVehicleFormStore();
   const [searchTerm, setSearchTerm] = useState("");
-  const [tempRangeStart, setTempRangeStart] = useState(null); // Only need start for temp range
+  const [tempRange, setTempRange] = useState({ start: null, end: null });
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  // selectedUnavailableEntries stores objects: { date: Date } or { start: Date, end: Date } for UI
-  const [selectedUnavailableEntries, setSelectedUnavailableEntries] = useState(
-    () => {
-      try {
-        // Initialize from store: vehicleData.unavailableDates are ISO strings
-        // For UI, treat each as a single unavailable date entry initially.
-        // More complex range reconstruction from flat list is possible but adds significant complexity.
-        return vehicleData.unavailableDates &&
-          Array.isArray(vehicleData.unavailableDates)
-          ? vehicleData.unavailableDates
-              .map((isoString) => {
-                const date = normalizeDate(new Date(isoString));
-                return date ? { date } : null;
-              })
-              .filter(Boolean) // Remove nulls from invalid dates
-          : [];
-      } catch (e) {
-        console.error("Error parsing unavailableDates for UI:", e);
-        return [];
-      }
+  const [selectedRanges, setSelectedRanges] = useState(() => {
+    try {
+      return vehicleData.calendar
+        ? JSON.parse(vehicleData.calendar).map((range) => ({
+            start: new Date(range.start),
+            end: new Date(range.end),
+          }))
+        : [];
+    } catch (e) {
+      console.error("Error parsing calendar:", e);
+      return [];
     }
-  );
+  });
 
-  // Effect to update the Zustand store (vehicleData.unavailableDates)
-  // This effect will flatten selectedUnavailableEntries into an array of ISO date strings
   useEffect(() => {
-    const allUnavailableIsoDates = [];
-    selectedUnavailableEntries.forEach((entry) => {
-      if (entry.date) {
-        // Single date entry
-        if (entry.date instanceof Date && !isNaN(entry.date)) {
-          allUnavailableIsoDates.push(normalizeDate(entry.date).toISOString());
-        }
-      } else if (entry.start && entry.end) {
-        // Date range entry
-        if (
-          entry.start instanceof Date &&
-          !isNaN(entry.start) &&
-          entry.end instanceof Date &&
-          !isNaN(entry.end) &&
-          normalizeDate(entry.start) <= normalizeDate(entry.end)
-        ) {
-          let current = normalizeDate(new Date(entry.start));
-          const endDate = normalizeDate(new Date(entry.end));
-          while (current <= endDate) {
-            allUnavailableIsoDates.push(new Date(current).toISOString());
-            current.setDate(current.getDate() + 1);
-          }
-        }
-      }
-    });
-    // Ensure unique dates in the store
-    const uniqueIsoDates = [...new Set(allUnavailableIsoDates)].sort(); // Sort for consistency
-    updateVehicleData({ unavailableDates: uniqueIsoDates });
-  }, [selectedUnavailableEntries, updateVehicleData]);
+    const validRanges = selectedRanges.filter(
+      (range) =>
+        range.start instanceof Date &&
+        range.end instanceof Date &&
+        !isNaN(range.start) &&
+        !isNaN(range.end)
+    );
 
-  const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"]; // Shorter names for small cells
+    const calendarString = JSON.stringify(
+      validRanges.map((range) => ({
+        start: range.start.toISOString(),
+        end: range.end.toISOString(),
+      }))
+    );
+
+    updateVehicleData({ calendar: calendarString });
+  }, [selectedRanges, updateVehicleData]);
+
+  const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   const months = [
     "January",
     "February",
@@ -202,7 +173,6 @@ const Step3 = ({ nextStep, prevStep }) => {
     "December",
   ];
 
-  // Constants (unchanged)
   const carFeatures = [
     "GPS",
     "AWD",
@@ -215,6 +185,7 @@ const Step3 = ({ nextStep, prevStep }) => {
     "Backup Camera",
     "Heated Seats",
   ];
+
   const noticePeriods = [
     "2 hours",
     "6 hours",
@@ -233,181 +204,125 @@ const Step3 = ({ nextStep, prevStep }) => {
   };
 
   const formatDate = (date) => {
-    if (!(date instanceof Date) || isNaN(date)) return "Invalid Date";
+    if (!(date instanceof Date) || isNaN(date)) {
+      return "Invalid Date";
+    }
     return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
       year: "numeric",
+      month: "long",
+      day: "numeric",
     }).format(date);
   };
 
-  const isDateUnavailable = useCallback(
-    (date) => {
-      const normalizedTargetDate = normalizeDate(date);
-      if (!normalizedTargetDate) return false;
-
-      return selectedUnavailableEntries.some((entry) => {
-        if (entry.date) {
-          return (
-            normalizeDate(entry.date)?.getTime() ===
-            normalizedTargetDate.getTime()
-          );
-        }
-        if (entry.start && entry.end) {
-          const entryStart = normalizeDate(entry.start);
-          const entryEnd = normalizeDate(entry.end);
-          return (
-            entryStart &&
-            entryEnd &&
-            normalizedTargetDate >= entryStart &&
-            normalizedTargetDate <= entryEnd
-          );
-        }
-        return false;
-      });
-    },
-    [selectedUnavailableEntries]
-  );
+  const isDateSelected = (date) => {
+    return selectedRanges.some((range) => {
+      const start = range.start.getTime();
+      const end = range.end.getTime();
+      const current = date.getTime();
+      return current >= start && current <= end;
+    });
+  };
 
   const handleDateSelect = (day) => {
-    let selectedDate = new Date(
+    const selectedDate = new Date(
       currentMonth.getFullYear(),
       currentMonth.getMonth(),
       day
     );
-    selectedDate = normalizeDate(selectedDate);
-    if (!selectedDate) return;
+    // Prevent selection of past dates (already handled by disabled, but good for direct calls)
+    if (selectedDate < new Date(new Date().setHours(0, 0, 0, 0))) return;
 
-    // Prevent selection of past dates
-    const today = normalizeDate(new Date());
-    if (selectedDate < today) return;
+    let rangeIndex = -1;
+    let targetRange = null;
 
-    const alreadyUnavailable = isDateUnavailable(selectedDate);
+    selectedRanges.forEach((range, index) => {
+      const start = range.start.getTime();
+      const end = range.end.getTime();
+      if (selectedDate.getTime() >= start && selectedDate.getTime() <= end) {
+        rangeIndex = index;
+        targetRange = range;
+      }
+    });
 
-    if (alreadyUnavailable) {
-      // User clicked an already unavailable date - make it available (deselect)
-      setSelectedUnavailableEntries(
-        (prevEntries) =>
-          prevEntries
-            .reduce((acc, entry) => {
-              if (entry.date) {
-                // Single date entry
-                if (
-                  normalizeDate(entry.date)?.getTime() !==
-                  selectedDate.getTime()
-                ) {
-                  acc.push(entry);
-                }
-              } else if (entry.start && entry.end) {
-                // Range entry
-                const entryStart = normalizeDate(entry.start);
-                const entryEnd = normalizeDate(entry.end);
+    if (rangeIndex !== -1 && targetRange) {
+      // Check targetRange is not null
+      const newRanges = [];
+      const splitDateStart = new Date(selectedDate); // For first new range end
+      const splitDateEnd = new Date(selectedDate); // For second new range start
 
-                if (selectedDate >= entryStart && selectedDate <= entryEnd) {
-                  // Split the range
-                  if (selectedDate > entryStart) {
-                    // Part before the clicked date
-                    acc.push({
-                      start: entryStart,
-                      end: new Date(
-                        selectedDate.getTime() - 86400000
-                      ) /* day before */,
-                    });
-                  }
-                  if (selectedDate < entryEnd) {
-                    // Part after the clicked date
-                    acc.push({
-                      start: new Date(
-                        selectedDate.getTime() + 86400000
-                      ) /* day after */,
-                      end: entryEnd,
-                    });
-                  }
-                } else {
-                  acc.push(entry); // Range does not include the selected date
-                }
-              }
-              return acc;
-            }, [])
-            .filter(
-              (e) =>
-                e.date ||
-                (e.start &&
-                  e.end &&
-                  normalizeDate(e.start) <= normalizeDate(e.end))
-            ) // Clean up empty ranges
-      );
-      setTempRangeStart(null); // Reset any pending range selection
+      if (targetRange.start.getTime() < selectedDate.getTime()) {
+        newRanges.push({
+          start: new Date(targetRange.start),
+          end: new Date(splitDateStart.setDate(splitDateStart.getDate() - 1)),
+        });
+      }
+
+      if (selectedDate.getTime() < targetRange.end.getTime()) {
+        newRanges.push({
+          start: new Date(splitDateEnd.setDate(splitDateEnd.getDate() + 1)),
+          end: new Date(targetRange.end),
+        });
+      }
+
+      const updatedRanges = [...selectedRanges];
+      updatedRanges.splice(
+        rangeIndex,
+        1,
+        ...newRanges.filter((r) => r.start <= r.end)
+      ); // ensure valid ranges
+      setSelectedRanges(updatedRanges);
     } else {
-      // User clicked an available date - make it unavailable
-      if (!tempRangeStart) {
-        setTempRangeStart(selectedDate); // Start of a new unavailable range/single date
+      if (!tempRange.start) {
+        setTempRange({ start: selectedDate, end: null });
       } else {
-        // Complete the range
-        let startDate = tempRangeStart;
-        let endDate = selectedDate;
+        let [startDate, endDate] = [tempRange.start, selectedDate];
         if (startDate > endDate) [startDate, endDate] = [endDate, startDate];
 
-        if (startDate.getTime() === endDate.getTime()) {
-          // Single day selection
-          setSelectedUnavailableEntries((prev) => [
-            ...prev,
-            { date: startDate },
-          ]);
-        } else {
-          // Range selection
-          setSelectedUnavailableEntries((prev) => [
-            ...prev,
-            { start: startDate, end: endDate },
-          ]);
-        }
-        setTempRangeStart(null); // Reset temp range
+        setSelectedRanges([
+          ...selectedRanges,
+          { start: new Date(startDate), end: new Date(endDate) },
+        ]);
+        setTempRange({ start: null, end: null });
       }
     }
   };
 
-  const removeUnavailableEntry = (indexToRemove) => {
-    setSelectedUnavailableEntries((prev) =>
+  const removeDateRange = (indexToRemove) => {
+    setSelectedRanges((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
-    setTempRangeStart(null); // Reset temp range if an entry is removed
   };
 
-  const formatUnavailableDateEntry = (entry) => {
-    if (entry.date) {
-      return formatDate(entry.date);
-    }
-    if (entry.start && entry.end) {
-      if (
-        normalizeDate(entry.start)?.getTime() ===
-        normalizeDate(entry.end)?.getTime()
-      ) {
-        return formatDate(entry.start);
-      }
-      return `${formatDate(entry.start)} - ${formatDate(entry.end)}`;
-    }
-    return "Invalid Entry";
+  const formatSelectedDates = () => {
+    return selectedRanges.map((range) =>
+      range.start.toDateString() === range.end.toDateString()
+        ? formatDate(range.start)
+        : `${formatDate(range.start)} - ${formatDate(range.end)}`
+    );
   };
 
   const renderCalendarDays = () => {
     const { daysInMonth, startingDay } = getDaysInMonth(currentMonth);
     const days = [];
-    const today = normalizeDate(new Date());
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize today to the start of the day
 
     for (let i = 0; i < startingDay; i++) {
-      days.push(<div key={`empty-${i}`} className="w-8 h-8" />);
+      days.push(<div key={`empty-${i}`} className="w-8 h-8" />); // Adjusted width to match buttons
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const currentDate = normalizeDate(
-        new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
+      const currentDate = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth(),
+        day
       );
-      if (!currentDate) continue;
+      currentDate.setHours(0, 0, 0, 0); // Normalize current date
 
       const isPastDate = currentDate < today;
-      const isCurrentlyUnavailable = isDateUnavailable(currentDate);
-      const isTempSelectionStart =
-        tempRangeStart && currentDate.getTime() === tempRangeStart.getTime();
+      const isCurrentlySelected = isDateSelected(currentDate);
+      const isTempStart =
+        tempRange.start && currentDate.getTime() === tempRange.start.getTime();
 
       days.push(
         <button
@@ -415,36 +330,24 @@ const Step3 = ({ nextStep, prevStep }) => {
           onClick={() => handleDateSelect(day)}
           className={`
             w-8 h-8 flex items-center justify-center focus:outline focus:outline-1 
-            focus:outline-blue-400 rounded-full text-xs sm:text-sm transition-all duration-200
-            ${isCurrentlyUnavailable ? "bg-red-500 text-white" : ""} 
+            focus:outline-blue-400 rounded-full text-sm transition-all duration-200
+            ${isCurrentlySelected ? "bg-navy-900 text-white" : ""}
+            ${isTempStart ? "bg-blue-300 text-black ring-2 ring-blue-500" : ""}
             ${
-              isTempSelectionStart
-                ? "bg-red-300 text-black ring-2 ring-red-500"
-                : ""
-            }
-            ${
-              !isCurrentlyUnavailable && !isTempSelectionStart && !isPastDate
+              !isCurrentlySelected && !isTempStart && !isPastDate
                 ? "hover:bg-gray-100"
                 : ""
             }
             ${
               currentDate.toDateString() === today.toDateString() &&
-              !isCurrentlyUnavailable &&
-              !isTempSelectionStart
+              !isCurrentlySelected &&
+              !isTempStart
                 ? "border-2 border-navy-900"
                 : ""
             }
             ${isPastDate ? "text-gray-400 cursor-not-allowed" : "text-gray-700"}
           `}
           disabled={isPastDate}
-          aria-pressed={isCurrentlyUnavailable}
-          aria-label={`${formatDate(currentDate)} ${
-            isCurrentlyUnavailable
-              ? "(Unavailable)"
-              : isPastDate
-              ? "(Past date)"
-              : "(Available)"
-          }`}
         >
           {day}
         </button>
@@ -471,6 +374,7 @@ const Step3 = ({ nextStep, prevStep }) => {
   const filteredFeatures = carFeatures.filter((feature) =>
     feature.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
   const suggestions = [
     "AWD",
     "Air Conditioning",
@@ -482,27 +386,29 @@ const Step3 = ({ nextStep, prevStep }) => {
   const isAdvanceNoticePeriodFilled =
     vehicleData.advanceNoticePeriod &&
     vehicleData.advanceNoticePeriod.trim() !== "";
-  // No longer require specific availability dates. Empty unavailableDates means fully available.
-  // const isAvailabilityDatesFilled = selectedUnavailableEntries.length > 0; // Or vehicleData.unavailableDates.length > 0
+
+  const isAvailabilityDatesFilled = selectedRanges.length > 0;
+
   const isInstantBookingFilled =
     typeof vehicleData.instantBooking === "boolean";
+
   const isPriceFilled =
     vehicleData.price !== undefined &&
     vehicleData.price !== null &&
     vehicleData.price.toString().trim() !== "" &&
     !isNaN(parseFloat(vehicleData.price)) &&
-    parseFloat(vehicleData.price) >= 0;
+    parseFloat(vehicleData.price) >= 0; // Price can be 0, but must be a number
 
   const allRequiredFieldsFilled =
     isAdvanceNoticePeriodFilled &&
-    // isAvailabilityDatesFilled && // This might be optional now
+    isAvailabilityDatesFilled &&
     isInstantBookingFilled &&
     isPriceFilled;
   // --- End Validation Logic ---
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 bg-[#F8F8FF] p-4 sm:p-0">
-      <div className="lg:mx-auto p-4 sm:p-8 md:w-full lg:w-2/3 bg-white rounded-2xl shadow-sm text-base">
+    <div className="flex gap-10 bg-[#F8F8FF]">
+      <div className="mx-auto p-8 md:w-2/3 w-full bg-white rounded-2xl shadow-sm text-base">
         {/* Progress Bar */}
         <div className="flex items-center justify-center">
           <div className="w-3/5 border-b-4 border-[#00113D] mr-2"></div>
@@ -510,74 +416,69 @@ const Step3 = ({ nextStep, prevStep }) => {
         </div>
         <div className="flex justify-between w-full">
           <div className="flex flex-col w-1/2 items-start">
-            <p className="text-lg sm:text-xl text-gray-800 my-4 font-medium text-center mb-4">
+            <p className="text-xl text-gray-800 my-4 font-medium text-center mb-4">
               Step 3 of 5
             </p>
           </div>
         </div>
 
-        {/* Car Features Section (largely unchanged) */}
+        {/* Car Features Section */}
         <section className="mb-12">
-          <h1 className="text-2xl sm:text-3xl font-semibold mt-8">
-            Car Features
-          </h1>
-          <p className="text-gray-600 text-sm sm:text-base mt-2 mb-6">
-            Select your car's features.
+          <h1 className="text-3xl font-semibold mt-8">Car Features</h1>
+          <p className="text-gray-600 text-base mt-2 mb-6">
+            Please enter your car's basic information below
           </p>
           <div className="relative items-center justify-center flex mb-6">
             <input
               type="text"
-              className="w-full p-2 border rounded-lg pr-8 text-sm sm:text-base"
+              className="w-full p-2 border rounded-lg pr-8 text-base"
               placeholder="Search features"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-base" />
+            <FaSearch className="absolute right-4 top-3 text-gray-400 text-base" />
             {searchTerm && (
-              <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 shadow-lg top-full max-h-60 overflow-y-auto">
+              <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 shadow-lg top-full">
                 {filteredFeatures.length > 0 ? (
                   filteredFeatures.map((feature) => (
                     <div
                       key={feature}
-                      className="p-3 sm:p-4 hover:bg-gray-100 cursor-pointer text-xs sm:text-sm"
+                      className="p-4 hover:bg-gray-100 cursor-pointer text-sm"
                       onClick={() => addFeature(feature)}
                     >
                       {feature}
                     </div>
                   ))
                 ) : (
-                  <div className="p-3 sm:p-4 text-xs sm:text-sm text-gray-500">
+                  <div className="p-4 text-sm text-gray-500">
                     No features found
                   </div>
                 )}
               </div>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">
+          <div className="flex flex-wrap items-center gap-3 mb-6">
             {vehicleData.carFeatures?.map((feature) => (
               <span
                 key={feature}
-                className="bg-blue-100 text-blue-800 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center gap-2 text-xs sm:text-sm"
+                className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full flex items-center gap-2 text-sm"
               >
                 {feature}
                 <FaTimes
                   className="cursor-pointer"
-                  size={10}
+                  size={12}
                   onClick={() => removeFeature(feature)}
-                  aria-label={`Remove ${feature}`}
                 />
               </span>
             ))}
           </div>
           <div className="mt-6">
-            <p className="text-gray-600 mb-3 text-base sm:text-lg">
-              Suggestions
-            </p>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
+            <p className="text-gray-600 mb-3 text-lg">Suggestions</p>
+            <div className="flex flex-wrap gap-3">
               {suggestions.map((suggestion) => (
                 <button
                   key={suggestion}
-                  className="border rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm flex items-center gap-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="border rounded-full px-4 py-2 text-sm flex items-center gap-2 hover:bg-gray-50"
                   onClick={() => addFeature(suggestion)}
                   disabled={vehicleData.carFeatures?.includes(suggestion)}
                 >
@@ -588,23 +489,21 @@ const Step3 = ({ nextStep, prevStep }) => {
           </div>
         </section>
 
-        {/* Car Unavailability Section */}
+        {/* Car Availability Section */}
         <section className="my-8">
-          <h2 className="text-2xl sm:text-3xl font-semibold my-8">
-            Car Unavailability
-          </h2>
+          <h2 className="text-3xl font-semibold my-8">Car Availability</h2>
 
           {/* Advance Notice Period */}
           <div className="mb-8">
-            <h3 className="text-base sm:text-lg font-semibold mb-3">
+            <h3 className="text-lg font-semibold mb-3">
               Advance Notice Period
             </h3>
-            <p className="text-gray-600 text-sm sm:text-base mb-3">
+            <p className="text-gray-600 text-base mb-3">
               How long in advance do you need to be notified before a trip
-              starts.
+              starts
             </p>
             <select
-              className="w-full sm:w-4/6 p-2 border rounded-lg text-xs sm:text-sm"
+              className="md:w-full w-4/6 p-2 border rounded-lg text-sm"
               value={vehicleData.advanceNoticePeriod || ""}
               onChange={(e) =>
                 updateVehicleData({ advanceNoticePeriod: e.target.value })
@@ -624,55 +523,46 @@ const Step3 = ({ nextStep, prevStep }) => {
             )}
           </div>
 
-          {/* Set Car Unavailability Dates */}
+          {/* Set Car Availability Dates */}
           <div className="mb-8">
-            <h3 className="text-base sm:text-lg font-semibold mb-3">
-              Set Unavailable Dates
+            <h3 className="text-lg font-semibold mb-3">
+              Set Car Availability Dates
             </h3>
-            <p className="text-gray-600 text-sm sm:text-base mb-3">
-              Select dates or date ranges when your car will NOT be available.
-              If no dates are selected, the car is assumed to be always
-              available.
+            <p className="text-gray-600 text-base mb-3">
+              Select multiple dates or date ranges for your car's availability.
             </p>
             <button
-              className="w-full p-2 border rounded-lg text-left text-xs sm:text-sm flex justify-between items-center hover:bg-gray-50"
+              className="w-full p-2 border rounded-lg text-left text-sm flex justify-between items-center"
               onClick={() => setShowCalendar(true)}
             >
               <span>
-                {selectedUnavailableEntries.length > 0
-                  ? `${selectedUnavailableEntries.length} unavailable period(s) set`
-                  : "Select unavailable dates"}
+                {selectedRanges.length > 0
+                  ? `${selectedRanges.length} range(s) selected`
+                  : "Select available dates"}
               </span>
               <FiEdit2 className="text-sm" />
             </button>
-            {selectedUnavailableEntries.length > 0 && (
+            {selectedRanges.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
-                {selectedUnavailableEntries.map((entry, index) => (
+                {formatSelectedDates().map((dateString, index) => (
                   <div
                     key={index}
-                    className="bg-red-100 text-red-800 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm flex items-center gap-2"
+                    className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm flex items-center gap-2"
                   >
-                    {formatUnavailableDateEntry(entry)}
+                    {dateString}
                     <FaTimes
                       className="cursor-pointer"
-                      size={10}
-                      onClick={() => removeUnavailableEntry(index)}
-                      aria-label={`Remove unavailability: ${formatUnavailableDateEntry(
-                        entry
-                      )}`}
+                      onClick={() => removeDateRange(index)}
                     />
                   </div>
                 ))}
               </div>
             )}
-            {/*
-            If making unavailable dates mandatory:
             {!isAvailabilityDatesFilled && (
               <p className="text-red-500 text-xs mt-1">
-                Please select at least one unavailable date or range if applicable.
+                Please select at least one date or range.
               </p>
             )}
-            */}
           </div>
 
           <CalendarModal
@@ -685,7 +575,7 @@ const Step3 = ({ nextStep, prevStep }) => {
             months={months}
           />
 
-          {/* Instant Booking (largely unchanged) */}
+          {/* Instant Booking */}
           <div className="flex items-center gap-3 mb-8">
             <div
               className={`w-12 h-6 rounded-full p-1 cursor-pointer flex items-center transition-colors duration-300 ${
@@ -713,37 +603,43 @@ const Step3 = ({ nextStep, prevStep }) => {
               />
             </div>
             <span
-              className="text-sm sm:text-base cursor-pointer"
+              className="text-base"
               onClick={() =>
                 updateVehicleData({
                   instantBooking: !vehicleData.instantBooking,
                 })
               }
+              style={{ cursor: "pointer" }}
             >
               Instant booking
             </span>
           </div>
+          {/* This field might not need an error message if a default is assumed, 
+               but if undefined is the initial and not allowed:
+            {!isInstantBookingFilled && (
+                 <p className="text-red-500 text-xs mt-1 -translate-y-6">Please specify instant booking preference.</p>
+            )} */}
 
-          {/* Pricing (largely unchanged) */}
+          {/* Pricing */}
           <div className="mb-8">
-            <h3 className="text-base sm:text-lg font-semibold mb-3">Pricing</h3>
-            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg mb-4">
-              <p className="text-xs sm:text-sm text-blue-800">
-                Please be aware that a service fee will be automatically
-                deducted from the price you set.
+            <h3 className="text-lg font-semibold mb-3">Pricing</h3>
+            <div className="bg-blue-50 p-4 rounded-lg mb-4">
+              <p className="text-sm text-blue-800">
+                When inputting a price please be aware there will be a price
+                deduction on the price you will be inputting
               </p>
             </div>
-            <p className="text-gray-600 text-sm sm:text-base mb-3">
-              Set daily price for your car.
+            <p className="text-gray-600 text-base mb-3">
+              Set daily price for your car
             </p>
             <div className="flex items-center border rounded-lg overflow-hidden">
-              <span className="px-3 font-semibold text-gray-700 text-xs sm:text-sm bg-gray-50 py-2.5">
+              <span className="px-3 font-semibold text-gray-700 text-sm bg-gray-50 py-2.5">
                 ETB
               </span>
               <input
                 type="number"
                 min="0"
-                className="w-full p-2 text-xs sm:text-sm outline-none"
+                className="w-full p-2 text-sm outline-none"
                 placeholder="Set Daily car rent price"
                 value={
                   vehicleData.price === null || vehicleData.price === undefined
@@ -767,16 +663,16 @@ const Step3 = ({ nextStep, prevStep }) => {
         </section>
 
         {/* Navigation Buttons */}
-        <div className="flex flex-col sm:flex-row mt-4 gap-4 justify-between">
+        <div className="flex md:flex-row mt-4 gap-4 flex-col justify-between">
           <button
             onClick={prevStep}
-            className="px-6 sm:px-8 py-3 border border-gray-300 rounded-full text-xs sm:text-sm hover:bg-gray-50"
+            className="px-8 py-3 border border-gray-300 rounded-full text-sm hover:bg-gray-50"
           >
             Back
           </button>
           <button
             onClick={nextStep}
-            className={`px-6 sm:px-8 py-3 rounded-full text-xs sm:text-sm text-white ${
+            className={`px-8 py-3 rounded-full text-sm text-white ${
               allRequiredFieldsFilled
                 ? "bg-navy-900 hover:bg-navy-800"
                 : "bg-gray-400 cursor-not-allowed"
@@ -789,11 +685,10 @@ const Step3 = ({ nextStep, prevStep }) => {
       </div>
 
       {/* Side Panel */}
-      <div className="p-4 sm:p-8 lg:w-1/4 md:flex hidden text-xs sm:text-sm bg-blue-100 py-6 h-fit rounded-lg shadow-sm">
-        Ensure all availability (unavailable dates) and pricing details are
-        accurate. If no dates are marked as unavailable, your car will be
-        considered available for booking at any time, subject to your advance
-        notice period.
+      <div className="p-8 w-1/4 md:flex hidden text-sm bg-blue-100 py-6 h-fit rounded-lg shadow-sm">
+        Make sure to upload all documents necessary to validate that you have
+        ownership of the rented car. Ensure all availability and pricing details
+        are accurate.
       </div>
     </div>
   );
