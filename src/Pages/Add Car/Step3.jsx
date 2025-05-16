@@ -723,6 +723,11 @@ const Step3 = ({ nextStep, prevStep }) => {
               Instant booking
             </span>
           </div>
+          {/* This field might not need an error message if a default is assumed, 
+               but if undefined is the initial and not allowed:
+            {!isInstantBookingFilled && (
+                 <p className="text-red-500 text-xs mt-1 -translate-y-6">Please specify instant booking preference.</p>
+            )} */}
 
           {/* Pricing (largely unchanged) */}
           <div className="mb-8">

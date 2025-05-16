@@ -57,7 +57,7 @@ const Step4 = ({ nextStep, prevStep }) => {
   });
 
   const [currentLocation, setCurrentLocation] = useState(null);
-  const [locationType, setLocationType] = useState("");
+  const [locationType, setLocationType] = useState(""); // For the modal
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [map, setMap] = useState(null);
@@ -106,7 +106,7 @@ const Step4 = ({ nextStep, prevStep }) => {
   const locationTypes = [
     "Pickup Location",
     "Drop-off Location",
-    "Pickup and Drop-off",
+    "Pickup and Drop-off", // This option adds to both
   ];
 
   useEffect(() => {
@@ -605,12 +605,14 @@ const Step4 = ({ nextStep, prevStep }) => {
                 ? "bg-navy-900 hover:bg-navy-800 shadow-md"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
+
             disabled={!allRequiredLocationsFilled}
           >
             Submit Listing & Continue
           </button>
         </div>
       </div>
+
       <div className="p-6 w-1/3 lg:flex hidden flex-col gap-4 text-sm bg-blue-50 border border-blue-200 rounded-lg shadow-sm h-fit">
         <h3 className="font-semibold text-blue-700">Location Tips:</h3>
         <ul className="list-disc list-inside text-blue-600 space-y-1 text-xs">

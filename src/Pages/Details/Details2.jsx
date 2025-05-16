@@ -343,6 +343,7 @@ export default function Details2() {
             return null;
           }
         } else {
+
           return null;
         }
 
@@ -550,6 +551,7 @@ export default function Details2() {
       } else {
         setDateError("");
         if (datesNeedSetting) {
+
           setCurrentPickUpDate(initialPickUp);
           setCurrentDropOffDate(initialDropOff);
         }
@@ -596,7 +598,6 @@ export default function Details2() {
     };
     fetchVehicleRatings(selectedVehicleId);
   }, [selectedVehicleId, authChecked, customer]);
-
   const openFullScreen = (index) => {
     setCurrentImageIndex(index);
     setIsFullScreen(true);
@@ -612,7 +613,6 @@ export default function Details2() {
         (prev) => (prev - 1 + vehicleImages.length) % vehicleImages.length
       );
   };
-
   let days = 0;
   if (
     currentPickUpDate &&
@@ -656,6 +656,7 @@ export default function Details2() {
       mapCenter = specificLocationData.originalCoords;
       popupTitleName = specificLocationData.displayName;
     } else {
+
       // View all locations of a type
       vehiclesForMap = [vehicleDetails]; // Pass the full vehicle details
       const locationsOfType =
