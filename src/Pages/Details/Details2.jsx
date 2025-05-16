@@ -64,7 +64,7 @@ const fetchPlaceName = async (lat, lng) => {
   const isValidLat = typeof lat === "number" && !isNaN(lat);
   const isValidLng = typeof lng === "number" && !isNaN(lng);
   const isKeyValid =
-    GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY !== "YOUR_GOOGLE_MAPS_API_KEY";
+    GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY !== "YOUR_GOOGLE_MAPS_API_KEY"; // Check against actual placeholder
   if (!isValidLat || !isValidLng || !isKeyValid) {
     console.warn(
       `Geocoding skipped: Missing valid coords (Lat valid: ${isValidLat}, Lng valid: ${isValidLng}) or API key issue (Key valid: ${isKeyValid}).`,
@@ -121,7 +121,6 @@ const fetchPlaceName = async (lat, lng) => {
 };
 
 const formatDateInternal = (dateString) => {
-  /* ... same as before ... */
   if (!dateString) return "N/A";
   try {
     const date = new Date(dateString);
@@ -137,7 +136,6 @@ const formatDateInternal = (dateString) => {
   }
 };
 const formatDateForDisplayInternal = (date) => {
-  /* ... same as before ... */
   if (!date) return "Not set";
   try {
     return date.toLocaleDateString("en-US", {
@@ -166,7 +164,7 @@ export default function Details2() {
       : null
   );
   const [currentDropOffDate, setCurrentDropOffDate] = useState(
-    locationHook.state?.DropOffTime
+    locationHook.state?.DropOffTime // Note: DropOffTime had a capital 'O' in original code
       ? new Date(locationHook.state.DropOffTime)
       : null
   );
@@ -193,8 +191,10 @@ export default function Details2() {
   const [actualSelectedDropOff, setActualSelectedDropOff] = useState(
     locationHook.state?.dropoffLocationData || null
   );
-  const [allVehicleEvents, setAllVehicleEvents] = useState([]);
-  const [availableEvents, setAvailableEvents] = useState([]);
+  // REMOVED: const [allVehicleEvents, setAllVehicleEvents] = useState([]);
+  // REMOVED: const [availableEvents, setAvailableEvents] = useState([]);
+  // We will use vehicleDetails.unavailableDates directly (Array of ISO strings)
+
   const [ratings, setRatings] = useState([]);
   const [averageRating, setAverageRating] = useState(0);
   const [showMapPopup, setShowMapPopup] = useState(false);
@@ -238,11 +238,10 @@ export default function Details2() {
         );
         if (response && response.body) {
           setVehicleDetails(response.body);
-          const eventsFromApi = response.body.events || [];
-          setAllVehicleEvents(eventsFromApi);
-          setAvailableEvents(
-            eventsFromApi.filter((event) => event.status === "available")
-          );
+          // Events logic removed. Assuming response.body.unavailableDates exists and is an array of ISO strings.
+          // Example: response.body.unavailableDates = ["2024-08-10T00:00:00.000Z", "2024-08-15T00:00:00.000Z"]
+          // If your API returns unavailable dates under a different key or format, adjust here.
+
           if (response.body.vehicleImageKeys?.length > 0) {
             const fetchedUrls = await Promise.all(
               response.body.vehicleImageKeys.map(
@@ -277,7 +276,7 @@ export default function Details2() {
     fetchVehicleData();
   }, [selectedVehicleId, apiCallWithRetry, authChecked, customer]);
 
-  // Effect to PROCESS RAW COORDINATES into options with human-readable NAMES
+  // Effect to PROCESS RAW COORDINATES into options with human-readable NAMES (Unchanged)
   useEffect(() => {
     if (!vehicleDetails) return;
 
@@ -293,20 +292,14 @@ export default function Details2() {
         setOptionsState([]);
         setSelectedNameState("");
         setActualSelectedState(null);
-        // console.warn(`No location data for (Type: ${setOptionsState === setPickUpLocationOptions ? 'Pick-up' : 'Drop-off'}). CoordsArray:`, coordsArray);
         return;
       }
-      // console.log(`Processing ${setOptionsState === setPickUpLocationOptions ? 'Pick-up' : 'Drop-off'} Locations. Raw coordsArray:`, JSON.parse(JSON.stringify(coordsArray)));
 
       const optionsPromises = coordsArray.map(async (coordData, index) => {
         let lat, lng, originalCoordsForOption;
-
-        // console.log(`[processLocationOptions] Index ${index}, Raw coordData:`, coordData);
-
         if (Array.isArray(coordData) && coordData.length === 2) {
-          lat = parseFloat(coordData[0]); // Attempt to convert to number
-          lng = parseFloat(coordData[1]); // Attempt to convert to number
-          //   console.log(`[processLocationOptions] Index ${index} - Parsed as Array: lat=${lat} (type: ${typeof lat}), lng=${lng} (type: ${typeof lng})`);
+          lat = parseFloat(coordData[0]);
+          lng = parseFloat(coordData[1]);
           if (
             typeof lat === "number" &&
             typeof lng === "number" &&
@@ -315,9 +308,6 @@ export default function Details2() {
           ) {
             originalCoordsForOption = { lat, lng };
           } else {
-            console.error(
-              `[processLocationOptions] Index ${index} - Invalid numbers in array AFTER parseFloat: lat=${lat}, lng=${lng}`
-            );
             return null;
           }
         } else if (
@@ -326,7 +316,6 @@ export default function Details2() {
         ) {
           lat = parseFloat(coordData.position.lat);
           lng = parseFloat(coordData.position.lng);
-          //   console.log(`[processLocationOptions] Index ${index} - Parsed as {position: {lat,lng}}: lat=${lat} (type: ${typeof lat}), lng=${lng} (type: ${typeof lng})`);
           if (
             typeof lat === "number" &&
             typeof lng === "number" &&
@@ -335,9 +324,6 @@ export default function Details2() {
           ) {
             originalCoordsForOption = { lat, lng };
           } else {
-            console.error(
-              `[processLocationOptions] Index ${index} - Invalid numbers in {position} AFTER parseFloat: lat=${lat}, lng=${lng}`
-            );
             return null;
           }
         } else if (
@@ -346,7 +332,6 @@ export default function Details2() {
         ) {
           lat = parseFloat(coordData.lat);
           lng = parseFloat(coordData.lng);
-          //   console.log(`[processLocationOptions] Index ${index} - Parsed as {lat,lng}: lat=${lat} (type: ${typeof lat}), lng=${lng} (type: ${typeof lng})`);
           if (
             typeof lat === "number" &&
             typeof lng === "number" &&
@@ -355,17 +340,10 @@ export default function Details2() {
           ) {
             originalCoordsForOption = { lat, lng };
           } else {
-            console.error(
-              `[processLocationOptions] Index ${index} - Invalid numbers in {lat,lng} AFTER parseFloat: lat=${lat}, lng=${lng}`
-            );
             return null;
           }
         } else {
-          console.error(
-            `[processLocationOptions] Index ${index} - Unrecognized coordinate data format:`,
-            coordData,
-            "(Skipping)"
-          );
+
           return null;
         }
 
@@ -380,7 +358,6 @@ export default function Details2() {
         Boolean
       );
       setOptionsState(createdOptions);
-      // console.log(`Created Options (${setOptionsState === setPickUpLocationOptions ? 'Pick-up' : 'Drop-off'}):`, createdOptions);
 
       let matchedOption = null;
       if (initialSelectedFullData && initialSelectedFullData.originalCoords) {
@@ -451,68 +428,71 @@ export default function Details2() {
   ]);
 
   const isDaySelectable = useCallback(
-    (date) => {
-      /* ... */
-      const currentDay = new Date(date);
-      currentDay.setHours(0, 0, 0, 0);
+    (dateToTest) => {
+      const currentDay = new Date(dateToTest);
+      currentDay.setHours(0, 0, 0, 0); // Normalize to start of day for comparison
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      if (currentDay < today) return false;
-      let isWithinAvailablePeriod =
-        availableEvents.length === 0
-          ? true
-          : availableEvents.some((event) => {
-              const start = new Date(event.startDate);
-              start.setHours(0, 0, 0, 0);
-              const end = new Date(event.endDate);
-              end.setHours(0, 0, 0, 0);
-              return currentDay >= start && currentDay <= end;
-            });
-      if (!isWithinAvailablePeriod) return false;
-      return !allVehicleEvents.some((event) => {
-        if (event.status === "blocked") {
-          const blockedStart = new Date(event.startDate);
-          blockedStart.setHours(0, 0, 0, 0);
-          const blockedEnd = new Date(event.endDate);
-          blockedEnd.setHours(0, 0, 0, 0);
-          return currentDay >= blockedStart && currentDay <= blockedEnd;
-        }
-        return false;
-      });
+      if (currentDay < today) return false; // Cannot select past dates
+
+      if (
+        vehicleDetails &&
+        vehicleDetails.unavailableDates &&
+        Array.isArray(vehicleDetails.unavailableDates)
+      ) {
+        const isUnavailable = vehicleDetails.unavailableDates.some(
+          (isoString) => {
+            const unavailableDate = new Date(isoString);
+            unavailableDate.setHours(0, 0, 0, 0); // Normalize
+            return unavailableDate.getTime() === currentDay.getTime();
+          }
+        );
+        return !isUnavailable; // Day is selectable if it's NOT in the unavailable list
+      }
+      return true; // If no unavailableDates array, assume all future dates are selectable
     },
-    [availableEvents, allVehicleEvents]
-  );
+    [vehicleDetails]
+  ); // Depends on vehicleDetails (specifically vehicleDetails.unavailableDates)
+
   const isDateRangeValid = useCallback(
     (startDate, endDate) => {
-      /* ... */
-      if (!startDate || !endDate) return true;
+      if (!startDate || !endDate) return true; // No range to validate or one end is missing
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
       const end = new Date(endDate);
       end.setHours(0, 0, 0, 0);
-      if (start >= end) return false;
+
+      if (start >= end) return false; // Start date must be before end date
+
+      // Iterate through each day in the range
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        if (!isDaySelectable(new Date(d))) return false;
+        if (!isDaySelectable(new Date(d))) {
+          // Use a new Date object for each iteration
+          return false; // If any day in the range is not selectable, the range is invalid
+        }
       }
-      return true;
+      return true; // All days in the range are selectable
     },
     [isDaySelectable]
   );
+
   const handlePickUpDateChange = (date) => {
-    /* ... */
     setCurrentPickUpDate(date);
     setDateError("");
     if (date && currentDropOffDate) {
       if (date >= currentDropOffDate) {
         setDateError("Pick-up date must be before drop-off.");
-        setCurrentDropOffDate(null);
+        setCurrentDropOffDate(null); // Clear drop-off if invalid
       } else if (!isDateRangeValid(date, currentDropOffDate)) {
         setDateError("Date range includes unavailable days.");
+        // Optionally clear drop-off or leave it, depending on desired UX
+        // setCurrentDropOffDate(null);
       }
     }
   };
+
   const handleDropOffDateChange = (date) => {
-    /* ... */
     setDateError("");
     if (!currentPickUpDate) {
       setDateError("Select pick-up date first.");
@@ -524,28 +504,35 @@ export default function Details2() {
       setCurrentDropOffDate(null);
       return;
     }
+
+    // Check if the new drop-off date forms a valid range with the current pick-up date
     if (date && currentPickUpDate) {
       if (isDateRangeValid(currentPickUpDate, date)) {
         setCurrentDropOffDate(date);
       } else {
         setDateError("Date range includes unavailable days.");
-        setCurrentDropOffDate(null);
+        setCurrentDropOffDate(null); // Clear drop-off if range becomes invalid
       }
     } else {
-      setCurrentDropOffDate(date);
+      setCurrentDropOffDate(date); // Allow clearing the drop-off date
     }
   };
+
   useEffect(() => {
     /* Initial Date Validation */
     if (
       authChecked &&
       customer &&
+      vehicleDetails && // Ensure vehicleDetails (and thus unavailableDates) are loaded
       locationHook.state?.pickUpTime &&
-      locationHook.state?.DropOffTime &&
-      allVehicleEvents.length > 0
+      locationHook.state?.DropOffTime
     ) {
       const initialPickUp = new Date(locationHook.state.pickUpTime);
       const initialDropOff = new Date(locationHook.state.DropOffTime);
+
+      // Only set dates if they are not already set, to avoid loops
+      const datesNeedSetting = !currentPickUpDate && !currentDropOffDate;
+
       if (
         !(
           isDaySelectable(initialPickUp) &&
@@ -556,26 +543,33 @@ export default function Details2() {
         setDateError(
           "Previously selected dates are unavailable. Please choose new dates."
         );
+        if (datesNeedSetting) {
+          // Clear dates if they were from location state and now invalid
+          setCurrentPickUpDate(null);
+          setCurrentDropOffDate(null);
+        }
       } else {
         setDateError("");
-        if (!currentPickUpDate && !currentDropOffDate) {
+        if (datesNeedSetting) {
+
           setCurrentPickUpDate(initialPickUp);
           setCurrentDropOffDate(initialDropOff);
         }
       }
     }
   }, [
-    allVehicleEvents,
+    vehicleDetails, // Added vehicleDetails dependency
     locationHook.state,
     authChecked,
     customer,
     isDaySelectable,
     isDateRangeValid,
-    currentPickUpDate,
-    currentDropOffDate,
+    currentPickUpDate, // Added to prevent re-setting if already set by user
+    currentDropOffDate, // Added to prevent re-setting if already set by user
   ]);
+
   useEffect(() => {
-    /* Fetch Ratings */
+    /* Fetch Ratings (Unchanged) */
     if (!authChecked || !customer || !selectedVehicleId) return;
     const fetchVehicleRatings = async (carID) => {
       try {
@@ -632,15 +626,16 @@ export default function Details2() {
     ? parseFloat(vehicleDetails.price)
     : 0;
   const totalPrice = days * dailyPrice;
+
   const handleViewMap = (type, specificLocationData = null) => {
-    /* ... same as previous response, uses vehiclesToShow for MapComponent ... */
     if (!vehicleDetails) {
       showStatusPopup("Vehicle details not loaded yet.", "warning");
       return;
     }
     let vehiclesForMap = [];
-    let mapCenter = { lat: 9.0054, lng: 38.7636 };
+    let mapCenter = { lat: 9.0054, lng: 38.7636 }; // Default center
     let popupTitleName = "";
+
     if (specificLocationData && specificLocationData.originalCoords) {
       const locationCoordsArray = [
         [
@@ -653,6 +648,7 @@ export default function Details2() {
           make: vehicleDetails.make,
           model: vehicleDetails.model,
           price: vehicleDetails.price,
+          // Create dummy pickUp/dropOff for the map component to parse, only for the specific type
           pickUp: type === "pickup" ? locationCoordsArray : [],
           dropOff: type === "dropoff" ? locationCoordsArray : [],
         },
@@ -660,47 +656,76 @@ export default function Details2() {
       mapCenter = specificLocationData.originalCoords;
       popupTitleName = specificLocationData.displayName;
     } else {
-      vehiclesForMap = [vehicleDetails];
+
+      // View all locations of a type
+      vehiclesForMap = [vehicleDetails]; // Pass the full vehicle details
       const locationsOfType =
-        type === "pickup" ? vehicleDetails.pickUp : vehicleDetails.dropOff;
-      if (
-        locationsOfType &&
-        locationsOfType.length > 0 &&
-        Array.isArray(locationsOfType[0]) &&
-        locationsOfType[0].length === 2
-      ) {
-        mapCenter = { lat: locationsOfType[0][0], lng: locationsOfType[0][1] };
+        type === "pickup"
+          ? vehicleDetails.pickUp || []
+          : vehicleDetails.dropOff || [];
+      // Attempt to center on the first location of the specified type
+      if (locationsOfType.length > 0) {
+        const firstLoc = locationsOfType[0];
+        if (Array.isArray(firstLoc) && firstLoc.length === 2) {
+          // [lat, lng] format
+          mapCenter = { lat: firstLoc[0], lng: firstLoc[1] };
+        } else if (
+          firstLoc &&
+          typeof firstLoc.lat === "number" &&
+          typeof firstLoc.lng === "number"
+        ) {
+          // {lat, lng} format
+          mapCenter = { lat: firstLoc.lat, lng: firstLoc.lng };
+        } else if (
+          firstLoc &&
+          firstLoc.position &&
+          typeof firstLoc.position.lat === "number" &&
+          typeof firstLoc.position.lng === "number"
+        ) {
+          // {position: {lat, lng}}
+          mapCenter = {
+            lat: firstLoc.position.lat,
+            lng: firstLoc.position.lng,
+          };
+        }
       }
       popupTitleName =
         type === "pickup"
           ? "Available Pick Up Locations"
           : "Available Drop Off Locations";
     }
-    if (
+
+    // Check if there are valid coordinates to show for the selected type
+    const hasValidCoords =
       vehiclesForMap.length > 0 &&
-      ((type === "pickup" && vehiclesForMap[0].pickUp.length > 0) ||
-        (type === "dropoff" && vehiclesForMap[0].dropOff.length > 0))
-    ) {
+      ((type === "pickup" &&
+        vehiclesForMap[0].pickUp &&
+        vehiclesForMap[0].pickUp.length > 0) ||
+        (type === "dropoff" &&
+          vehiclesForMap[0].dropOff &&
+          vehiclesForMap[0].dropOff.length > 0));
+
+    if (hasValidCoords) {
       setMapPopupData({
         vehiclesToShow: vehiclesForMap,
         center: mapCenter,
-        type: type,
+        type: type, // This helps MapComponent know which type of pins to emphasize if needed
         displayNameForTitle: popupTitleName,
       });
       setShowMapPopup(true);
     } else {
       const message = specificLocationData
         ? `Selected ${type} location could not be shown on map.`
-        : `No valid ${type} locations defined.`;
+        : `No valid ${type} locations defined for this vehicle.`;
       showStatusPopup(message, "warning");
     }
   };
+
   const handleCloseMapPopup = () => {
     setShowMapPopup(false);
     setMapPopupData(null);
   };
   const handlePickUpLocationSelect = (displayNameFromDropdown) => {
-    /* ... */
     const selectedLocObj = pickUpLocationOptions.find(
       (loc) => loc.displayName === displayNameFromDropdown
     );
@@ -713,7 +738,6 @@ export default function Details2() {
     }
   };
   const handleDropOffLocationSelect = (displayNameFromDropdown) => {
-    /* ... */
     const selectedLocObj = dropOffLocationOptions.find(
       (loc) => loc.displayName === displayNameFromDropdown
     );
@@ -767,7 +791,7 @@ export default function Details2() {
       />
       <div className="flex flex-col lg:w-3/4">
         <div className="flex md:flex-row flex-col gap-10 md:mt-24">
-          {/* Left Side - Car Info */}
+          {/* Left Side - Car Info (Unchanged) */}
           <div className="p-6 bg-white md:w-1/2 h-fit shadow-lg rounded-lg">
             <div className="flex px-2 flex-col">
               <button
@@ -845,6 +869,7 @@ export default function Details2() {
               </div>
             </div>
             <div className="p-6 md:p-10 pt-6 w-full">
+              {/* Car Specification, Features, Pick-up/Drop-off Locations, Ratings (Unchanged in structure/style) */}
               <h4 className="mt-6 text-lg font-semibold">Car Specification</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 text-base gap-4 mt-4">
                 <div>
@@ -941,30 +966,37 @@ export default function Details2() {
                   )}
                 </div>
               </section>
+
+              {/* MODIFIED SECTION: Unavailability Dates */}
               <section className="my-8">
                 <h2 className="font-semibold text-lg mb-4">
-                  Available Rental Dates
+                  Unavailable Dates
                 </h2>
-                {availableEvents.length > 0 ? (
+                {vehicleDetails &&
+                vehicleDetails.unavailableDates &&
+                vehicleDetails.unavailableDates.length > 0 ? (
                   <div className="space-y-2">
-                    {availableEvents.map((ev, i) => (
+                    {vehicleDetails.unavailableDates.map((isoDateString, i) => (
                       <div
-                        key={ev.eventId || i}
-                        className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-md"
+                        key={`unavailable-${i}`}
+                        className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-md"
                       >
-                        <FaCalendarAlt className="text-green-600" size={16} />
-                        <span className="text-sm text-green-700">{`${formatDateInternal(
-                          ev.startDate
-                        )} - ${formatDateInternal(ev.endDate)}`}</span>
+                        <FaCalendarAlt className="text-red-600" size={16} />
+                        <span className="text-sm text-red-700">
+                          {formatDateInternal(isoDateString)}
+                        </span>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-gray-500 text-sm">
-                    Check calendar when booking.
+                    This vehicle has no specific unavailable dates marked.
+                    Please check the calendar when selecting your rental period.
                   </p>
                 )}
               </section>
+              {/* END MODIFIED SECTION */}
+
               <section className="my-8">
                 <h3 className="text-lg font-semibold text-gray-800 mb-3">
                   Rating & Reviews
@@ -1024,7 +1056,7 @@ export default function Details2() {
           </div>
         </div>
       </div>
-      {/* Right Column - Booking Panel */}
+      {/* Right Column - Booking Panel (DatePicker filterDate prop uses the updated isDaySelectable) */}
       <div className="flex flex-col lg:w-1/4">
         <section className="bg-white p-6 md:mt-24 mb-8 rounded-xl shadow-md">
           <h2 className="text-lg font-semibold text-[#00113D] mb-6">
@@ -1045,7 +1077,7 @@ export default function Details2() {
               startDate={currentPickUpDate}
               endDate={currentDropOffDate}
               minDate={new Date()}
-              filterDate={isDaySelectable}
+              filterDate={isDaySelectable} // This will now use the new logic
               placeholderText="Select pick-up date"
               dateFormat="MMMM d, yyyy"
               className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -1075,7 +1107,7 @@ export default function Details2() {
                     )
                   : new Date()
               }
-              filterDate={isDaySelectable}
+              filterDate={isDaySelectable} // This will now use the new logic
               disabled={!currentPickUpDate}
               placeholderText="Select drop-off date"
               dateFormat="MMMM d, yyyy"
@@ -1138,7 +1170,7 @@ export default function Details2() {
                 <div className="ml-[7px] mt-1 pl-5 pb-3">
                   <div className="font-semibold mt-1">
                     {selectedDropOffLocationName ? (
-                      <span className="text-green-500">
+                      <span className="text-green-600">
                         {selectedDropOffLocationName}
                       </span>
                     ) : (
