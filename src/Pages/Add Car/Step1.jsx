@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react"; // Explicitly import React
-// import Dropdown from "../../components/Search/Dropdown"; // <--- Remove this import
+import React, { useEffect, useState } from "react";
 import makesData from "../../api/makes.json";
 import modelsData from "../../api/models.json";
-// import { Link, useNavigate } from "react-router-dom"; // <--- Remove useNavigate if not used here anymore
 import useVehicleFormStore from "../../store/useVehicleFormStore";
 import {
   FormControl,
@@ -12,51 +10,63 @@ import {
   TextField,
 } from "@mui/material";
 
-// Destructure the prop `nextStep` correctly
-const Step1 = ({ nextStep }) => {
-  // --- REMOVE OLD STATE VARIABLES ---
-  // const [carMake, setCarMake] = useState("");
-  // const [carModel, setCarModel] = useState("");
-  // const [millage, setMillage] = useState("");
-  // const [seats, setSeats] = useState("");
-  // const [manufacturedYear, setManufacturedYear] = useState("");
-  // const [fuelType, setFuelType] = useState("");
-  // const [carType, setCarType] = useState("");
-  // const [transmissionType, setTransmissionType] = useState("");
+// Options for the new Select components
+const currentYear = new Date().getFullYear();
+const yearOptions = Array.from({ length: 70 }, (_, i) => {
+  // Years for the last 70 years
+  const year = currentYear - i;
+  return { value: year.toString(), label: year.toString() };
+});
 
-  // Keep state for dropdown options (derived from data files)
+const plateRegionOptions = [
+  { value: "AA", label: "Addis Ababa" },
+  { value: "OR", label: "Oromia" },
+  { value: "AM", label: "Amhara" },
+  { value: "TG", label: "Tigray" },
+  { value: "SN", label: "SNNPR" },
+  { value: "SD", label: "Sidama" },
+  { value: "SM", label: "Somali" },
+  { value: "BG", label: "Benishangul-Gumuz" },
+  { value: "AF", label: "Afar" },
+  { value: "GM", label: "Gambela" },
+  { value: "HR", label: "Harari" },
+  { value: "DR", label: "Dire Dawa" },
+  { value: "Other", label: "Other/Not Specified" },
+];
+
+const seatOptions = [
+  { value: "2", label: "2 Seats" },
+  { value: "4", label: "4 Seats" },
+  { value: "5", label: "5 Seats" },
+  { value: "6", label: "6 Seats" },
+  { value: "7", label: "7 Seats" },
+  { value: "8+", label: "8+ Seats" },
+];
+
+const mileageRangeOptions = [
+  { value: "0-20000", label: "0 - 20,000 km" },
+  { value: "20001-50000", label: "20,001 - 50,000 km" },
+  { value: "50001-100000", label: "50,001 - 100,000 km" },
+  { value: "100001-150000", label: "100,001 - 150,000 km" },
+  { value: "150001-200000", label: "150,001 - 200,000 km" },
+  { value: "200001-250000", label: "200,001 - 250,000 km" },
+  { value: "250000+", label: "Over 250,000 km" },
+];
+
+const Step1 = ({ nextStep }) => {
   const [makeDisplayArray, setMakeDisplayArray] = useState([]);
   const [modelOptions, setModelOptions] = useState([]);
 
-  // --- REMOVE UNUSED HOOKS/FUNCTIONS ---
-  // const navigate = useNavigate(); // Remove if navigation is handled by nextStep prop
-  // const handleNext = async () => { // Remove this function
-  //   navigate("/Step2", {
-  //     state: {
-  //       millage,
-  //       seats,
-  //       manufacturedYear,
-  //       fuelType,
-  //       carType,
-  //       transmissionType,
-  //     },
-  //   });
-  // };
-
-  // Use the store
   const { vehicleData, updateVehicleData } = useVehicleFormStore();
 
-  // Effect to load car makes on mount
   useEffect(() => {
     const makeOptions = makesData.Makes.map((make) => make.make_display);
     setMakeDisplayArray(makeOptions);
   }, []);
 
-  // Effect to update model options based on selected car make from store
   useEffect(() => {
-    const selectedMake = vehicleData.make; // Get the make from the store
+    const selectedMake = vehicleData.make;
     if (selectedMake) {
-      // Find the models for the selected make in modelsData
       const selectedMakeModels = modelsData.find(
         (model) => Object.keys(model)[0] === selectedMake
       );
@@ -64,47 +74,34 @@ const Step1 = ({ nextStep }) => {
         selectedMakeModels ? selectedMakeModels[selectedMake] : []
       );
     } else {
-      setModelOptions([]); // Clear models if no make is selected
+      setModelOptions([]);
     }
-  }, [vehicleData.make]); // Depend on the 'make' value in the store
+  }, [vehicleData.make]);
 
-  // Universal handler for updating store data from input/select events
-  // This works for most inputs where e.target has name and value
   const handleChange = (e) => {
     const { name, value } = e.target;
     updateVehicleData({ [name]: value });
   };
 
-  // --- Validation Logic ---
-  // Check if all required fields in the store are filled
-  // Explicitly check number fields as they might start as null/undefined
+  // Updated validation logic for new Select fields
   const isFormValid =
     vehicleData.fuelType !== "" &&
-    vehicleData.seats != null &&
-    parseInt(vehicleData.seats) > 0 &&
-    !isNaN(parseInt(vehicleData.seats)) &&
+    vehicleData.seats !== "" && // Changed from number check to string check
     vehicleData.vehicleNumber !== "" &&
-    vehicleData.mileage != null &&
-    parseInt(vehicleData.mileage) >= 0 &&
-    !isNaN(parseInt(vehicleData.mileage)) &&
-    vehicleData.year != null &&
-    parseInt(vehicleData.year) > 0 &&
-    !isNaN(parseInt(vehicleData.year)) &&
-    vehicleData.plateRegion !== "" &&
+    vehicleData.mileage !== "" && // Changed from number check to string check
+    vehicleData.year !== "" && // Changed from number check to string check
+    vehicleData.plateRegion !== "" && // Was okay, but now it's definitely a select
     vehicleData.category !== "" &&
     vehicleData.make !== "" &&
     vehicleData.model !== "" &&
     vehicleData.transmission !== "";
 
-  // Handler for the continue button
-  // This should call the `nextStep` prop if the form is valid
   const handleContinueClick = () => {
     if (isFormValid) {
       nextStep();
-      // console.log("Form Data Submitted:", vehicleData); // Optional: log data on valid submit
     } else {
       console.log("Form is invalid. Please fill all required fields.");
-      // Optional: Add user feedback here (e.g., highlight fields, show a message)
+      // You might want to show a user-friendly message or highlight errors
     }
   };
 
@@ -132,85 +129,118 @@ const Step1 = ({ nextStep }) => {
           <FormControl fullWidth required size="small">
             <InputLabel>Fuel Type</InputLabel>
             <Select
-              label="Fuel Type "
+              label="Fuel Type" // Note: MUI recommends label prop match InputLabel
               name="fuelType"
-              value={vehicleData.fuelType || ""} // Ensure value is never undefined or null
+              value={vehicleData.fuelType || ""}
               onChange={handleChange}
             >
               <MenuItem value="">
                 <em>None</em>
               </MenuItem>
-              <MenuItem value="Petrol">Petrol(Benzene)</MenuItem>
-              <MenuItem value="Diesel">Diesel(Nafta)</MenuItem>
+              <MenuItem value="Petrol">Petrol (Benzene)</MenuItem>
+              <MenuItem value="Diesel">Diesel (Nafta)</MenuItem>
               <MenuItem value="Electric">Electric</MenuItem>
               <MenuItem value="Hybrid">Hybrid</MenuItem>
             </Select>
           </FormControl>
 
-          <TextField
-            label="Number of Seats "
-            variant="outlined"
-            name="seats"
-            value={vehicleData.seats || ""} // Ensure value is never undefined or null
-            onChange={handleChange}
-            type="number"
-            size="small"
-            fullWidth
-            required
-          />
+          {/* Number of Seats - Changed to Select */}
+          <FormControl fullWidth required size="small">
+            <InputLabel>Number of Seats</InputLabel>
+            <Select
+              label="Number of Seats"
+              name="seats"
+              value={vehicleData.seats || ""}
+              onChange={handleChange}
+            >
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {seatOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           <TextField
-            label="Plate Number "
+            label="Plate Number"
             variant="outlined"
             name="vehicleNumber"
-            value={vehicleData.vehicleNumber || ""} // Ensure value is never undefined or null
+            value={vehicleData.vehicleNumber || ""}
             onChange={handleChange}
             size="small"
             fullWidth
             required
           />
 
-          <TextField
-            label="Mileage "
-            variant="outlined"
-            name="mileage"
-            value={vehicleData.mileage || ""} // Ensure value is never undefined or null
-            onChange={handleChange}
-            type="number"
-            size="small"
-            fullWidth
-            required
-          />
+          {/* Mileage - Changed to Select */}
+          <FormControl fullWidth required size="small">
+            <InputLabel>Mileage</InputLabel>
+            <Select
+              label="Mileage"
+              name="mileage"
+              value={vehicleData.mileage || ""}
+              onChange={handleChange}
+            >
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {mileageRangeOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-          <TextField
-            label="Manufactured Year "
-            variant="outlined"
-            name="year"
-            value={vehicleData.year || ""} // Ensure value is never undefined or null
-            onChange={handleChange}
-            type="number"
-            size="small"
-            fullWidth
-            required
-          />
+          {/* Manufactured Year - Changed to Select */}
+          <FormControl fullWidth required size="small">
+            <InputLabel>Manufactured Year</InputLabel>
+            <Select
+              label="Manufactured Year"
+              name="year"
+              value={vehicleData.year || ""}
+              onChange={handleChange}
+            >
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {yearOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-          <TextField
-            label="Plate Region "
-            variant="outlined"
-            name="plateRegion"
-            value={vehicleData.plateRegion || ""} // Ensure value is never undefined or null
-            onChange={handleChange}
-            size="small"
-            fullWidth
-            required
-          />
+          {/* Plate Region - Changed to Select */}
+          <FormControl fullWidth required size="small">
+            <InputLabel>Plate Region</InputLabel>
+            <Select
+              label="Plate Region"
+              name="plateRegion"
+              value={vehicleData.plateRegion || ""}
+              onChange={handleChange}
+            >
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {plateRegionOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           <FormControl fullWidth required size="small">
             <InputLabel>Car Type</InputLabel>
             <Select
-              label="Car Type "
+              label="Car Type"
               name="category"
-              value={vehicleData.category || ""} // Ensure value is never undefined or null
+              value={vehicleData.category || ""}
               onChange={handleChange}
             >
               <MenuItem value="">
@@ -218,28 +248,28 @@ const Step1 = ({ nextStep }) => {
               </MenuItem>
               <MenuItem value="Hatchback">Hatchback</MenuItem>
               <MenuItem value="Sedan">Sedan</MenuItem>
-              <MenuItem value="MUV">MUV</MenuItem>
-              <MenuItem value="Coupe">Coupe</MenuItem>
+              <MenuItem value="MUV">MUV/SUV</MenuItem>{" "}
+              {/* Combined for simplicity or keep separate */}
               <MenuItem value="SUV">SUV</MenuItem>
+              <MenuItem value="Coupe">Coupe</MenuItem>
               <MenuItem value="Convertible">Convertible</MenuItem>
               <MenuItem value="Pickup Truck">Pickup Truck</MenuItem>
+              <MenuItem value="Minivan">Minivan</MenuItem>
+              <MenuItem value="Van">Van</MenuItem>
             </Select>
           </FormControl>
 
           <div className="flex gap-6">
-            {/* Car Make Dropdown */}
             <FormControl variant="outlined" fullWidth size="small" required>
               <InputLabel id="car-make-label">Car Make</InputLabel>
               <Select
                 labelId="car-make-label"
+                label="Car Make"
                 name="make"
-                value={vehicleData.make || ""} // Ensure value is never undefined or null
+                value={vehicleData.make || ""}
                 onChange={(event) => {
-                  // When make changes, update make and reset model in store
                   updateVehicleData({ make: event.target.value, model: "" });
-                  // The useEffect watching vehicleData.make will update modelOptions
                 }}
-                label="Car Make "
               >
                 <MenuItem value="">
                   <em>None</em>
@@ -252,26 +282,24 @@ const Step1 = ({ nextStep }) => {
               </Select>
             </FormControl>
 
-            {/* Car Model Dropdown */}
             <FormControl
               variant="outlined"
               fullWidth
               size="small"
               required
-              disabled={!vehicleData.make} // Disable if no make is selected
+              disabled={!vehicleData.make || modelOptions.length === 0}
             >
               <InputLabel id="car-model-label">Car Model</InputLabel>
               <Select
                 labelId="car-model-label"
+                label="Car Model"
                 name="model"
-                value={vehicleData.model || ""} // Ensure value is never undefined or null
-                onChange={handleChange} // Use generic handleChange
-                label="Car Model "
+                value={vehicleData.model || ""}
+                onChange={handleChange}
               >
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                {/* Only show models if a make is selected and models are available */}
                 {vehicleData.make &&
                   modelOptions.map((model) => (
                     <MenuItem key={model} value={model}>
@@ -285,9 +313,9 @@ const Step1 = ({ nextStep }) => {
           <FormControl fullWidth required size="small">
             <InputLabel>Transmission Type</InputLabel>
             <Select
-              label="Transmission Type "
+              label="Transmission Type"
               name="transmission"
-              value={vehicleData.transmission || ""} // Ensure value is never undefined or null
+              value={vehicleData.transmission || ""}
               onChange={handleChange}
             >
               <MenuItem value="">

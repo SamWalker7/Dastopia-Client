@@ -6,58 +6,58 @@ import BackgroundImage1 from "../images/howitworks/bgHow.png";
 // Testimonial data
 const testimonials = [
   {
-    name: "Marc Köhlbrugge",
-    handle: "@marckohlbrugge",
-    text: `Tweeting more with @typefully these days.\n\n🧘‍♂️ Distraction-free\n✍🏻 Write-only Twitter\n📑 Effortless threads\n📊 Actionable metrics\n\nI recommend giving it a shot.`,
+    name: "Aisha Mohammed",
+    handle: "@aishamohammed",
+    text: `Car rental in Addis Ababa has never been this easy! Found the perfect car for my trip through this platform. Smooth process, great prices. Highly recommend!`,
     avatar: "/path-to-avatar1.jpg", // Replace with actual avatar paths
     bgColor: "bg-white",
   },
   {
-    name: "Santiago",
-    handle: "@svpino",
-    text: `For 24 months, I tried almost a dozen Twitter scheduling tools.\n\nThen I found @typefully, and I've been using it for seven months straight.\n\nWhen it comes down to the experience of scheduling and long-form content writing, Typefully is in a league of its own.`,
+    name: "Kebede Demissie",
+    handle: "@kebeded",
+    text: `I've used many car rental services in Ethiopia, but this one stands out. Their selection is diverse, and the booking experience is seamless. A real time-saver for my business trips.`,
     avatar: "/path-to-avatar2.jpg",
     bgColor: "bg-white",
   },
   {
-    name: "Jurre Houtkamp",
-    handle: "@jurrehoutkamp",
-    text: `Typefully is fantastic and way too cheap for what you get.\n\nWe've tried many alternatives @framer but nothing beats it. If you're still tweeting from Twitter you're wasting time.`,
+    name: "Tirunesh Bekele",
+    handle: "@tiruneshB",
+    text: `Fantastic experience! Rented a car for a family vacation to Bahir Dar. The car was clean, well-maintained, and the customer service was excellent. Will definitely use again.`,
     avatar: "/path-to-avatar3.jpg",
     bgColor: "bg-white",
   },
   {
-    name: "Luca Rossi",
-    handle: "@lucaronin",
-    text: `After trying literally all the major Twitter scheduling tools, I settled with @typefully.\n\nKiller feature to me is the native image editor — unique and super useful 🙏`,
+    name: "Fitsum Abera",
+    handle: "@fitsuma",
+    text: `Needed a reliable car for a week in Ethiopia, and this service delivered. The pickup and drop-off were convenient, and the communication was top-notch.`,
     avatar: "/path-to-avatar4.jpg",
     bgColor: "bg-white",
   },
   {
-    name: "Visual Theory",
-    handle: "@visualtheory_",
-    text: `Really impressed by the way @typefully has simplified my Twitter writing + scheduling/publishing experience.\n\nBeautiful user experience.\n0 friction.\n\nSimplicity is the ultimate sophistication.`,
+    name: "Mekonnen Tesfaye",
+    handle: "@mekonnent",
+    text: `Impressed by how simple and efficient the whole rental process is. From Browse cars to completing the booking, everything was straightforward. A true game-changer for car rentals here.`,
     avatar: "/path-to-avatar5.jpg",
     bgColor: "bg-white",
   },
   {
-    name: "Naitik Mehta",
-    handle: "@heyNaitik",
-    text: `I've reached 600K+ impressions since I started writing online 6 months ago w/ @typefully 🤯\n\nShoutout to the team for building a beautiful writing tool with thought, care, and good design.\n\n👉 Clean UX/design\n👉 Mobile-friendly\n👉 Keyboard shortcuts\n👉 Rarely see any bugs`,
+    name: "Sara Gebre",
+    handle: "@sarag",
+    text: `Found the perfect car for my needs at a very competitive price. The transparency in pricing and the wide range of vehicles made my decision easy. Definitely my go-to for car rentals now.`,
     avatar: "/path-to-avatar6.jpg",
     bgColor: "bg-white",
   },
   {
-    name: "DHH",
-    handle: "@dhh",
-    text: `This is my new go-to writing environment for Twitter threads.\n\nThey've built something wonderfully simple and distraction free with Typefully.`,
+    name: "Yonas Getachew",
+    handle: "@yonasg",
+    text: `This platform makes renting a car in Ethiopia stress-free. The detailed listings and user reviews helped me choose with confidence. A truly reliable service.`,
     avatar: "/path-to-avatar7.jpg",
     bgColor: "bg-white",
   },
   {
-    name: "daws.eth",
-    handle: "@DawsonBotsford",
-    text: `Impressed with @typefully. It's the editor you wish Twitter had.\n\nSaving multiple drafts, re-ordering tweets in a thread, and moving attached images around is EASY.`,
+    name: "Lelise Kebede",
+    handle: "@lelisek",
+    text: `I was hesitant about online car rentals, but this changed my mind. The entire process was seamless, and the car was exactly as described. Excellent service from start to finish!`,
     avatar: "/path-to-avatar8.jpg",
     bgColor: "bg-white",
   },
@@ -123,7 +123,7 @@ const TestimonialsGrid = () => {
           ))}
         </div>
       </div>{" "}
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

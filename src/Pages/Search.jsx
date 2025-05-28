@@ -1,32 +1,43 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  Box,
   CircularProgress,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
   TextField,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import SettingsIcon from "@mui/icons-material/Settings"; // For Transmission
+import CategoryIcon from "@mui/icons-material/Category";
+
 import ResultsGrid from "../components/Search/ResultsGrid";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchVehicles, fetchImages } from "../store/slices/vehicleSlice";
 import makesData from "../api/makes.json";
 import modelData from "../api/models.json";
 import MapComponent from "../components/GoogleMaps";
-import zIndex from "@mui/material/styles/zIndex";
-import { getDownloadUrl, paginatedSearch } from "../api";
-import Dropdown from "../components/Search/Dropdown";
+import { getDownloadUrl } from "../api";
 import Footer from "../components/Footer";
 
-const Search = () => {
-  const dispatch = useDispatch();
+// Primary color defined
+const PRIMARY_COLOR = "#172554";
+const PRIMARY_COLOR_DARKER = "#0d1732"; // For hover states
 
+// Helper to create filter button style
+const filterButtonStyle =
+  "bg-white border border-gray-300 hover:border-gray-500 text-gray-700 px-4 py-2 rounded-md text-sm flex items-center justify-center shadow-sm transition-colors duration-150 ease-in-out";
+// Active filter buttons will use the primary color for border and text
+const activeFilterButtonStyle = `bg-gray-50 border-[${PRIMARY_COLOR}] text-[${PRIMARY_COLOR}] hover:bg-gray-100 px-4 py-2 rounded-md text-sm flex items-center justify-center shadow-sm transition-colors duration-150 ease-in-out`;
+
+const Search = () => {
   const [vehicles, setVehicles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
-  const makeDisplayArray = makesData.Makes.map((Makes) => Makes.make_display);
   const ethiopianCities = [
     "Addis Ababa",
     "Dire Dawa",
@@ -37,189 +48,251 @@ const Search = () => {
     "Hawassa",
   ];
 
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
+  // Filter States
   const [make, setMake] = useState("any");
-  const [model, setModel] = useState();
+  const [modelList, setModelList] = useState([]);
   const [selectedModel, setSelectedModel] = useState("any");
   const [transmission, setTransmission] = useState("any");
   const [category, setCategory] = useState("any");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+
   const [error, setError] = useState("");
 
+  // Modal States
+  const [openDateModal, setOpenDateModal] = useState(false);
+  const [openPriceModal, setOpenPriceModal] = useState(false);
+  const [openMakeModelModal, setOpenMakeModelModal] = useState(false);
+  const [openTransmissionModal, setOpenTransmissionModal] = useState(false);
+  const [openCategoryModal, setOpenCategoryModal] = useState(false);
+  const [openAllFiltersModal, setOpenAllFiltersModal] = useState(false);
+
+  // Temporary states for modal inputs
+  const [tempStartDate, setTempStartDate] = useState("");
+  const [tempEndDate, setTempEndDate] = useState("");
+  const [tempMinPrice, setTempMinPrice] = useState("");
+  const [tempMaxPrice, setTempMaxPrice] = useState("");
+  const [tempMake, setTempMake] = useState("any");
+  const [tempModel, setTempModel] = useState("any");
+  const [tempTransmission, setTempTransmission] = useState("any");
+  const [tempCategory, setTempCategory] = useState("any");
+
   useEffect(() => {
-    const getQueryParam = (name) => {
-      const params = new URLSearchParams(window.location.search);
-      return params.get(name);
-    };
-    const pickupLocation = getQueryParam("pickUp");
-    const pickupDate = getQueryParam("pickUp");
-    const dropOffDate = getQueryParam("dropOff");
+    const getQueryParam = (name) =>
+      new URLSearchParams(window.location.search).get(name);
+    const pickupLocation = getQueryParam("pickUpLocation");
+    const pickupDateQuery = getQueryParam("pickUpDate"); // Dates from URL
+    const dropOffDateQuery = getQueryParam("dropOffDate"); // Dates from URL
 
     if (pickupLocation && ethiopianCities.includes(pickupLocation)) {
       setSelectedCity(pickupLocation);
     }
-    if (pickupDate) {
-      setStartDate(pickupDate);
+    if (pickupDateQuery) {
+      setStartDate(pickupDateQuery);
     }
-    if (dropOffDate) {
-      setEndDate(dropOffDate);
+    if (dropOffDateQuery) {
+      setEndDate(dropOffDateQuery);
     }
   }, []);
 
-  const handleCityChange = (event) => {
-    setSelectedCity(event.target.value);
-  };
-  const [isOpen, setIsOpen] = useState(false);
-  const [isOpen1, setIsOpen1] = useState(false);
-  const [isOpen2, setIsOpen2] = useState(false);
-  const [isOpen3, setIsOpen3] = useState(false);
-  const [selectedOption, setSelectedOption] = useState("");
-
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
+  const handleOpenDateModal = () => {
+    setTempStartDate(startDate); // Initialize modal with current main state
+    setTempEndDate(endDate);
+    setOpenDateModal(true);
   };
 
-  const toggleDropdown1 = () => {
-    setIsOpen1(!isOpen1);
+  const handleApplyDates = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const currentTempStartDate = tempStartDate ? new Date(tempStartDate) : null;
+    if (currentTempStartDate) currentTempStartDate.setHours(0, 0, 0, 0);
+    const currentTempEndDate = tempEndDate ? new Date(tempEndDate) : null;
+    if (currentTempEndDate) currentTempEndDate.setHours(0, 0, 0, 0);
+
+    let dateError = "";
+    if (tempStartDate && !tempEndDate) {
+      dateError = "Please select a drop-off date.";
+    } else if (!tempStartDate && tempEndDate) {
+      dateError = "Please select a pick-up date.";
+    } else if (currentTempStartDate && currentTempStartDate < today) {
+      dateError = "Pickup date cannot be before today.";
+    } else if (
+      currentTempStartDate &&
+      currentTempEndDate &&
+      currentTempEndDate <= currentTempStartDate
+    ) {
+      dateError = "End date must be after pickup date.";
+    }
+
+    if (dateError) {
+      alert(dateError);
+      return;
+    }
+
+    setStartDate(tempStartDate);
+    setEndDate(tempEndDate);
+    setOpenDateModal(false);
+    setError("");
   };
 
-  const toggleDropdown2 = () => {
-    setIsOpen2(!isOpen2);
+  const handleOpenPriceModal = () => {
+    setTempMinPrice(minPrice);
+    setTempMaxPrice(maxPrice);
+    setOpenPriceModal(true);
+  };
+  const handleApplyPrice = () => {
+    const tempMin = parseFloat(tempMinPrice) || 0;
+    const tempMax = parseFloat(tempMaxPrice) || Infinity;
+    if (tempMin < 0) {
+      alert("Minimum price cannot be negative.");
+      return;
+    }
+    if (tempMaxPrice !== "" && tempMax < tempMin) {
+      alert("Maximum price must be greater than minimum price.");
+      return;
+    }
+    setMinPrice(tempMinPrice);
+    setMaxPrice(tempMaxPrice);
+    setOpenPriceModal(false);
   };
 
-  const toggleDropdown3 = () => {
-    setIsOpen3(!isOpen3);
-  };
-
-  const handleStartDateChange = (event) => {
-    const value = event.target.value;
-    const currentDate = new Date().setHours(0, 0, 0, 0);
-    const selectedStartDate = new Date(value).setHours(0, 0, 0, 0);
-    const selectedEndDate = endDate
-      ? new Date(endDate).setHours(0, 0, 0, 0)
-      : null;
-
-    if (selectedStartDate > currentDate) {
-      setError("Pickup date cannot be before the current date.");
-      setStartDate("");
-    } else if (selectedEndDate && selectedStartDate > selectedEndDate) {
-      setError("Pickup date cannot be after the end date.");
-      setStartDate("");
+  const handleOpenMakeModelModal = () => {
+    setTempMake(make);
+    setTempModel(selectedModel);
+    if (make !== "any") {
+      const makeModelsData = modelData.find(
+        (m) => Object.keys(m)[0].toLowerCase() === make.toLowerCase()
+      );
+      setModelList(
+        makeModelsData ? makeModelsData[Object.keys(makeModelsData)[0]] : []
+      );
     } else {
-      setError("");
-      setStartDate(value);
+      setModelList([]);
+    }
+    setOpenMakeModelModal(true);
+  };
+  const handleTempMakeChange = (eventValue) => {
+    setTempMake(eventValue);
+    setTempModel("any");
+    if (eventValue !== "any") {
+      const makeModelsData = modelData.find(
+        (m) => Object.keys(m)[0].toLowerCase() === eventValue.toLowerCase()
+      );
+      setModelList(
+        makeModelsData ? makeModelsData[Object.keys(makeModelsData)[0]] : []
+      );
+    } else {
+      setModelList([]);
     }
   };
+  const handleApplyMakeModel = () => {
+    setMake(tempMake);
+    setSelectedModel(tempModel);
+    setOpenMakeModelModal(false);
+  };
 
-  const handleEndDateChange = (event) => {
-    const value = event.target.value;
-    if (new Date(value) <= new Date(startDate)) {
-      setError("End date must be after the pickup date.");
-      setEndDate("");
-    } else if (new Date(value).toDateString() === new Date().toDateString()) {
-      setError("End date cannot be the current date.");
-      setEndDate("");
+  useEffect(() => {
+    if (make !== "any") {
+      const makeModelsData = modelData.find(
+        (m) => Object.keys(m)[0].toLowerCase() === make.toLowerCase()
+      );
+      setModelList(
+        makeModelsData ? makeModelsData[Object.keys(makeModelsData)[0]] : []
+      );
     } else {
-      setError("");
-      setEndDate(value);
+      setModelList([]);
     }
-  };
+  }, [make]);
 
-  const handleMakeChange = (event) => {
-    const value = event.target.value;
-    setMake(value);
-    setSelectedModel("any");
-    setModel(modelData.find((m) => Object.keys(m)[0] === value)?.[value] || []);
+  const handleOpenTransmissionModal = () => {
+    setTempTransmission(transmission);
+    setOpenTransmissionModal(true);
   };
-
-  const handleModelChange = (event) => {
-    setSelectedModel(event.target.value);
+  const handleApplyTransmission = () => {
+    setTransmission(tempTransmission);
+    setOpenTransmissionModal(false);
   };
-
-  const handleTransmissionChange = (event) => {
-    setTransmission(event.target.value);
+  const handleOpenCategoryModal = () => {
+    setTempCategory(category);
+    setOpenCategoryModal(true);
   };
-
-  const handleCategoryChange = (event) => {
-    setCategory(event.target.value);
-  };
-
-  const handleMinPriceChange = (e) => {
-    const value = e.target.value.replace(/\D/g, "");
-    setMinPrice(value);
-  };
-
-  const handleMaxPriceChange = (e) => {
-    const value = e.target.value.replace(/\D/g, "");
-    setMaxPrice(value);
+  const handleApplyCategory = () => {
+    setCategory(tempCategory);
+    setOpenCategoryModal(false);
   };
 
   const getFilteredVehicles = useCallback(() => {
     const min = parseFloat(minPrice) || 0;
     const max = parseFloat(maxPrice) || Infinity;
-
-    return vehicles.filter((vehicle) => {
-      const price = parseFloat(vehicle.price) || 0;
-      return price >= min && price <= max;
+    let filtered = vehicles.filter((vehicle) => {
+      const priceVal = parseFloat(vehicle.price) || 0;
+      return priceVal >= min && priceVal <= max;
     });
+    return filtered.sort(
+      (a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0)
+    );
   }, [vehicles, minPrice, maxPrice]);
 
-  const [inputValue, setInputValue] = useState("");
-  const handleInputChange = (e) => {
-    setInputValue(e.target.value);
-  };
   const transmissionType = ["Automatic", "Manual"];
-  const Category = ["Sedan", "SUV", "Convertable"];
-  const isValidInput = /^[0-9 ]*$/.test(inputValue);
+  const CategoryList = [
+    "Sedan",
+    "SUV",
+    "Convertible",
+    "Minivan",
+    "Truck",
+    "Hatchback",
+  ];
 
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
-
     const fetchData = async () => {
       setIsLoading(true);
+      setError("");
       try {
         const url = new URL(
           "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/search"
         );
-
         const params = {
-          make: make !== "any" ? make : "",
-          model: selectedModel !== "any" ? selectedModel : "",
-          transmission: transmission !== "any" ? transmission : "",
-          category: category !== "any" ? category : "",
-          pickUp: startDate,
-          dropOff: endDate,
+          make: make !== "any" ? make : undefined,
+          model: selectedModel !== "any" ? selectedModel : undefined,
+          transmission: transmission !== "any" ? transmission : undefined,
+          category: category !== "any" ? category : undefined,
+          pickUp: startDate || undefined,
+          dropOff: endDate || undefined,
           isActive: "active",
           isApproved: "approved",
         };
-
         Object.entries(params).forEach(([key, value]) => {
           if (value) url.searchParams.append(key, value);
         });
-
-        const response = await fetch(url, { signal });
-        if (!response.ok) throw new Error("Network response was not ok");
-
+        const response = await fetch(url.toString(), { signal });
+        if (!response.ok) {
+          const errorData = await response
+            .json()
+            .catch(() => ({ message: "Network response was not ok" }));
+          throw new Error(
+            errorData.message || `HTTP error! status: ${response.status}`
+          );
+        }
         const data = await response.json();
-        const vehicles = data.body || [];
-
+        const fetchedVehicles =
+          data.body && Array.isArray(data.body) ? data.body : [];
         const vehiclesWithImages = await Promise.all(
-          vehicles.map(async (vehicle) => {
+          fetchedVehicles.map(async (vehicle) => {
             const images = await Promise.all(
-              (vehicle.vehicleImageKeys || []).map(async (image) => {
+              (vehicle.vehicleImageKeys || []).map(async (imageKeyObj) => {
                 try {
-                  const path = await getDownloadUrl(image.key);
-                  return path?.body || "https://via.placeholder.com/300";
+                  if (imageKeyObj && imageKeyObj.key) {
+                    const pathResult = await getDownloadUrl(imageKeyObj.key);
+                    return (
+                      pathResult?.body || "https://via.placeholder.com/300"
+                    );
+                  }
+                  return "https://via.placeholder.com/300";
                 } catch {
                   return "https://via.placeholder.com/300";
                 }
@@ -228,287 +301,616 @@ const Search = () => {
             return { ...vehicle, images };
           })
         );
-
         setVehicles(vehiclesWithImages);
       } catch (error) {
         if (error.name !== "AbortError") {
           console.error("Fetch error:", error);
+          setError(error.message || "Failed to fetch vehicles.");
           setVehicles([]);
         }
       } finally {
         setIsLoading(false);
-        setIsLoading(false);
       }
     };
-
     fetchData();
     return () => controller.abort();
   }, [make, selectedModel, transmission, category, startDate, endDate]);
 
-  const isMinPriceValid = !minPrice || parseFloat(minPrice) >= 0;
-  const isMaxPriceValid =
-    !maxPrice || parseFloat(maxPrice) > parseFloat(minPrice);
-
-  const formatPrice = (price) => {
-    return parseFloat(price).toLocaleString("en-ET", {
-      style: "currency",
-      currency: "ETB",
-      minimumFractionDigits: 2,
-    });
+  const countActiveFilters = () => {
+    let count = 0;
+    if (minPrice || maxPrice) count++;
+    if (make !== "any") count++;
+    if (selectedModel !== "any" && make !== "any") count++;
+    if (transmission !== "any") count++;
+    if (category !== "any") count++;
+    return count;
   };
-  const allLocations = vehicles.flatMap((vehicle) => [
-    ...(vehicle.pickUp || []),
-    ...(vehicle.dropOff || []),
-  ]);
+  const activeFilterCount = countActiveFilters();
+
+  const clearAllFilters = () => {
+    setMake("any");
+    setSelectedModel("any");
+    setModelList([]);
+    setTransmission("any");
+    setCategory("any");
+    setMinPrice("");
+    setMaxPrice("");
+    // Do not clear dates by default from "Clear All Filters" unless specified
+    // setStartDate(""); setEndDate("");
+    // Reset temp states as well
+    setTempMake("any");
+    setTempModel("any");
+    setTempMinPrice("");
+    setTempMaxPrice("");
+    setTempTransmission("any");
+    setTempCategory("any");
+    setOpenAllFiltersModal(false);
+  };
+
+  // MUI Button style with primary color
+  const primaryButtonStyle = {
+    backgroundColor: PRIMARY_COLOR,
+    "&:hover": { backgroundColor: PRIMARY_COLOR_DARKER },
+  };
+  const primaryOutlinedButtonStyle = {
+    borderColor: PRIMARY_COLOR,
+    color: PRIMARY_COLOR,
+    "&:hover": {
+      borderColor: PRIMARY_COLOR_DARKER,
+      color: PRIMARY_COLOR_DARKER,
+      backgroundColor: "rgba(23, 37, 84, 0.04)",
+    },
+  };
+
   return (
-    <div>
-      <div className=" bg-[#FAF9FE] py-32 flex lg:flex-row flex-col items-center lg:items-start w-full">
-        <div className=" flex flex-col px-8 lg:pl-12 py-2 items-center ">
-          {startDate && endDate ? (
-            <div className="bg-white w-full px-10 py-4 justify-between text-lg md:flex-row flex-col rounded-xl shadow-sm shadow-blue-300 border border-blue-300 flex mb-4">
-              <div className="flex md:flex-row flex-col items-center text-base">
-                <div className="flex flex-col ">
-                  <div>Pick-up Date</div>
-                  <div>{new Date(startDate).toLocaleDateString()}</div>
-                </div>
-
-                <div className="mx-4">
-                  <svg
-                    className=" text-gray-800 w-8 h-8 transform transition-transform duration-200 
-                  -rotate-9-rotate-90"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M5.23 7.21a.75.75 0 011.06 0L10 10.92l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0l-4.25-4.25a.75.75 0 010-1.06z" />
-                  </svg>
-                </div>
-
-                <div className="flex flex-col ">
-                  <div>Drop-off Date</div>
-                  <div>{new Date(endDate).toLocaleDateString()}</div>
-                </div>
-              </div>
-              {/* 
-              <button className=" bg-blue-950 text-sm text-white rounded-full px-4 ml-8 my-2 py-2">
-                Edit
-              </button> */}
+    <div className="min-h-screen flex flex-col">
+      <main className="flex-grow">
+        <div className=" bg-[#FAF9FE] pt-24 sm:pt-32 pb-10">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-wrap items-center gap-2 mb-6 overflow-x-auto pb-2">
+              {(!startDate || !endDate) && (
+                <button
+                  onClick={handleOpenDateModal}
+                  className={filterButtonStyle}
+                >
+                  <CalendarTodayIcon fontSize="small" className="mr-2" /> Select
+                  Dates
+                </button>
+              )}
+              <button
+                onClick={handleOpenPriceModal}
+                className={
+                  minPrice || maxPrice
+                    ? activeFilterButtonStyle
+                    : filterButtonStyle
+                }
+              >
+                <AttachMoneyIcon fontSize="small" className="mr-2" />
+                {minPrice || maxPrice
+                  ? `Price: ${minPrice || "Any"} - ${maxPrice || "Any"}`
+                  : "Daily price"}
+              </button>
+              <button
+                onClick={handleOpenMakeModelModal}
+                className={
+                  make !== "any" ? activeFilterButtonStyle : filterButtonStyle
+                }
+              >
+                <DirectionsCarIcon fontSize="small" className="mr-2" />
+                {make !== "any"
+                  ? `${make}${
+                      selectedModel !== "any" ? " " + selectedModel : ""
+                    }`
+                  : "Make & model"}
+              </button>
+              <button
+                onClick={handleOpenTransmissionModal}
+                className={
+                  transmission !== "any"
+                    ? activeFilterButtonStyle
+                    : filterButtonStyle
+                }
+              >
+                <SettingsIcon fontSize="small" className="mr-2" />{" "}
+                {transmission !== "any" ? transmission : "Transmission"}
+              </button>
+              <button
+                onClick={handleOpenCategoryModal}
+                className={
+                  category !== "any"
+                    ? activeFilterButtonStyle
+                    : filterButtonStyle
+                }
+              >
+                <CategoryIcon fontSize="small" className="mr-2" />{" "}
+                {category !== "any" ? category : "Category"}
+              </button>
+              <button
+                onClick={() => setOpenAllFiltersModal(true)}
+                className={
+                  activeFilterCount > 0
+                    ? activeFilterButtonStyle
+                    : filterButtonStyle
+                }
+              >
+                <FilterListIcon fontSize="small" className="mr-2" /> All filters{" "}
+                {activeFilterCount > 0 ? `(${activeFilterCount})` : ""}
+              </button>
             </div>
-          ) : (
-            <div className="bg-white w-full px-10 py-4 justify-between text-lg md:flex-row flex-col rounded-xl shadow-sm shadow-blue-300 border border-blue-300 flex mb-4">
-              <div>No dates selected</div>
-              {/* <button className=" bg-blue-950 text-sm text-white rounded-full px-4 ml-8 my-2 py-2">
-                Edit
-              </button> */}
-            </div>
-          )}
 
-          <div className="flex flex-col bg-white my-12 w-full px-4 py-4 text-lg  rounded-xl shadow-md shadow-gray-100 ">
-            <div className="text-xl mx-4 font-semibold mt-4">Filters</div>
-
-            <div className="flex md:flex-row flex-col justify-center lg:items-start items-center">
-              <div className="flex flex-col m-4 w-full lg:w-1/2">
-                {/* Make Dropdown */}
-                <div className="relative inline-block my-3 text-lg w-full">
-                  <FormControl fullWidth size="small">
-                    <InputLabel
-                      id="make-label"
-                      className="bg-white px-1 text-gray-500"
-                    >
-                      Make
-                    </InputLabel>
-
-                    <Select
-                      labelId="make-label"
-                      id="make"
-                      value={make}
-                      onChange={handleMakeChange}
-                      label="Make"
-                    >
-                      <MenuItem value="any">Any</MenuItem>
-
-                      {makesData.Makes.map((m) => (
-                        <MenuItem key={m.make_display} value={m.make_display}>
-                          {m.make_display}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </div>
-                {/* Model Dropdown */}
-
-                <div className="relative inline-block my-3 text-lg w-full">
-                  <FormControl fullWidth size="small">
-                    <InputLabel
-                      id="model-label"
-                      className="bg-white px-1 text-gray-500"
-                    >
-                      Model
-                    </InputLabel>
-
-                    <Select
-                      labelId="model-label"
-                      id="model"
-                      value={selectedModel}
-                      onChange={handleModelChange}
-                      label="Model"
-                    >
-                      <MenuItem value="any">Any</MenuItem>
-
-                      {model &&
-                        model.map((m) => (
-                          <MenuItem key={m} value={m}>
-                            {m}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-                </div>
-                {/* Transmission Dropdown */}
-                <div className="relative inline-block mt-3 text-lg w-full">
-                  <FormControl fullWidth size="small">
-                    <InputLabel
-                      id="transmission-label"
-                      className="bg-white px-1 text-gray-500"
-                    >
-                      Transmission
-                    </InputLabel>
-
-                    <Select
-                      labelId="transmission-label"
-                      id="transmission"
-                      value={transmission}
-                      onChange={handleTransmissionChange}
-                      label="Transmission"
-                    >
-                      <MenuItem value="any">Any</MenuItem>
-
-                      {transmissionType.map((m) => (
-                        <MenuItem key={m} value={m}>
-                          {m}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </div>
-              </div>
-
-              <div className="flex flex-col justify-start items-start h-full m-4 w-full lg:w-1/2">
-                {/* Min Price Input */}
-                <div className="flex ">
-                  <div className="relative inline-block my-3 text-lg w-full mr-4">
-                    <TextField
-                      fullWidth
-                      label="Min Price (ETB)"
-                      variant="outlined"
-                      size="small"
-                      value={minPrice}
-                      onChange={handleMinPriceChange}
-                      inputProps={{
-                        inputMode: "numeric",
-                        pattern: "[0-9]*",
-                        type: "tel",
-                      }}
-                      error={!isMinPriceValid}
-                      helperText={!isMinPriceValid && "Invalid minimum price"}
-                    />
-                  </div>
-                  {/* Max Price Input */}
-                  <div className="relative inline-block my-3 text-lg w-full">
-                    <TextField
-                      fullWidth
-                      label="Max Price (ETB)"
-                      variant="outlined"
-                      size="small"
-                      value={maxPrice}
-                      onChange={handleMaxPriceChange}
-                      inputProps={{
-                        inputMode: "numeric",
-                        pattern: "[0-9]*",
-                        type: "tel",
-                      }}
-                      error={!isMaxPriceValid}
-                      helperText={
-                        !isMaxPriceValid && "Must be greater than min price"
-                      }
-                    />
+            {startDate && endDate && (
+              <div className="bg-white w-full max-w-md mx-auto sm:max-w-lg px-6 py-3 justify-between text-sm rounded-xl shadow border border-gray-200 flex items-center mb-6">
+                <div className="flex flex-col text-center">
+                  <div className="text-xs text-gray-500">Pick-up</div>
+                  <div className="font-medium">
+                    {new Date(startDate).toLocaleDateString()}
                   </div>
                 </div>
-                {/* Category Dropdown */}
-
-                <div className="relative inline-block my-3 text-lg w-full">
-                  <FormControl fullWidth size="small">
-                    <InputLabel
-                      id="category-label"
-                      className="bg-white px-1 text-gray-500"
-                    >
-                      Category
-                    </InputLabel>
-
-                    <Select
-                      labelId="category-label"
-                      id="category"
-                      value={category}
-                      onChange={handleCategoryChange}
-                      label="Category"
-                    >
-                      <MenuItem value="any">Any</MenuItem>
-
-                      {Category.map((m) => (
-                        <MenuItem key={m} value={m}>
-                          {m}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                <div className="text-gray-400 px-2">→</div>
+                <div className="flex flex-col text-center">
+                  <div className="text-xs text-gray-500">Drop-off</div>
+                  <div className="font-medium">
+                    {new Date(endDate).toLocaleDateString()}
+                  </div>
                 </div>
+                <button
+                  onClick={handleOpenDateModal}
+                  className={`ml-auto text-[${PRIMARY_COLOR}] hover:text-[${PRIMARY_COLOR_DARKER}] text-xs font-semibold`}
+                >
+                  Edit
+                </button>
               </div>
-            </div>
+            )}
           </div>
 
-          <div className=" flex flex-col w-full items-center ">
-            <div className="flex flex-col bg-white my-4w-full px-8 py-4 text-lg md:text-2xl  rounded-xl shadow-md shadow-gray-100 ">
-              <div className="flex flex-wrap">
+          <div className="flex lg:flex-row flex-col items-start w-full container mx-auto px-4">
+            <div className="flex flex-col w-full lg:w-3/5 xl:w-2/3 lg:pr-6">
+              <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
                 {isLoading ? (
-                  <div>
-                    <CircularProgress />
+                  <div className="w-full text-center py-20">
+                    {" "}
+                    <CircularProgress sx={{ color: PRIMARY_COLOR }} />{" "}
+                  </div>
+                ) : error ? (
+                  <div className="w-full text-center py-10 text-red-600 bg-red-50 p-4 rounded-md">
+                    {error}
                   </div>
                 ) : getFilteredVehicles().length > 0 ? (
-                  <div>
-                    <div className="text-xl m-4 font-normal my-8">
-                      Found
-                      <span className="font-bold">
-                        ({getFilteredVehicles().length})
-                      </span>
-                      Cars
+                  <>
+                    <div className="text-lg sm:text-xl font-semibold mb-4">
+                      {getFilteredVehicles().length} car
+                      {getFilteredVehicles().length === 1 ? "" : "s"} available
                     </div>
-
                     <ResultsGrid
                       key={`${make}-${selectedModel}-${transmission}-${category}-${minPrice}-${maxPrice}-${startDate}-${endDate}`}
                       vehicles={getFilteredVehicles()}
                       pickUpTime={startDate}
                       DropOffTime={endDate}
                     />
-                  </div>
+                  </>
                 ) : (
-                  <div>
-                    No vehicles found for the selected dates and filters. Adjust
-                    your search criteria.
+                  <div className="w-full text-center py-20 text-gray-600">
+                    No vehicles found for your selection. Adjust your search
+                    criteria.
                   </div>
                 )}
+              </div>
+            </div>
+            <div className="sticky top-28 flex flex-col lg:w-2/5 xl:w-1/3 h-full w-full mt-8 lg:mt-0">
+              <div className="bg-white w-full p-1 rounded-xl shadow-lg ">
+                <MapComponent vehicles={vehicles} />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col lg:w-2/5 h-full items-start justify-start w-5/6 lg:pr-20">
-          {error && <div>{error}</div>}
-          <div className="flex bg-white w-full p-2 text-lg md:text-2xl  rounded-xl shadow-md shadow-gray-100  ">
-            <MapComponent vehicles={vehicles} />
-          </div>
-        </div>
-      </div>
+        <Dialog
+          open={openDateModal}
+          onClose={() => setOpenDateModal(false)}
+          fullWidth
+          maxWidth="xs"
+        >
+          <DialogTitle>
+            Select Dates{" "}
+            <IconButton
+              aria-label="close"
+              onClick={() => setOpenDateModal(false)}
+              sx={{ position: "absolute", right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            <TextField
+              label="Pick-up Date"
+              type="date"
+              value={tempStartDate}
+              onChange={(e) => setTempStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              margin="normal"
+            />
+            <TextField
+              label="Drop-off Date"
+              type="date"
+              value={tempEndDate}
+              onChange={(e) => setTempEndDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              margin="normal"
+            />
+          </DialogContent>
+          <DialogActions>
+            {" "}
+            <Button
+              onClick={handleApplyDates}
+              variant="contained"
+              sx={primaryButtonStyle}
+            >
+              Apply Dates
+            </Button>{" "}
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={openPriceModal}
+          onClose={() => setOpenPriceModal(false)}
+          fullWidth
+          maxWidth="xs"
+        >
+          <DialogTitle>
+            Set Price Range{" "}
+            <IconButton
+              aria-label="close"
+              onClick={() => setOpenPriceModal(false)}
+              sx={{ position: "absolute", right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            <TextField
+              label="Min Price (ETB)"
+              type="number"
+              value={tempMinPrice}
+              onChange={(e) => setTempMinPrice(e.target.value)}
+              fullWidth
+              margin="normal"
+            />
+            <TextField
+              label="Max Price (ETB)"
+              type="number"
+              value={tempMaxPrice}
+              onChange={(e) => setTempMaxPrice(e.target.value)}
+              fullWidth
+              margin="normal"
+            />
+          </DialogContent>
+          <DialogActions>
+            {" "}
+            <Button
+              onClick={handleApplyPrice}
+              variant="contained"
+              sx={primaryButtonStyle}
+            >
+              Apply Price
+            </Button>{" "}
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={openMakeModelModal}
+          onClose={() => setOpenMakeModelModal(false)}
+          fullWidth
+          maxWidth="xs"
+        >
+          <DialogTitle>
+            Select Make & Model{" "}
+            <IconButton
+              aria-label="close"
+              onClick={() => setOpenMakeModelModal(false)}
+              sx={{ position: "absolute", right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            <TextField
+              select
+              label="Make"
+              value={tempMake}
+              onChange={(e) => handleTempMakeChange(e.target.value)}
+              fullWidth
+              margin="normal"
+              SelectProps={{ native: true }}
+            >
+              <option value="any">Any Make</option>{" "}
+              {makesData.Makes.map((m) => (
+                <option key={m.make_id} value={m.make_display}>
+                  {m.make_display}
+                </option>
+              ))}
+            </TextField>
+            <TextField
+              select
+              label="Model"
+              value={tempModel}
+              onChange={(e) => setTempModel(e.target.value)}
+              fullWidth
+              margin="normal"
+              disabled={tempMake === "any" || modelList.length === 0}
+              SelectProps={{ native: true }}
+            >
+              <option value="any">Any Model</option>{" "}
+              {modelList.map((m_val) => (
+                <option key={m_val} value={m_val}>
+                  {m_val}
+                </option>
+              ))}
+            </TextField>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleApplyMakeModel}
+              variant="contained"
+              sx={primaryButtonStyle}
+            >
+              Apply Make & Model
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={openTransmissionModal}
+          onClose={() => setOpenTransmissionModal(false)}
+          fullWidth
+          maxWidth="xs"
+        >
+          <DialogTitle>
+            Select Transmission{" "}
+            <IconButton
+              aria-label="close"
+              onClick={() => setOpenTransmissionModal(false)}
+              sx={{ position: "absolute", right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            <TextField
+              select
+              label="Transmission"
+              value={tempTransmission}
+              onChange={(e) => setTempTransmission(e.target.value)}
+              fullWidth
+              margin="normal"
+              SelectProps={{ native: true }}
+            >
+              <option value="any">Any</option>{" "}
+              {transmissionType.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </TextField>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleApplyTransmission}
+              variant="contained"
+              sx={primaryButtonStyle}
+            >
+              Apply Transmission
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={openCategoryModal}
+          onClose={() => setOpenCategoryModal(false)}
+          fullWidth
+          maxWidth="xs"
+        >
+          <DialogTitle>
+            Select Category{" "}
+            <IconButton
+              aria-label="close"
+              onClick={() => setOpenCategoryModal(false)}
+              sx={{ position: "absolute", right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            <TextField
+              select
+              label="Category"
+              value={tempCategory}
+              onChange={(e) => setTempCategory(e.target.value)}
+              fullWidth
+              margin="normal"
+              SelectProps={{ native: true }}
+            >
+              <option value="any">Any</option>{" "}
+              {CategoryList.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </TextField>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleApplyCategory}
+              variant="contained"
+              sx={primaryButtonStyle}
+            >
+              Apply Category
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={openAllFiltersModal}
+          onClose={() => setOpenAllFiltersModal(false)}
+          fullWidth
+          maxWidth="sm"
+        >
+          <DialogTitle>
+            All Filters{" "}
+            <IconButton
+              aria-label="close"
+              onClick={() => setOpenAllFiltersModal(false)}
+              sx={{ position: "absolute", right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            <p className="mb-4 text-sm text-gray-600">
+              Apply or modify all available filters here.
+            </p>
+            <div className="mb-4 p-4 border rounded-lg">
+              <h3 className="font-semibold mb-2">Price Range (ETB)</h3>
+              <div className="flex gap-4">
+                <TextField
+                  label="Min Price"
+                  type="number"
+                  value={tempMinPrice}
+                  onChange={(e) => setTempMinPrice(e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+                <TextField
+                  label="Max Price"
+                  type="number"
+                  value={tempMaxPrice}
+                  onChange={(e) => setTempMaxPrice(e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+              </div>
+            </div>
+            <div className="mb-4 p-4 border rounded-lg">
+              <h3 className="font-semibold mb-2">Vehicle</h3>
+              <TextField
+                select
+                label="Make"
+                value={tempMake}
+                onChange={(e) => handleTempMakeChange(e.target.value)}
+                fullWidth
+                margin="dense"
+                size="small"
+                SelectProps={{ native: true }}
+              >
+                <option value="any">Any Make</option>{" "}
+                {makesData.Makes.map((m) => (
+                  <option key={m.make_id} value={m.make_display}>
+                    {m.make_display}
+                  </option>
+                ))}
+              </TextField>
+              <TextField
+                select
+                label="Model"
+                value={tempModel}
+                onChange={(e) => setTempModel(e.target.value)}
+                fullWidth
+                margin="dense"
+                size="small"
+                disabled={tempMake === "any" || modelList.length === 0}
+                SelectProps={{ native: true }}
+              >
+                <option value="any">Any Model</option>{" "}
+                {modelList.map((m_val) => (
+                  <option key={m_val} value={m_val}>
+                    {m_val}
+                  </option>
+                ))}
+              </TextField>
+            </div>
+            <div className="mb-4 p-4 border rounded-lg">
+              <h3 className="font-semibold mb-2">Transmission</h3>
+              <TextField
+                select
+                label="Transmission"
+                value={tempTransmission}
+                onChange={(e) => setTempTransmission(e.target.value)}
+                fullWidth
+                margin="dense"
+                size="small"
+                SelectProps={{ native: true }}
+              >
+                <option value="any">Any</option>{" "}
+                {transmissionType.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </TextField>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <h3 className="font-semibold mb-2">Category</h3>
+              <TextField
+                select
+                label="Category"
+                value={tempCategory}
+                onChange={(e) => setTempCategory(e.target.value)}
+                fullWidth
+                margin="dense"
+                size="small"
+                SelectProps={{ native: true }}
+              >
+                <option value="any">Any</option>{" "}
+                {CategoryList.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </TextField>
+            </div>
+          </DialogContent>
+          <DialogActions
+            sx={{
+              justifyContent: "space-between",
+              paddingX: 2,
+              paddingBottom: 2,
+            }}
+          >
+            <Button
+              onClick={clearAllFilters}
+              variant="outlined"
+              size="small"
+              sx={primaryOutlinedButtonStyle}
+            >
+              Clear All Filters
+            </Button>
+            <div>
+              <Button
+                onClick={() => setOpenAllFiltersModal(false)}
+                sx={{ mr: 1 }}
+                size="small"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  handleApplyPrice();
+                  handleApplyMakeModel();
+                  handleApplyTransmission();
+                  handleApplyCategory();
+                  setOpenAllFiltersModal(false);
+                }}
+                variant="contained"
+                size="small"
+                sx={primaryButtonStyle}
+              >
+                Apply Filters
+              </Button>
+            </div>
+          </DialogActions>
+        </Dialog>
+      </main>
       <Footer />
     </div>
   );

@@ -24,7 +24,7 @@ import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import HomeIcon from "@mui/icons-material/Home";
-import InfoIcon from "@mui/icons-material/Info"; // For About Us
+import InfoIcon from "@mui/icons-material/Info"; // For About Us, and now How It Works
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote"; // For Testimonials
 import GroupIcon from "@mui/icons-material/Group"; // For Our Team
 import ContactMailIcon from "@mui/icons-material/ContactMail"; // For Contact
@@ -156,7 +156,7 @@ function Navbar({ user2, setUser }) {
     window.location.href = "/"; // Redirect to login page
   };
 
-  const alternativePages = ["/contact", "/testimonials", "/howitworks"];
+  const alternativePages = ["/contact", "/howitworks"];
   const isAlternativeColor = alternativePages.includes(location.pathname);
   const backgroundColor = isAlternativeColor
     ? "bg-[#00173C] text-gray-300 font-normal"
@@ -178,12 +178,12 @@ function Navbar({ user2, setUser }) {
     switch (label) {
       case "Home":
         return <HomeIcon className="text-md" />;
+      case "How It Works": // Added How It Works
+        return <InfoIcon className="text-md" />; // Reusing InfoIcon
       case "About":
         return <InfoIcon className="text-md" />;
-
-      case "Testimonials":
+      case "Explore Cars":
         return <FormatQuoteIcon className="text-md" />;
-
       case "Contact":
         return <ContactMailIcon className="text-md" />;
       default:
@@ -232,7 +232,8 @@ function Navbar({ user2, setUser }) {
           >
             {[
               { to: "/", label: "Home" },
-              { to: "/testimonials", label: "Testimonials" },
+              { to: "/howitworks", label: "How It Works" }, // Added How It Works
+              { to: "/search", label: "Explore Cars" },
               { to: "/about", label: "About Us" },
               { to: "/contact", label: "Contact Us" },
             ].map(({ to, label }) => (
@@ -258,7 +259,7 @@ function Navbar({ user2, setUser }) {
                   className={` ${backgroundColor1} text-sm flex items-center justify-center rounded-full px-4 ml-4 my-2 py-1`}
                 >
                   <AddIcon className="mr-4 " size={12} />
-                  <span>Add Car</span>
+                  <span>List Your Car</span>
                 </NavLink>
                 <NavLink to="/profile" className=" ">
                   {isImageLoadingNavbar ? (
@@ -339,7 +340,7 @@ function Navbar({ user2, setUser }) {
                           <MenuItem
                             icon={<CreditCardIcon className="text-md" />}
                             text="Payment History"
-                            onClick={() => handleNavigate("/payments")}
+                            onClick={() => handleNavigate("/profile")}
                           />
                         </MenuItem>
 
@@ -379,8 +380,9 @@ function Navbar({ user2, setUser }) {
           <div className="md:hidden bg-white shadow-md fixed w-[100vw] inset-0 z-10 flex flex-col px-4 space-y-2">
             {[
               { to: "/", label: "Home" },
+              { to: "/howitworks", label: "How It Works" }, // Added How It Works
               { to: "/about", label: "About" },
-              { to: "/testimonials", label: "Testimonials" },
+              { to: "/search", label: "Exploare Cars" },
               { to: "/contact", label: "Contact" },
             ].map(({ to, label }) => (
               <MenuItem
@@ -434,7 +436,7 @@ function Navbar({ user2, setUser }) {
                   onClick={openNav} // Close menu on click
                 >
                   <AddIcon className="mr-4 " size={12} />
-                  <span>Add Car</span>
+                  <span>List Your Car</span>
                 </NavLink>
                 <MenuItem
                   icon={<AssignmentIcon className="text-md" />}
@@ -511,7 +513,7 @@ function Navbar({ user2, setUser }) {
                     text="Payment History"
                     onClick={() => {
                       openNav();
-                      handleNavigate("/payments");
+                      handleNavigate("/profile");
                     }}
                   />
                 </MenuItem>

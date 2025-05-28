@@ -11,7 +11,7 @@ const SignupForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (acceptedTerms) {
-      navigate("/verification",{state:{firstName,lastName}});
+      navigate("/verification", { state: { firstName, lastName } });
     }
   };
 
@@ -114,7 +114,7 @@ const SignupForm = () => {
           </p>
 
           {/* Google Signup */}
-          <div className="mt-6 flex items-center justify-center border-t border-gray-300 pt-4">
+          {/* <div className="mt-6 flex items-center justify-center border-t border-gray-300 pt-4">
             <button
               type="button"
               className="flex items-center justify-center w-full border rounded-full py-3 hover:bg-gray-100 transition"
@@ -126,7 +126,7 @@ const SignupForm = () => {
               />
               Continue with Google
             </button>
-          </div>
+          </div> */}
         </form>
 
         {/* Terms Text */}

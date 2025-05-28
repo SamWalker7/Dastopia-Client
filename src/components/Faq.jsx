@@ -3,31 +3,27 @@ import React, { useState } from "react";
 // Questions and answers data
 const faqData = [
   {
-    question: "What is a Payment Gateway?",
+    question: "How do I rent a car?",
     answer:
-      "A payment gateway is a technology used to accept and process payments online.",
+      "Choose a car, select your dates, and confirm your booking online or through our app.",
   },
   {
-    question:
-      "Do I need to pay to Instapay even when there is no transaction going on in my business?",
-    answer:
-      "No, you do not need to pay Instapay when there is no transaction happening. With one of the lowest transaction charges in the industry, pay only when you get paid!",
+    question: "What do I need to rent a car?",
+    answer: "You need a valid ID, a driver's license, and a payment method.",
   },
   {
-    question: "What platforms does ACME payment gateway support?",
+    question: "Can I cancel or change my booking?",
     answer:
-      "ACME payment gateway supports multiple platforms such as web, mobile, and POS terminals.",
+      "Yes, you can cancel or update your booking from your account, depending on the policy.",
   },
+  // {
+  //   question: "Is insurance included?",
+  //   answer: "Yes, basic insurance is included with every rental.",
+  // },
   {
-    question: "Does ACME provide international payments support?",
+    question: "How can I list my car?",
     answer:
-      "Yes, ACME supports international payments with various currencies.",
-  },
-  {
-    question:
-      "Is there any setup fee or annual maintenance fee that I need to pay regularly?",
-    answer:
-      "There is no setup fee or maintenance fee for using ACME payment gateway, making it an affordable choice for your business.",
+      "Sign up, add your car details, and publish your listing to start earning.",
   },
 ];
 

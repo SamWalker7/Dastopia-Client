@@ -627,7 +627,7 @@ const Step3 = ({ nextStep, prevStep }) => {
           {/* Set Car Unavailability Dates */}
           <div className="mb-8">
             <h3 className="text-base sm:text-lg font-semibold mb-3">
-              Set Unavailable Dates
+              Set Unavailable/Blocked Dates
             </h3>
             <p className="text-gray-600 text-sm sm:text-base mb-3">
               Select dates or date ranges when your car will NOT be available.
