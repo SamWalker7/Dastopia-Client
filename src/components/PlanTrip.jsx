@@ -7,6 +7,11 @@ import Community from "../images/plan/Community.png";
 import ComingSoon from "../images/plan/ComingSoon.png";
 import { Link } from "react-router-dom";
 function PlanTrip() {
+  const googlePlayBadgeUrl =
+    "https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png";
+  const googlePlayLink =
+    "https://play.google.com/store/apps/details?id=YOUR_APP_ID_HERE";
+
   return (
     <>
       <div
@@ -25,10 +30,9 @@ function PlanTrip() {
             Explore Cars
           </h1>
           <p className="text-sm md:text-lg mb-8">
-            Lorem ipsum dolor sit amet consectetur. Vitae condimentum leo
-            convallis nisi tincidunt. Sapien dignissim mattis congue eget elit a
-            imperdiet. Eu non turpis facilisis hendrerit velit massa tincidunt
-            id. Sed at quis.
+            Find the perfect car for your next trip. Choose from a wide
+            selection of vehicles—whether you need something economical,
+            luxurious, or spacious for the family.
           </p>
           <Link
             to="/search"
@@ -53,16 +57,14 @@ function PlanTrip() {
             List Your Car
           </h1>
           <p className="text-sm md:text-lg mb-8">
-            Lorem ipsum dolor sit amet consectetur. Vitae condimentum leo
-            convallis nisi tincidunt. Sapien dignissim mattis congue eget elit a
-            imperdiet. Eu non turpis facilisis hendrerit velit massa tincidunt
-            id. Sed at quis.
+            Earn money by renting out your car. Join our trusted network and
+            make the most out of your vehicle when you're not using it.
           </p>
           <Link
             to="/addcar"
             className=" bg-[#00173C] text-sm cursor-pointer font-normal text-white rounded-full px-12 py-2 mt-4  "
           >
-            List My Car
+            List Your Car
           </Link>
         </div>
         <div className="w-fit md:pl-12 items-center justify-center flex">
@@ -124,14 +126,24 @@ function PlanTrip() {
       <div className="relative bg-white h-fit md:p-10 p-4 md:px-20 md:flex items-center justify-center">
         <div className="relative md:pb-20 md:pr-72 z-10 text-start  text-[#00173C] p-8">
           <h1 className="text-2xl  md:text-6xl  font-semibold md:pr-10  my-4 md:mb-8">
-            Mobile App Coming soon
+            Our Mobile App Is Here
           </h1>
           <p className="text-sm md:text-lg md:mb-12">
-            Lorem ipsum dolor sit amet consectetur. Vitae condimentum leo
-            convallis nisi tincidunt. Sapien dignissim mattis congue eget elit a
-            imperdiet. Eu non turpis facilisis hendrerit velit massa tincidunt
-            id. Sed at quis.
+            Book, manage, and explore cars on the go. Download our app for a
+            seamless rental experience—anytime, anywhere.
           </p>
+          <a
+            href={googlePlayLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block"
+          >
+            <img
+              src={googlePlayBadgeUrl}
+              alt="Get it on Google Play"
+              className="h-20 hover:opacity-90 transition-opacity"
+            />
+          </a>
         </div>
         <div className="md:w-fit  items-center justify-center flex">
           {" "}

@@ -605,10 +605,9 @@ const Step4 = ({ nextStep, prevStep }) => {
                 ? "bg-navy-900 hover:bg-navy-800 shadow-md"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
-
             disabled={!allRequiredLocationsFilled}
           >
-            Submit Listing & Continue
+            Submit Listing
           </button>
         </div>
       </div>

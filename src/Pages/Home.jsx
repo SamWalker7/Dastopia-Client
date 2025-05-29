@@ -10,6 +10,7 @@ import Download from "../components/Download";
 import Footer from "../components/Footer";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
+import TestimonialsPage from "./TestimonialsPage";
 
 function Home({ user }) {
   const user1 = useSelector((state) => state.auth.user);
@@ -24,6 +25,7 @@ function Home({ user }) {
       <PlanTrip />
       <Testimonials />
       <Faq />
+      <TestimonialsPage />
       <Footer />
     </>
   );

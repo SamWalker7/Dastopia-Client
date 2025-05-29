@@ -18,8 +18,8 @@ const SuccessPopup = ({ onClose }) => (
         Vehicle Submitted Successfully!
       </h2>
       <p className="text-gray-600 text-sm sm:text-base mb-6 sm:mb-8">
-        Your vehicle listing has been submitted and is now pending review or
-        live.
+        Your vehicle listing has been submitted and it will go live after
+        review.
       </p>
       <button
         onClick={onClose}

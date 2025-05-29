@@ -284,7 +284,7 @@ const Details = ({ selectedVehicleId }) => {
   };
 
   return (
-    <div className="lg:w-3/5 w-full">
+    <div className=" w-full">
       <div className="p-10 bg-white w-full shadow-lg rounded-lg">
         <h1 className="text-2xl my-4 mb-8 font-semibold">Detail Listing</h1>
 

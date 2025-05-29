@@ -343,7 +343,6 @@ export default function Details2() {
             return null;
           }
         } else {
-
           return null;
         }
 
@@ -551,7 +550,6 @@ export default function Details2() {
       } else {
         setDateError("");
         if (datesNeedSetting) {
-
           setCurrentPickUpDate(initialPickUp);
           setCurrentDropOffDate(initialDropOff);
         }
@@ -656,7 +654,6 @@ export default function Details2() {
       mapCenter = specificLocationData.originalCoords;
       popupTitleName = specificLocationData.displayName;
     } else {
-
       // View all locations of a type
       vehiclesForMap = [vehicleDetails]; // Pass the full vehicle details
       const locationsOfType =
@@ -759,7 +756,12 @@ export default function Details2() {
   if (!customer && authChecked)
     return (
       <div className="flex justify-center items-center h-screen text-xl">
-        <p>Please log in to continue.</p>
+        <p>
+          Please log in to continue.
+          <a href="/login" className="text-blue-600 mx-8 font-semibold">
+            Login
+          </a>
+        </p>
       </div>
     );
   if (detailsLoading)

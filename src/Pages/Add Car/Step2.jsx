@@ -420,7 +420,7 @@ const Step2 = ({ nextStep, prevStep }) => {
         </div>
       </div>
       <div className="p-8 w-1/4 hidden md:flex font-light bg-blue-200 py-10 h-fit">
-        Please upload clear pictures of the car. Make sure you have at least 4
+        Please upload clear pictures of the car. Make sure you have at least 6
         images covering all corners. Also, upload the required vehicle
         documents.
       </div>

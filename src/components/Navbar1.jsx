@@ -90,7 +90,7 @@ function Navbar1({ user2 }) {
     setNav(false);
   };
 
-  const alternativePages = ["/contact", "/testimonials", "/howitworks"];
+  const alternativePages = ["/contact", "/howitworks"];
   const isAlternativeColor = alternativePages.includes(location.pathname);
   const backgroundColor = isAlternativeColor
     ? "bg-[#00173C] text-gray-300 font-normal"
@@ -140,7 +140,7 @@ function Navbar1({ user2 }) {
           >
             {[
               { to: "/", label: "Home" },
-              { to: "/testimonials", label: "Testimonials" },
+              { to: "/search", label: "Explore Cars" },
               { to: "/about", label: "About Us" },
               { to: "/contact", label: "Contact Us" },
             ].map(({ to, label }) => (
@@ -187,7 +187,7 @@ function Navbar1({ user2 }) {
               { to: "/", label: "Home" },
               { to: "/about", label: "About" },
               { to: "/models", label: "Vehicles" },
-              { to: "/testimonials", label: "Testimonials" },
+              { to: "/search", label: "Explore Cars" },
               { to: "/team", label: "Our Team" },
               { to: "/contact", label: "Contact" },
             ].map(({ to, label }) => (

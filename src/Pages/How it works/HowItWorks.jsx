@@ -17,15 +17,15 @@ const HowItWorks = () => {
       }}
       className=" flex flex-col overflow-hidden bg-auto  "
     >
-      <div className="md:mt-40 mt-10">
-        <h2 className="text-center text-xl md:my-28 md:text-9xl  font-medium text-[#00173C] mb-4">
+      <div className="md:mt-40 mt-32">
+        <h2 className="text-center text-4xl md:my-16 md:text-8xl  font-medium text-[#00173C] mb-4">
           How It Works
         </h2>
         <div className="relative    ">
           <div className="flex justify-center  mb-4 sm:mb-6">
             <button
               onClick={() => setActiveTab("Renter")}
-              className={`px-12 py-2 text-2xl ${
+              className={`md:px-12 px-4 py-2 text-2xl ${
                 activeTab === "Renter"
                   ? "text-black border-b-2 border-[#00173C]"
                   : "text-gray-500 border-b-2 border-gray-300"
@@ -35,7 +35,7 @@ const HowItWorks = () => {
             </button>
             <button
               onClick={() => setActiveTab("Owner")}
-              className={`px-12 py-2 text-2xl ${
+              className={`md:px-12 px-4 py-2 text-2xl ${
                 activeTab === "Owner"
                   ? "text-black border-b-2 border-[#00173C]"
                   : "text-gray-500 border-b-2 border-gray-300"
@@ -45,7 +45,7 @@ const HowItWorks = () => {
             </button>
             <button
               onClick={() => setActiveTab("Corporate")}
-              className={`px-12 py-2 text-2xl ${
+              className={`md:px-12 px-4 py-2 text-2xl ${
                 activeTab === "Corporate"
                   ? "text-black border-b-2 border-[#00173C]"
                   : "text-gray-500 border-b-2 border-gray-300"

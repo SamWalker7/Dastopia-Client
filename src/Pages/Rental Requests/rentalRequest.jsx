@@ -648,14 +648,14 @@ const RentalRequests = () => {
                 <img
                   src={selectedRequest.renterAvatarUrl}
                   alt="Renter Profile"
-                  className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover"
+                  className="w-12 h-12 md:w-12 md:h-12 rounded-full object-cover"
                 />
                 <div className="grid gap-x-6 gap-y-3 md:grid-cols-2 grid-cols-1 w-full">
                   <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
                     <IoPersonOutline size={18} className="text-gray-500" />
                     <span>{selectedRequest.renterName}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
+                  {/* <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
                     <MdOutlineLocalPhone size={18} className="text-gray-500" />
                     <span>{selectedRequest.renterPhone}</span>
                   </div>
@@ -666,10 +666,10 @@ const RentalRequests = () => {
                   <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
                     <IoLocationOutline size={18} className="text-gray-500" />
                     <span>Address N/A</span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
-              <button
+              {/* <button
                 className="w-full md:w-auto mt-4 px-8 py-3 text-sm border rounded-full border-[#00113D] text-[#00113D] bg-white hover:bg-[#00113D] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 onClick={() => handleChatWithRentee(selectedRequest)}
                 disabled={
@@ -681,7 +681,7 @@ const RentalRequests = () => {
               >
                 <IoChatboxOutline size={16} />
                 Chat With Rentee
-              </button>
+              </button> */}
               {actionError && (
                 <p className="text-red-500 text-sm text-center mt-2">
                   {actionError}
