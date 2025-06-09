@@ -141,7 +141,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
           {/* Left: Copyright */}
           <div className="mb-4 md:mb-0">
-            © {new Date().getFullYear()} DasGuzo. All rights reserved.
+            © 2025 Das Technologies. All rights reserved.
           </div>
 
           {/* Middle: Bottom Links */}

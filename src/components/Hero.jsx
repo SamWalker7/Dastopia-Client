@@ -47,6 +47,7 @@ function Hero({ user }) {
         <p className="text-xl md:text-3xl font-semibold mb-6 md:w-full w-[80vw]">
           Rent it. List it. Drive away.
         </p>
+
         <BookCar />
       </div>
     </div>

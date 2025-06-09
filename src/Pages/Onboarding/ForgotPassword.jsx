@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import flag from "../../images/hero/image.png";
 import { IconButton, InputAdornment, TextField } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close"; // For the close button
 
 const ForgotPassword = () => {
   const [phone_number, setPhoneNumber] = useState("");
@@ -15,17 +16,20 @@ const ForgotPassword = () => {
     if (!phone_number || errors.phone_number) return;
 
     try {
-      const response = await fetch("https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/forget_password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ "phone_number": phone_number }),
-      });
+      const response = await fetch(
+        "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/forget_password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone_number: phone_number }),
+        }
+      );
 
       if (!response.ok) {
-        console.error("Failed to send OTP",response)
+        console.error("Failed to send OTP", response);
         return;
       }
-       console.log(response);
+      console.log(response);
 
       navigate("/resetpassword", { state: { phone_number } });
     } catch (error) {
@@ -54,7 +58,23 @@ const ForgotPassword = () => {
   return (
     <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 z-50">
       <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE] relative scale-75">
-        <h1 className="text-3xl font-bold my-8">Forgot Password</h1>
+        <div className="flex w-full justify-between items-center ">
+          <h1 className="text-3xl font-bold my-8">Forgot Password</h1>
+          <Link to="/" className="relative -mt-40">
+            {" "}
+            <IconButton
+              aria-label="close login modal"
+              sx={{
+                position: "absolute",
+                top: "12px", // Adjust as needed
+                right: "0px", // Adjust as needed
+                color: "text.secondary",
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Link>
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-2 mb-4">
             <div className="relative inline-block my-3 text-lg w-full">
@@ -153,7 +173,24 @@ const Resetpassword = () => {
   return (
     <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 z-50">
       <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE] relative scale-75">
-        <h1 className="text-3xl font-bold my-8">Reset Password</h1>
+        <div className="flex w-full justify-between items-center ">
+          <h1 className="text-3xl font-bold my-8">Reset Password</h1>
+
+          <Link to="/" className="relative -mt-40">
+            {" "}
+            <IconButton
+              aria-label="close login modal"
+              sx={{
+                position: "absolute",
+                top: "12px", // Adjust as needed
+                right: "0px", // Adjust as needed
+                color: "text.secondary",
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Link>
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-4 mb-6">
             {/* OTP Input */}
@@ -192,7 +229,7 @@ const Resetpassword = () => {
                       onMouseDown={handleMouseDownPassword}
                       edge="end"
                     >
-                      {showPassword ? <Visibility /> : <VisibilityOff />  }
+                      {showPassword ? <Visibility /> : <VisibilityOff />}
                     </IconButton>
                   </InputAdornment>
                 ),
@@ -214,4 +251,4 @@ const Resetpassword = () => {
 };
 
 export { Resetpassword };
-export default Resetpassword;
+export default ForgotPassword;

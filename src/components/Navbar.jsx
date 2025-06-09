@@ -308,12 +308,6 @@ function Navbar({ user2, setUser }) {
                           hasDropdown
                         >
                           <MenuItem
-                            icon={<CheckBoxIcon className="text-md" />}
-                            text="Approvals"
-                            onClick={() => handleNavigate("/approvals")}
-                          />
-
-                          <MenuItem
                             icon={<DirectionsCarIcon className="text-md" />}
                             text="My Vehicle"
                             onClick={() => handleNavigate("/mylisting")}
@@ -325,11 +319,11 @@ function Navbar({ user2, setUser }) {
                           text="General Settings"
                           hasDropdown
                         >
-                          <MenuItem
+                          {/* <MenuItem
                             icon={<LanguageIcon className="text-md" />}
                             text="Language"
                             onClick={() => handleNavigate("/language")}
-                          />
+                          /> */}
 
                           <MenuItem
                             icon={<AccountCircleIcon className="text-md" />}
@@ -468,15 +462,6 @@ function Navbar({ user2, setUser }) {
                   hasDropdown
                 >
                   <MenuItem
-                    icon={<CheckBoxIcon className="text-md" />}
-                    text="Approvals"
-                    onClick={() => {
-                      openNav();
-                      handleNavigate("/approvals");
-                    }}
-                  />
-
-                  <MenuItem
                     icon={<DirectionsCarIcon className="text-md" />}
                     text="My Vehicle"
                     onClick={() => {
@@ -490,14 +475,14 @@ function Navbar({ user2, setUser }) {
                   text="General Settings"
                   hasDropdown
                 >
-                  <MenuItem
+                  {/* <MenuItem
                     icon={<LanguageIcon className="text-md" />}
                     text="Language"
                     onClick={() => {
                       openNav();
                       handleNavigate("/language");
                     }}
-                  />
+                  /> */}
 
                   <MenuItem
                     icon={<AccountCircleIcon className="text-md" />}

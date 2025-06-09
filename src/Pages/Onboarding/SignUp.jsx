@@ -1,5 +1,7 @@
+import { IconButton } from "@mui/material";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import CloseIcon from "@mui/icons-material/Close"; // For the close button
 
 const SignupForm = () => {
   const [firstName, setFirstName] = useState("");
@@ -21,8 +23,23 @@ const SignupForm = () => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       {/* Signup Form Container */}
       <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE]">
-        <h1 className="text-5xl font-bold my-8">Create An Account</h1>
-
+        <div className="flex w-full justify-between items-center ">
+          <h1 className="text-4xl font-bold my-8">Create An Account</h1>
+          <Link to="/" className="relative -mt-40">
+            {" "}
+            <IconButton
+              aria-label="close login modal"
+              sx={{
+                position: "absolute",
+                top: "12px", // Adjust as needed
+                right: "12px", // Adjust as needed
+                color: "text.secondary",
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Link>
+        </div>
         {/* Progress Bar */}
         <div className="flex items-center justify-center">
           <div className="w-1/2 border-b-4 border-blue-200"></div>
