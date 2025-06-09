@@ -884,7 +884,7 @@ const MyRequests = () => {
               </section>
             </div>
 
-            <section className="h-fit bg-white p-6 space-y-6 rounded-xl shadow-lg">
+            {/* <section className="h-fit bg-white p-6 space-y-6 rounded-xl shadow-lg">
               <h2 className="text-lg font-semibold text-[#00113D] mb-6">
                 Car Owner Details
               </h2>
@@ -949,7 +949,7 @@ const MyRequests = () => {
                   {paymentError}
                 </p>
               )}
-            </section>
+            </section> */}
           </>
         ) : (
           !loading &&

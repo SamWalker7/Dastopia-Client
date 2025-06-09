@@ -9,7 +9,6 @@ function BookCar() {
   const [endDate, setEndDate] = useState(null);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
   const today = new Date();
 
   // Helper to format Date objects to "YYYY-MM-DD" string for navigation
@@ -67,6 +66,8 @@ function BookCar() {
   const googlePlayLink =
     "https://play.google.com/store/apps/details?id=YOUR_APP_ID_HERE";
 
+  const today = new Date();
+
   return (
     <>
       <section>
@@ -74,7 +75,7 @@ function BookCar() {
           <div
             className="relative h-fit md:justify-start justify-center py-8 md:py-4 w-full md:w-fit px-6 md:items-start items-center rounded-lg bg-[#FAF9FE]"
             style={{
-              backgroundImage: `url(${BackgroundImage})`,
+              backgroundImage: `url(${BackgroundImage})`, // Make sure this image path is correct
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}

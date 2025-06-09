@@ -755,6 +755,7 @@ const Search = () => {
         </Dialog>
 
         {/* Category Modal */}
+
         <Dialog
           open={openCategoryModal}
           onClose={() => setOpenCategoryModal(false)}
