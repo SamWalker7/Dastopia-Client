@@ -66,8 +66,6 @@ function BookCar() {
   const googlePlayLink =
     "https://play.google.com/store/apps/details?id=YOUR_APP_ID_HERE";
 
-  const today = new Date();
-
   return (
     <>
       <section>
