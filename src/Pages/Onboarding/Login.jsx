@@ -30,7 +30,7 @@ const Login = ({ onClose }) => {
     if (isAuthenticated) {
       if (onClose) onClose(); // Close modal first
       navigate("/");
-      // No need for reload, Redux state should update UI
+      window.location.reload(true);
     }
   }, [isAuthenticated, navigate, onClose]);
 
@@ -170,19 +170,20 @@ const Login = ({ onClose }) => {
         className="w-full max-w-md bg-[#FAF9FE] rounded-lg shadow-xl p-6 md:p-8 relative transform transition-all scale-100" // Adjusted max-width and padding
         onClick={(e) => e.stopPropagation()} // Prevent click inside modal from closing it
       >
-        {/* <IconButton
-          aria-label="close login modal"
-          onClick={onClose}
-          sx={{
-            position: "absolute",
-            top: "12px", // Adjust as needed
-            right: "12px", // Adjust as needed
-            color: "text.secondary",
-          }}
-        >
-          <CloseIcon />
-        </IconButton> */}
-
+        <Link to="/">
+          {" "}
+          <IconButton
+            aria-label="close login modal"
+            sx={{
+              position: "absolute",
+              top: "12px", // Adjust as needed
+              right: "12px", // Adjust as needed
+              color: "text.secondary",
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Link>
         <h1 className="text-2xl md:text-3xl font-bold my-6 text-center text-black">
           Login
         </h1>

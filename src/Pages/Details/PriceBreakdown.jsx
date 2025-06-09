@@ -349,14 +349,7 @@ export default function PriceBreakdown({
     setShowPaymentDetails(true);
   };
 
-  const canRequestBooking =
-    pickUpLocation &&
-    dropOffLocation &&
-    id &&
-    ownerId &&
-    pickUpTime &&
-    dropOffTime;
-
+  const canRequestBooking = pickUpLocation && dropOffLocation && id && ownerId;
   return (
     <div className="flex items-center justify-center ">
       <div className="bg-[#0d1b3e] text-gray-300 shadow-lg p-6 rounded-2xl w-full max-w-md">

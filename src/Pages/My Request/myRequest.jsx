@@ -884,11 +884,11 @@ const MyRequests = () => {
               </section>
             </div>
 
-            {/* <section className="h-fit bg-white p-6 space-y-6 rounded-xl shadow-lg">
+            <section className="h-fit bg-white p-6 space-y-6 rounded-xl shadow-lg">
               <h2 className="text-lg font-semibold text-[#00113D] mb-6">
                 Car Owner Details
               </h2>
-              {selectedOwnerDetails ? (
+              {/* {selectedOwnerDetails ? (
                 <div className="items-center flex md:flex-row flex-col gap-6 md:gap-8">
                   <img
                     src={selectedOwnerDetails.profilePicture || image}
@@ -917,10 +917,10 @@ const MyRequests = () => {
                 <p className="text-sm text-gray-500">
                   Loading owner details...
                 </p>
-              )}
+              )} */}
 
               <div className="flex flex-col sm:flex-row text-base gap-4 pt-4 border-t border-gray-200">
-                <button
+                {/* <button
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border rounded-full border-[#00113D] text-[#00113D] hover:bg-[#00113D] hover:text-white transition-colors disabled:opacity-50"
                   onClick={handleChatWithOwner}
                   disabled={
@@ -930,7 +930,7 @@ const MyRequests = () => {
                   }
                 >
                   <IoChatboxOutline size={18} /> Chat With Owner
-                </button>
+                </button> */}
 
                 {selectedRequestStatusInfo?.isPaymentPending &&
                   !selectedRequestStatusInfo?.isExpired &&
@@ -949,7 +949,7 @@ const MyRequests = () => {
                   {paymentError}
                 </p>
               )}
-            </section> */}
+            </section>
           </>
         ) : (
           !loading &&

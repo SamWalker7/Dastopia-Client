@@ -23,7 +23,7 @@ import Dropdown from "../../components/Search/Dropdown"; // ADJUST PATH
 import useVehicleFormStore from "../../store/useVehicleFormStore"; // ADJUST PATH
 
 // --- CONFIGURATION ---
-const GOOGLE_MAPS_API_KEY = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4"; // <<<--- REPLACE THIS
+const GOOGLE_MAPS_API_KEY = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4"; // <<<--- REPLACE THIS IF NEEDED
 const PLACEHOLDER_IMAGE_URL =
   "https://via.placeholder.com/600x400.png?text=No+Image+Available";
 
@@ -64,21 +64,31 @@ const fetchPlaceName = async (lat, lng) => {
   const isValidLat = typeof lat === "number" && !isNaN(lat);
   const isValidLng = typeof lng === "number" && !isNaN(lng);
   const isKeyValid =
-    GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY !== "YOUR_GOOGLE_MAPS_API_KEY"; // Check against actual placeholder
+    GOOGLE_MAPS_API_KEY &&
+    GOOGLE_MAPS_API_KEY !== "YOUR_GOOGLE_MAPS_API_KEY" &&
+    GOOGLE_MAPS_API_KEY !== "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4"; // Check against actual placeholder
   if (!isValidLat || !isValidLng || !isKeyValid) {
     console.warn(
-      `Geocoding skipped: Missing valid coords (Lat valid: ${isValidLat}, Lng valid: ${isValidLng}) or API key issue (Key valid: ${isKeyValid}).`,
+      `Geocoding skipped: Missing valid coords (Lat valid: ${isValidLat}, Lng valid: ${isValidLng}) or API key issue (Key valid: ${isKeyValid}). Using default API key.`,
       {
         lat,
         lng,
         keyStatus: isKeyValid
           ? "Valid (but may have other issues)"
+          : GOOGLE_MAPS_API_KEY === "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4"
+          ? "Default Demo Key"
           : "Invalid/Placeholder",
       }
     );
-    const fLat = isValidLat ? lat.toFixed(2) : "N/A";
-    const fLng = isValidLng ? lng.toFixed(2) : "N/A";
-    return `Coord: ${fLat}, ${fLng} (API Call Skipped)`;
+    // If using the default demo key, proceed with the API call if coords are valid
+    if (
+      GOOGLE_MAPS_API_KEY !== "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4" &&
+      (!isValidLat || !isValidLng)
+    ) {
+      const fLat = isValidLat ? lat.toFixed(2) : "N/A";
+      const fLng = isValidLng ? lng.toFixed(2) : "N/A";
+      return `Coord: ${fLat}, ${fLng} (API Call Skipped)`;
+    }
   }
 
   const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`;
@@ -164,7 +174,7 @@ export default function Details2() {
       : null
   );
   const [currentDropOffDate, setCurrentDropOffDate] = useState(
-    locationHook.state?.DropOffTime // Note: DropOffTime had a capital 'O' in original code
+    locationHook.state?.DropOffTime
       ? new Date(locationHook.state.DropOffTime)
       : null
   );
@@ -191,9 +201,6 @@ export default function Details2() {
   const [actualSelectedDropOff, setActualSelectedDropOff] = useState(
     locationHook.state?.dropoffLocationData || null
   );
-  // REMOVED: const [allVehicleEvents, setAllVehicleEvents] = useState([]);
-  // REMOVED: const [availableEvents, setAvailableEvents] = useState([]);
-  // We will use vehicleDetails.unavailableDates directly (Array of ISO strings)
 
   const [ratings, setRatings] = useState([]);
   const [averageRating, setAverageRating] = useState(0);
@@ -211,7 +218,7 @@ export default function Details2() {
     const storedCustomer = JSON.parse(localStorage.getItem("customer"));
     if (!storedCustomer || !storedCustomer.AccessToken) {
       showStatusPopup("You must be logged in. Redirecting...", "error");
-      setTimeout(() => navigate("/search"), 4000);
+      setTimeout(() => navigate("/login"), 3000); // Redirect to login if not authenticated
     } else {
       setCustomer(storedCustomer);
     }
@@ -220,7 +227,7 @@ export default function Details2() {
 
   useEffect(() => {
     /* Fetch Vehicle Data */
-    if (!authChecked || !customer) return;
+    if (!authChecked || !customer) return; // Wait for auth check and customer
     const fetchVehicleData = async () => {
       if (!selectedVehicleId) {
         setApiError("Vehicle ID is missing.");
@@ -238,19 +245,27 @@ export default function Details2() {
         );
         if (response && response.body) {
           setVehicleDetails(response.body);
-          // Events logic removed. Assuming response.body.unavailableDates exists and is an array of ISO strings.
-          // Example: response.body.unavailableDates = ["2024-08-10T00:00:00.000Z", "2024-08-15T00:00:00.000Z"]
-          // If your API returns unavailable dates under a different key or format, adjust here.
 
           if (response.body.vehicleImageKeys?.length > 0) {
             const fetchedUrls = await Promise.all(
-              response.body.vehicleImageKeys.map(
-                async (key) =>
-                  (await getDownloadUrl(key))?.body || PLACEHOLDER_IMAGE_URL
-              )
+              response.body.vehicleImageKeys.map(async (imageKeyObj) => {
+                // Ensure correct key extraction if imageKeyObj is an object or string
+                const s3Key =
+                  typeof imageKeyObj === "string"
+                    ? imageKeyObj
+                    : imageKeyObj?.key;
+                if (!s3Key) return PLACEHOLDER_IMAGE_URL; // Skip if no valid key
+                try {
+                  const result = await getDownloadUrl(s3Key);
+                  return result?.body || PLACEHOLDER_IMAGE_URL;
+                } catch (imgErr) {
+                  console.error(`Failed to get URL for key ${s3Key}:`, imgErr);
+                  return PLACEHOLDER_IMAGE_URL;
+                }
+              })
             );
             const validUrls = fetchedUrls.filter(
-              (url) => url !== PLACEHOLDER_IMAGE_URL && url
+              (url) => url && url !== PLACEHOLDER_IMAGE_URL
             );
             setVehicleImages(
               validUrls.length > 0 ? validUrls : [PLACEHOLDER_IMAGE_URL]
@@ -264,19 +279,20 @@ export default function Details2() {
           }
         } else {
           setApiError("Failed to fetch vehicle details or invalid format.");
+          setVehicleDetails(null); // Ensure vehicleDetails is null on error
         }
       } catch (err) {
         console.error("API Call Error:", err);
         setApiError(`Error: ${err.message}`);
+        setVehicleDetails(null); // Ensure vehicleDetails is null on error
       } finally {
         setDetailsLoading(false);
         setImageLoading(false);
       }
     };
     fetchVehicleData();
-  }, [selectedVehicleId, apiCallWithRetry, authChecked, customer]);
+  }, [selectedVehicleId, apiCallWithRetry, authChecked, customer]); // Added customer dependency
 
-  // Effect to PROCESS RAW COORDINATES into options with human-readable NAMES (Unchanged)
   useEffect(() => {
     if (!vehicleDetails) return;
 
@@ -379,12 +395,33 @@ export default function Details2() {
         setActualSelectedState(matchedOption);
         setSelectedNameState(matchedOption.displayName);
       } else {
-        if (
-          (setOptionsState === setPickUpLocationOptions &&
-            !selectedPickUpLocationName) ||
-          (setOptionsState === setDropOffLocationOptions &&
-            !selectedDropOffLocationName)
-        ) {
+        // If coming from search results with pre-selected name, but no full data, try to find by name again
+        if (initialSelectedNameOnly && !initialSelectedFullData) {
+          const byNameOnly = createdOptions.find(
+            (opt) => opt.displayName === initialSelectedNameOnly
+          );
+          if (byNameOnly) {
+            setActualSelectedState(byNameOnly);
+            setSelectedNameState(byNameOnly.displayName);
+            return; // Early exit if found by name
+          }
+        }
+        // Fallback for default selection or no match
+        if (createdOptions.length > 0) {
+          if (
+            (setOptionsState === setPickUpLocationOptions &&
+              !selectedPickUpLocationName &&
+              !initialSelectedNameOnly &&
+              !initialSelectedFullData) ||
+            (setOptionsState === setDropOffLocationOptions &&
+              !selectedDropOffLocationName &&
+              !initialSelectedNameOnly &&
+              !initialSelectedFullData)
+          ) {
+            // If no specific pre-selection, and options are available, consider selecting the first one.
+            // However, current logic correctly leaves it unselected or to "Please select" which is fine.
+          }
+        } else {
           setSelectedNameState("");
           setActualSelectedState(null);
         }
@@ -421,19 +458,18 @@ export default function Details2() {
     }
   }, [
     vehicleDetails,
-    locationHook.state,
-    selectedPickUpLocationName,
-    selectedDropOffLocationName,
+    locationHook.state, // This is fine as it captures initial state
+    // Removed selectedPickUpLocationName and selectedDropOffLocationName to prevent re-running when user selects from dropdown
   ]);
 
   const isDaySelectable = useCallback(
     (dateToTest) => {
       const currentDay = new Date(dateToTest);
-      currentDay.setHours(0, 0, 0, 0); // Normalize to start of day for comparison
+      currentDay.setHours(0, 0, 0, 0);
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      if (currentDay < today) return false; // Cannot select past dates
+      if (currentDay < today) return false;
 
       if (
         vehicleDetails &&
@@ -443,35 +479,33 @@ export default function Details2() {
         const isUnavailable = vehicleDetails.unavailableDates.some(
           (isoString) => {
             const unavailableDate = new Date(isoString);
-            unavailableDate.setHours(0, 0, 0, 0); // Normalize
+            unavailableDate.setHours(0, 0, 0, 0);
             return unavailableDate.getTime() === currentDay.getTime();
           }
         );
-        return !isUnavailable; // Day is selectable if it's NOT in the unavailable list
+        return !isUnavailable;
       }
-      return true; // If no unavailableDates array, assume all future dates are selectable
+      return true;
     },
     [vehicleDetails]
-  ); // Depends on vehicleDetails (specifically vehicleDetails.unavailableDates)
+  );
 
   const isDateRangeValid = useCallback(
     (startDate, endDate) => {
-      if (!startDate || !endDate) return true; // No range to validate or one end is missing
+      if (!startDate || !endDate) return true;
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
       const end = new Date(endDate);
       end.setHours(0, 0, 0, 0);
 
-      if (start >= end) return false; // Start date must be before end date
+      if (start >= end) return false;
 
-      // Iterate through each day in the range
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         if (!isDaySelectable(new Date(d))) {
-          // Use a new Date object for each iteration
-          return false; // If any day in the range is not selectable, the range is invalid
+          return false;
         }
       }
-      return true; // All days in the range are selectable
+      return true;
     },
     [isDaySelectable]
   );
@@ -482,11 +516,9 @@ export default function Details2() {
     if (date && currentDropOffDate) {
       if (date >= currentDropOffDate) {
         setDateError("Pick-up date must be before drop-off.");
-        setCurrentDropOffDate(null); // Clear drop-off if invalid
+        setCurrentDropOffDate(null);
       } else if (!isDateRangeValid(date, currentDropOffDate)) {
         setDateError("Date range includes unavailable days.");
-        // Optionally clear drop-off or leave it, depending on desired UX
-        // setCurrentDropOffDate(null);
       }
     }
   };
@@ -504,70 +536,68 @@ export default function Details2() {
       return;
     }
 
-    // Check if the new drop-off date forms a valid range with the current pick-up date
     if (date && currentPickUpDate) {
       if (isDateRangeValid(currentPickUpDate, date)) {
         setCurrentDropOffDate(date);
       } else {
         setDateError("Date range includes unavailable days.");
-        setCurrentDropOffDate(null); // Clear drop-off if range becomes invalid
+        setCurrentDropOffDate(null);
       }
     } else {
-      setCurrentDropOffDate(date); // Allow clearing the drop-off date
+      setCurrentDropOffDate(date);
     }
   };
 
   useEffect(() => {
-    /* Initial Date Validation */
     if (
       authChecked &&
       customer &&
-      vehicleDetails && // Ensure vehicleDetails (and thus unavailableDates) are loaded
+      vehicleDetails &&
       locationHook.state?.pickUpTime &&
       locationHook.state?.DropOffTime
     ) {
       const initialPickUp = new Date(locationHook.state.pickUpTime);
       const initialDropOff = new Date(locationHook.state.DropOffTime);
 
-      // Only set dates if they are not already set, to avoid loops
-      const datesNeedSetting = !currentPickUpDate && !currentDropOffDate;
+      const datesNeedValidationAndSetting =
+        (!currentPickUpDate && !currentDropOffDate) || // If dates are not set yet
+        (currentPickUpDate &&
+          initialPickUp.getTime() !== currentPickUpDate.getTime()) || // Or if URL state differs
+        (currentDropOffDate &&
+          initialDropOff.getTime() !== currentDropOffDate.getTime());
 
-      if (
-        !(
-          isDaySelectable(initialPickUp) &&
-          isDaySelectable(initialDropOff) &&
-          isDateRangeValid(initialPickUp, initialDropOff)
-        )
-      ) {
-        setDateError(
-          "Previously selected dates are unavailable. Please choose new dates."
-        );
-        if (datesNeedSetting) {
-          // Clear dates if they were from location state and now invalid
+      if (datesNeedValidationAndSetting) {
+        if (
+          !(
+            isDaySelectable(initialPickUp) &&
+            isDaySelectable(initialDropOff) &&
+            isDateRangeValid(initialPickUp, initialDropOff)
+          )
+        ) {
+          setDateError(
+            "Previously selected dates are unavailable. Please choose new dates."
+          );
           setCurrentPickUpDate(null);
           setCurrentDropOffDate(null);
-        }
-      } else {
-        setDateError("");
-        if (datesNeedSetting) {
+        } else {
+          setDateError("");
           setCurrentPickUpDate(initialPickUp);
           setCurrentDropOffDate(initialDropOff);
         }
       }
     }
   }, [
-    vehicleDetails, // Added vehicleDetails dependency
+    vehicleDetails,
     locationHook.state,
     authChecked,
     customer,
     isDaySelectable,
     isDateRangeValid,
-    currentPickUpDate, // Added to prevent re-setting if already set by user
-    currentDropOffDate, // Added to prevent re-setting if already set by user
+    // currentPickUpDate, // Removed to allow re-evaluation if locationHook.state changes
+    // currentDropOffDate,
   ]);
 
   useEffect(() => {
-    /* Fetch Ratings (Unchanged) */
     if (!authChecked || !customer || !selectedVehicleId) return;
     const fetchVehicleRatings = async (carID) => {
       try {
@@ -596,11 +626,13 @@ export default function Details2() {
     };
     fetchVehicleRatings(selectedVehicleId);
   }, [selectedVehicleId, authChecked, customer]);
+
   const openFullScreen = (index) => {
     setCurrentImageIndex(index);
     setIsFullScreen(true);
   };
   const closeFullScreen = () => setIsFullScreen(false);
+
   const nextImage = () => {
     if (vehicleImages.length > 0)
       setCurrentImageIndex((prev) => (prev + 1) % vehicleImages.length);
@@ -631,7 +663,7 @@ export default function Details2() {
       return;
     }
     let vehiclesForMap = [];
-    let mapCenter = { lat: 9.0054, lng: 38.7636 }; // Default center
+    let mapCenter = { lat: 9.0054, lng: 38.7636 };
     let popupTitleName = "";
 
     if (specificLocationData && specificLocationData.originalCoords) {
@@ -646,7 +678,6 @@ export default function Details2() {
           make: vehicleDetails.make,
           model: vehicleDetails.model,
           price: vehicleDetails.price,
-          // Create dummy pickUp/dropOff for the map component to parse, only for the specific type
           pickUp: type === "pickup" ? locationCoordsArray : [],
           dropOff: type === "dropoff" ? locationCoordsArray : [],
         },
@@ -654,24 +685,20 @@ export default function Details2() {
       mapCenter = specificLocationData.originalCoords;
       popupTitleName = specificLocationData.displayName;
     } else {
-      // View all locations of a type
-      vehiclesForMap = [vehicleDetails]; // Pass the full vehicle details
+      vehiclesForMap = [vehicleDetails];
       const locationsOfType =
         type === "pickup"
           ? vehicleDetails.pickUp || []
           : vehicleDetails.dropOff || [];
-      // Attempt to center on the first location of the specified type
       if (locationsOfType.length > 0) {
         const firstLoc = locationsOfType[0];
         if (Array.isArray(firstLoc) && firstLoc.length === 2) {
-          // [lat, lng] format
           mapCenter = { lat: firstLoc[0], lng: firstLoc[1] };
         } else if (
           firstLoc &&
           typeof firstLoc.lat === "number" &&
           typeof firstLoc.lng === "number"
         ) {
-          // {lat, lng} format
           mapCenter = { lat: firstLoc.lat, lng: firstLoc.lng };
         } else if (
           firstLoc &&
@@ -679,7 +706,6 @@ export default function Details2() {
           typeof firstLoc.position.lat === "number" &&
           typeof firstLoc.position.lng === "number"
         ) {
-          // {position: {lat, lng}}
           mapCenter = {
             lat: firstLoc.position.lat,
             lng: firstLoc.position.lng,
@@ -692,7 +718,6 @@ export default function Details2() {
           : "Available Drop Off Locations";
     }
 
-    // Check if there are valid coordinates to show for the selected type
     const hasValidCoords =
       vehiclesForMap.length > 0 &&
       ((type === "pickup" &&
@@ -706,7 +731,7 @@ export default function Details2() {
       setMapPopupData({
         vehiclesToShow: vehiclesForMap,
         center: mapCenter,
-        type: type, // This helps MapComponent know which type of pins to emphasize if needed
+        type: type,
         displayNameForTitle: popupTitleName,
       });
       setShowMapPopup(true);
@@ -754,13 +779,17 @@ export default function Details2() {
       </div>
     );
   if (!customer && authChecked)
+    // Show login prompt only after auth check is complete
     return (
       <div className="flex justify-center items-center h-screen text-xl">
         <p>
-          Please log in to continue.
-          <a href="/login" className="text-blue-600 mx-8 font-semibold">
+          Please log in to continue.{" "}
+          <button
+            onClick={() => navigate("/login")}
+            className="text-blue-600 hover:text-blue-800 font-semibold underline"
+          >
             Login
-          </a>
+          </button>
         </p>
       </div>
     );
@@ -772,14 +801,26 @@ export default function Details2() {
     );
   if (apiError)
     return (
-      <div className="flex justify-center items-center h-screen text-red-500 text-xl">
+      <div className="flex flex-col justify-center items-center h-screen text-red-500 text-xl">
         <p>Error: {apiError}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Try Again
+        </button>
       </div>
     );
   if (!vehicleDetails)
     return (
-      <div className="flex justify-center items-center h-screen text-xl">
-        <p>No vehicle data found.</p>
+      <div className="flex flex-col justify-center items-center h-screen text-xl">
+        <p>No vehicle data found for this ID or an error occurred.</p>
+        <button
+          onClick={() => navigate("/search")}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Back to Search
+        </button>
       </div>
     );
 
@@ -793,7 +834,6 @@ export default function Details2() {
       />
       <div className="flex flex-col lg:w-3/4">
         <div className="flex md:flex-row flex-col gap-10 md:mt-24">
-          {/* Left Side - Car Info (Unchanged) */}
           <div className="p-6 bg-white md:w-1/2 h-fit shadow-lg rounded-lg">
             <div className="flex px-2 flex-col">
               <button
@@ -813,16 +853,20 @@ export default function Details2() {
               <Skeleton
                 variant="rectangular"
                 width="100%"
-                height={250}
+                // Increased height for skeleton
+                height={400}
                 className="rounded-lg mb-4"
               />
             ) : (
               <img
                 src={selectedImageForDisplay}
                 alt={`${vehicleDetails.make} ${vehicleDetails.model}`}
-                className="w-full h-auto max-h-[300px] object-contain rounded-lg mb-4 cursor-pointer"
+                // ADJUSTED: Increased max-h for a larger main image.
+                // You can use vh units for responsive height or a larger pixel value.
+                className="w-full h-auto max-h-[400px] md:max-h-[55vh] object-contain rounded-lg mb-4 cursor-pointer"
                 onClick={() =>
                   vehicleImages.length > 0 &&
+                  vehicleImages[0] !== PLACEHOLDER_IMAGE_URL && // Only open if not placeholder
                   openFullScreen(
                     vehicleImages.indexOf(selectedImageForDisplay) !== -1
                       ? vehicleImages.indexOf(selectedImageForDisplay)
@@ -832,32 +876,40 @@ export default function Details2() {
               />
             )}
             <div className="flex justify-start space-x-2 items-center mt-6 overflow-x-auto pb-2">
-              {vehicleImages.map((thumb, index) => (
-                <img
-                  key={index}
-                  src={thumb}
-                  alt={`Thumb ${index + 1}`}
-                  onClick={() => setSelectedImageForDisplay(thumb)}
-                  className={`w-20 h-20 object-cover cursor-pointer rounded-lg border-2 ${
-                    selectedImageForDisplay === thumb
-                      ? "border-blue-500"
-                      : "border-transparent hover:border-gray-300"
-                  }`}
-                />
-              ))}
+              {vehicleImages.length > 0 &&
+              vehicleImages[0] !== PLACEHOLDER_IMAGE_URL
+                ? vehicleImages.map((thumb, index) => (
+                    <img
+                      key={index}
+                      src={thumb}
+                      alt={`Thumb ${index + 1}`}
+                      onClick={() => setSelectedImageForDisplay(thumb)}
+                      className={`w-20 h-20 object-cover cursor-pointer rounded-lg border-2 flex-shrink-0 ${
+                        selectedImageForDisplay === thumb
+                          ? "border-blue-500"
+                          : "border-transparent hover:border-gray-300"
+                      }`}
+                    />
+                  ))
+                : !imageLoading && (
+                    <p className="text-xs text-gray-500">
+                      No additional images.
+                    </p>
+                  )}
             </div>
             <div className="flex mt-4">
               <div className="flex justify-between w-full items-center px-2 py-4 my-2 text-gray-700 text-base">
                 <div className="flex items-center space-x-2">
-                  <FaGasPump size={16} /> <span>{vehicleDetails.fuelType}</span>
+                  <FaGasPump size={16} />{" "}
+                  <span>{vehicleDetails.fuelType || "N/A"}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <FaCogs size={16} />
-                  <span>{vehicleDetails.transmission}</span>
+                  <span>{vehicleDetails.transmission || "N/A"}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <FaUserFriends size={16} />
-                  <span>{vehicleDetails.seats} People</span>
+                  <span>{vehicleDetails.seats || "N/A"} People</span>
                 </div>
               </div>
             </div>
@@ -867,28 +919,37 @@ export default function Details2() {
             <div className="bg-blue-100 w-11/12 mx-auto text-blue-700 py-3 px-4 rounded-lg text-center mt-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-base font-semibold">Price Per Day</h3>
-                <span className="text-base font-bold">{dailyPrice} Birr</span>
+                <span className="text-base font-bold">
+                  {dailyPrice > 0 ? `${dailyPrice} Birr` : "N/A"}
+                </span>
               </div>
             </div>
             <div className="p-6 md:p-10 pt-6 w-full">
-              {/* Car Specification, Features, Pick-up/Drop-off Locations, Ratings (Unchanged in structure/style) */}
               <h4 className="mt-6 text-lg font-semibold">Car Specification</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 text-base gap-4 mt-4">
                 <div>
                   <span className="font-medium">Brand</span>
-                  <p className="text-gray-500">{vehicleDetails.make}</p>
+                  <p className="text-gray-500">
+                    {vehicleDetails.make || "N/A"}
+                  </p>
                 </div>
                 <div>
                   <span className="font-medium">Model</span>
-                  <p className="text-gray-500">{vehicleDetails.model}</p>
+                  <p className="text-gray-500">
+                    {vehicleDetails.model || "N/A"}
+                  </p>
                 </div>
                 <div>
                   <span className="font-medium">Category</span>
-                  <p className="text-gray-500">{vehicleDetails.category}</p>
+                  <p className="text-gray-500">
+                    {vehicleDetails.category || "N/A"}
+                  </p>
                 </div>
                 <div>
                   <span className="font-medium">Year</span>
-                  <p className="text-gray-500">{vehicleDetails.year}</p>
+                  <p className="text-gray-500">
+                    {vehicleDetails.year || "N/A"}
+                  </p>
                 </div>
                 <div>
                   <span className="font-medium">Mileage</span>
@@ -926,12 +987,8 @@ export default function Details2() {
                         className="flex items-center gap-1 border border-gray-300 text-sm px-3 py-1 rounded-full bg-gray-50 cursor-pointer hover:bg-gray-100"
                         onClick={() => handleViewMap("pickup", loc)}
                       >
-                        {" "}
-                        <FaMapMarkerAlt
-                          className="text-gray-500"
-                          size={12}
-                        />{" "}
-                        {loc.displayName}{" "}
+                        <FaMapMarkerAlt className="text-gray-500" size={12} />
+                        {loc.displayName}
                       </span>
                     ))
                   ) : (
@@ -953,12 +1010,8 @@ export default function Details2() {
                         className="flex items-center gap-1 border border-gray-300 text-sm px-3 py-1 rounded-full bg-gray-50 cursor-pointer hover:bg-gray-100"
                         onClick={() => handleViewMap("dropoff", loc)}
                       >
-                        {" "}
-                        <FaMapMarkerAlt
-                          className="text-gray-500"
-                          size={12}
-                        />{" "}
-                        {loc.displayName}{" "}
+                        <FaMapMarkerAlt className="text-gray-500" size={12} />
+                        {loc.displayName}
                       </span>
                     ))
                   ) : (
@@ -969,7 +1022,6 @@ export default function Details2() {
                 </div>
               </section>
 
-              {/* MODIFIED SECTION: Unavailability Dates */}
               <section className="my-8">
                 <h2 className="font-semibold text-lg mb-4">
                   Unavailable Dates
@@ -997,7 +1049,6 @@ export default function Details2() {
                   </p>
                 )}
               </section>
-              {/* END MODIFIED SECTION */}
 
               <section className="my-8">
                 <h3 className="text-lg font-semibold text-gray-800 mb-3">
@@ -1058,7 +1109,7 @@ export default function Details2() {
           </div>
         </div>
       </div>
-      {/* Right Column - Booking Panel (DatePicker filterDate prop uses the updated isDaySelectable) */}
+      {/* Right Column - Booking Panel */}
       <div className="flex flex-col lg:w-1/4">
         <section className="bg-white p-6 md:mt-24 mb-8 rounded-xl shadow-md">
           <h2 className="text-lg font-semibold text-[#00113D] mb-6">
@@ -1079,7 +1130,7 @@ export default function Details2() {
               startDate={currentPickUpDate}
               endDate={currentDropOffDate}
               minDate={new Date()}
-              filterDate={isDaySelectable} // This will now use the new logic
+              filterDate={isDaySelectable}
               placeholderText="Select pick-up date"
               dateFormat="MMMM d, yyyy"
               className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -1104,12 +1155,12 @@ export default function Details2() {
                 currentPickUpDate
                   ? new Date(
                       new Date(currentPickUpDate).setDate(
-                        currentPickUpDate.getDate()
+                        currentPickUpDate.getDate() // Allow same day drop-off for selection, validation handles if it's not after
                       )
                     )
                   : new Date()
               }
-              filterDate={isDaySelectable} // This will now use the new logic
+              filterDate={isDaySelectable}
               disabled={!currentPickUpDate}
               placeholderText="Select drop-off date"
               dateFormat="MMMM d, yyyy"
@@ -1144,8 +1195,7 @@ export default function Details2() {
                     {actualSelectedPickUp &&
                       actualSelectedPickUp.originalCoords && (
                         <>
-                          {" "}
-                          <br />{" "}
+                          <br />
                           <button
                             onClick={() =>
                               handleViewMap("pickup", actualSelectedPickUp)
@@ -1153,7 +1203,7 @@ export default function Details2() {
                             className="text-blue-500 underline hover:text-blue-700 cursor-pointer text-xs"
                           >
                             View On Map
-                          </button>{" "}
+                          </button>
                         </>
                       )}
                   </div>
@@ -1183,8 +1233,7 @@ export default function Details2() {
                     {actualSelectedDropOff &&
                       actualSelectedDropOff.originalCoords && (
                         <>
-                          {" "}
-                          <br />{" "}
+                          <br />
                           <button
                             onClick={() =>
                               handleViewMap("dropoff", actualSelectedDropOff)
@@ -1192,7 +1241,7 @@ export default function Details2() {
                             className="text-blue-500 underline hover:text-blue-700 cursor-pointer text-xs"
                           >
                             View On Map
-                          </button>{" "}
+                          </button>
                         </>
                       )}
                   </div>
@@ -1233,8 +1282,10 @@ export default function Details2() {
             currentDropOffDate ? currentDropOffDate.toISOString() : ""
           }
           pickUpTime={currentPickUpDate ? currentPickUpDate.toISOString() : ""}
-          pickUpLocation={actualSelectedPickUp?.originalCoords}
-          dropOffLocation={actualSelectedDropOff?.originalCoords}
+          pickUpLocation={actualSelectedPickUp?.originalCoords} // Pass full object
+          pickUpLocationName={selectedPickUpLocationName} // Pass name
+          dropOffLocation={actualSelectedDropOff?.originalCoords} // Pass full object
+          dropOffLocationName={selectedDropOffLocationName} // Pass name
         />
       </div>
       {showMapPopup && mapPopupData && (
@@ -1255,43 +1306,48 @@ export default function Details2() {
               </button>
             </div>
             <div className="flex-1 p-1 overflow-auto">
-              <MapComponent vehicles={mapPopupData.vehiclesToShow} />
+              {/* Ensure MapComponent receives the GOOGLE_MAPS_API_KEY if it needs it directly */}
+              <MapComponent
+                vehicles={mapPopupData.vehiclesToShow}
+                apiKey={GOOGLE_MAPS_API_KEY}
+              />
             </div>
           </div>
         </div>
       )}
-      {isFullScreen && vehicleImages.length > 0 && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-90 z-[110] flex justify-center items-center p-4">
-          <button
-            onClick={closeFullScreen}
-            className="absolute top-5 right-5 text-white text-3xl hover:opacity-75"
-          >
-            <FaTimes />
-          </button>
-          <img
-            src={vehicleImages[currentImageIndex]}
-            alt={`Fullscreen ${currentImageIndex + 1}`}
-            className="max-w-[90vw] max-h-[90vh] object-contain"
-          />
-          {vehicleImages.length > 1 && (
-            <>
-              {" "}
-              <button
-                onClick={previousImage}
-                className="absolute top-1/2 left-5 text-white text-4xl transform -translate-y-1/2 hover:opacity-75"
-              >
-                <FaChevronLeft />
-              </button>{" "}
-              <button
-                onClick={nextImage}
-                className="absolute top-1/2 right-5 text-white text-4xl transform -translate-y-1/2 hover:opacity-75"
-              >
-                <FaChevronRight />
-              </button>{" "}
-            </>
-          )}
-        </div>
-      )}
+      {isFullScreen &&
+        vehicleImages.length > 0 &&
+        vehicleImages[0] !== PLACEHOLDER_IMAGE_URL && (
+          <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-90 z-[110] flex justify-center items-center p-4">
+            <button
+              onClick={closeFullScreen}
+              className="absolute top-5 right-5 text-white text-3xl hover:opacity-75"
+            >
+              <FaTimes />
+            </button>
+            <img
+              src={vehicleImages[currentImageIndex]}
+              alt={`Fullscreen ${currentImageIndex + 1}`}
+              className="max-w-[90vw] max-h-[90vh] object-contain"
+            />
+            {vehicleImages.length > 1 && (
+              <>
+                <button
+                  onClick={previousImage}
+                  className="absolute top-1/2 left-5 text-white text-4xl transform -translate-y-1/2 hover:opacity-75"
+                >
+                  <FaChevronLeft />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute top-1/2 right-5 text-white text-4xl transform -translate-y-1/2 hover:opacity-75"
+                >
+                  <FaChevronRight />
+                </button>
+              </>
+            )}
+          </div>
+        )}
     </div>
   );
 }

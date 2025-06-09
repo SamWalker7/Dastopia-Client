@@ -1,89 +1,85 @@
 import { useState } from "react";
 import BackgroundImage from "../images/book-car/book-bg.png"; // Assuming this path is correct
 import { useNavigate } from "react-router-dom";
-import DatePicker from "react-datepicker"; // Import DatePicker
-import "react-datepicker/dist/react-datepicker.css"; // Import default styles
-
-// Optional: If you want to customize the calendar icon or input appearance
-// import { CalendarDaysIcon } from "@heroicons/react/24/outline"; // Example using heroicons
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 function BookCar() {
-  // const [pickUpLocation, setPickUpLocation] = useState(""); // Keep for location selection
-  // const [dropOffLocation, setDropOffLocation] = useState(""); // Keep for location selection
-
-  // State for the date range
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Helper to format Date objects to "YYYY-MM-DD" string
+  const today = new Date();
+
+  // Helper to format Date objects to "YYYY-MM-DD" string for navigation
   const formatDate = (date) => {
     if (!date) return "";
-    return date.toISOString().split("T")[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // This function will be called by the "From" (Pick-up) DatePicker
+  // when a range is selected or changed.
+  const handleRangeChange = (dates) => {
+    const [start, end] = dates; // dates is an array [startDate, endDate]
+    setStartDate(start);
+    setEndDate(end);
+
+    if (start && end) {
+      if (start >= end) {
+        // This case should ideally be prevented by react-datepicker's range logic
+        // but good to have a fallback or ensure error is cleared correctly.
+        setError("Pick-up date must be before drop-off date!");
+      } else {
+        setError(""); // Clear error when a valid range is selected
+      }
+    } else if (!start && !end) {
+      // If range is cleared
+      setError("");
+    }
+    // If only start is selected (mid-selection), do nothing with error yet
   };
 
   const confirmBooking = () => {
-    const currentDateStr = new Date().toISOString().split("T")[0];
-    const pickUpStr = formatDate(startDate);
-    const dropOffStr = formatDate(endDate);
-
     if (!startDate || !endDate) {
       setError("Pick-up and drop-off dates are required!");
       return;
     }
 
-    // No need to check if pickUpStr < currentDateStr as minDate on DatePicker handles this
-    // No need to check if dropOffStr <= currentDateStr (implicitly handled by range logic and minDate)
+    const pickUpStr = formatDate(startDate);
+    const dropOffStr = formatDate(endDate);
 
-    if (pickUpStr >= dropOffStr) {
-      // This check is still valid, though DatePicker usually prevents selecting end before start
-      setError("Pick-up date should be before drop-off date!");
+    // The DatePicker's minDate and range selection logic should prevent most invalid date scenarios
+    if (new Date(pickUpStr) >= new Date(dropOffStr)) {
+      // Double check, though DatePicker should handle this
+      setError("Pick-up date must be before drop-off date!");
       return;
     }
 
-    setError(""); // Clear any previous error
-
-    navigate(`/search?pickUp=${pickUpStr}&dropOff=${dropOffStr}`);
+    setError("");
+    navigate(`/search?pickUpDate=${pickUpStr}&dropOffDate=${dropOffStr}`);
   };
-
-  // const handleRedirect = () => { // This function doesn't seem to be used directly in the form
-  //   navigate("/search");
-  // };
-
-  // const locations = ["Addis Ababa", "Adama", "Hawassa", "Bahir Dar"]; // Keep if you implement location dropdowns
-  // const [isChecked, setIsChecked] = useState(false); // Keep if used elsewhere
-
-  // const handleCheckboxChange = (e) => { // Keep if used elsewhere
-  //   setIsChecked(e.target.checked);
-  // };
-
-  const handleDateChange = (dates) => {
-    const [start, end] = dates;
-    setStartDate(start);
-    setEndDate(end);
-    if (start && end) {
-      setError(""); // Clear error when both dates are selected
-    }
-  };
-
-  const today = new Date();
+  const googlePlayBadgeUrl =
+    "https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png";
+  const googlePlayLink =
+    "https://play.google.com/store/apps/details?id=YOUR_APP_ID_HERE";
 
   return (
     <>
       <section>
         <div className="">
           <div
-            className="relative h-fit md:justify-start justify-center py-8 md:py-4 w-full md:w-fit px-6 md:items-start items-center rounded-lg bg-[#FAF9FE] "
+            className="relative h-fit md:justify-start justify-center py-8 md:py-4 w-full md:w-fit px-6 md:items-start items-center rounded-lg bg-[#FAF9FE]"
             style={{
-              backgroundImage: `url(${BackgroundImage})`, // Make sure this image path is correct
+              backgroundImage: `url(${BackgroundImage})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
           >
             <div className="flex flex-col">
-              {" "}
-              {/* Changed to flex-col for error message layout */}
               {error && (
                 <div
                   className="text-sm text-red-600 mb-3 p-2 bg-red-100 border border-red-400 rounded"
@@ -92,43 +88,79 @@ function BookCar() {
                   {error}
                 </div>
               )}
-              <form className="flex flex-col md:flex-row gap-3 justify-center md:items-center w-full">
-                <div className="flex flex-col md:flex-row md:space-x-4 gap-3">
-                  <div className="relative inline-block my-3 text-xs w-full md:w-[250px]">
-                    {" "}
-                    {/* Increased width for range picker */}
-                    <label
-                      htmlFor="dateRange"
-                      className="absolute -top-2 left-3 text-xs bg-[#FAF9FE] px-1 text-gray-500 z-10"
-                    >
-                      Pick-up & Drop-off Date <b>*</b>
-                    </label>
-                    <DatePicker
-                      id="dateRange"
-                      selected={startDate}
-                      onChange={handleDateChange}
-                      startDate={startDate}
-                      endDate={endDate}
-                      minDate={today}
-                      selectsRange
-                      isClearable={true}
-                      placeholderText="Select date range"
-                      dateFormat="yyyy-MM-dd"
-                      className="border border-gray-400 w-full p-3 py-2 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400"
-                      wrapperClassName="w-full" // Ensure DatePicker takes full width of its container
-                    />
-                  </div>
+              <form className="flex flex-col md:flex-row md:items-end gap-x-4 gap-y-3 w-full">
+                {/* From (Pick-up) Date Picker - This one handles the range selection */}
+                <div className="flex flex-col w-full md:flex-1">
+                  <label
+                    htmlFor="pickUpDateRange"
+                    className="block text-xs font-semibold text-gray-700 mb-1"
+                  >
+                    From <span className="text-red-500">*</span>
+                  </label>
+                  <DatePicker
+                    id="pickUpDateRange"
+                    selected={startDate} // Show the start date in this input
+                    onChange={handleRangeChange}
+                    startDate={startDate}
+                    endDate={endDate}
+                    minDate={today}
+                    selectsRange // IMPORTANT: Enables range selection
+                    isClearable={true}
+                    placeholderText="Select Pick-up Date" // Or "Select Date Range"
+                    dateFormat="dd/MM/yyyy"
+                    className="border border-gray-400 w-full p-3 py-2 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400"
+                    wrapperClassName="w-full"
+                    autoComplete="off"
+                  />
                 </div>
-                <button
-                  className=" bg-blue-950 text-xs text-white rounded-full px-8 my-3 py-2 lg:ml-10 "
-                  type="button"
-                  onClick={confirmBooking}
-                >
-                  Search
-                </button>
+
+                {/* Until (Drop-off) Date Picker - Display only */}
+                <div className="flex flex-col w-full md:flex-1">
+                  <label
+                    htmlFor="dropOffDateDisplay"
+                    className="block text-xs font-semibold text-gray-700 mb-1"
+                  >
+                    Until <span className="text-red-500">*</span>
+                  </label>
+                  <DatePicker
+                    id="dropOffDateDisplay"
+                    selected={endDate} // Display the selected end date
+                    // No onChange needed as it's disabled for input
+                    dateFormat="dd/MM/yyyy"
+                    className="border border-gray-400 w-full p-3 py-2 bg-gray-100 text-gray-500 rounded-md cursor-not-allowed" // Style for disabled
+                    wrapperClassName="w-full"
+                    disabled // IMPORTANT: Disable direct interaction
+                    placeholderText="Drop-off Date"
+                    // minDate and other selection props are not relevant here
+                    // as it's purely for display and driven by the other picker.
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="w-full md:w-auto pt-3 md:pt-0">
+                  <button
+                    className="bg-blue-950 text-xs text-white rounded-md px-8 py-2.5 w-full md:w-auto h-[42px]"
+                    type="button"
+                    onClick={confirmBooking}
+                  >
+                    Search
+                  </button>
+                </div>
               </form>
             </div>
           </div>
+          <a
+            href={googlePlayLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block"
+          >
+            <img
+              src={googlePlayBadgeUrl}
+              alt="Get it on Google Play"
+              className="h-20 hover:opacity-90 transition-opacity"
+            />
+          </a>
         </div>
       </section>
     </>

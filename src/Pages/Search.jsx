@@ -34,6 +34,29 @@ const filterButtonStyle =
 // Active filter buttons will use the primary color for border and text
 const activeFilterButtonStyle = `bg-gray-50 border-[${PRIMARY_COLOR}] text-[${PRIMARY_COLOR}] hover:bg-gray-100 px-4 py-2 rounded-md text-sm flex items-center justify-center shadow-sm transition-colors duration-150 ease-in-out`;
 
+// Helper component for the clear icon button
+const ClearFilterButton = ({ onClick }) => (
+  <IconButton
+    size="small"
+    onClick={(e) => {
+      e.stopPropagation(); // Prevent modal from opening if the parent is a button
+      onClick();
+    }}
+    aria-label="clear filter"
+    sx={{
+      ml: 1, // margin-left
+      padding: "3px", // Adjust padding to be compact
+      color: PRIMARY_COLOR, // Icon color matches active filter text
+      "&:hover": {
+        backgroundColor: `rgba(23, 37, 84, 0.08)`, // Subtle hover background, primary color based
+        color: PRIMARY_COLOR_DARKER, // Darken icon on hover
+      },
+    }}
+  >
+    <CloseIcon fontSize="small" />
+  </IconButton>
+);
+
 const Search = () => {
   const [vehicles, setVehicles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -99,7 +122,7 @@ const Search = () => {
   }, []);
 
   const handleOpenDateModal = () => {
-    setTempStartDate(startDate); // Initialize modal with current main state
+    setTempStartDate(startDate);
     setTempEndDate(endDate);
     setOpenDateModal(true);
   };
@@ -318,9 +341,11 @@ const Search = () => {
 
   const countActiveFilters = () => {
     let count = 0;
+    if (startDate && endDate) count++; // Date filter is active if both dates are set
     if (minPrice || maxPrice) count++;
     if (make !== "any") count++;
-    if (selectedModel !== "any" && make !== "any") count++;
+    // Count model only if make is also selected, to avoid double counting just "any model"
+    // if (selectedModel !== "any" && make !== "any") count++; // This logic might be too complex for simple count, usually make implies model filter is engaged.
     if (transmission !== "any") count++;
     if (category !== "any") count++;
     return count;
@@ -335,19 +360,19 @@ const Search = () => {
     setCategory("any");
     setMinPrice("");
     setMaxPrice("");
-    // Do not clear dates by default from "Clear All Filters" unless specified
-    // setStartDate(""); setEndDate("");
-    // Reset temp states as well
+    // setStartDate(""); // Keep dates as per original logic unless specified to clear
+    // setEndDate("");
     setTempMake("any");
     setTempModel("any");
     setTempMinPrice("");
     setTempMaxPrice("");
     setTempTransmission("any");
     setTempCategory("any");
+    // setTempStartDate(""); // If dates are cleared, temp dates should also be cleared
+    // setTempEndDate("");
     setOpenAllFiltersModal(false);
   };
 
-  // MUI Button style with primary color
   const primaryButtonStyle = {
     backgroundColor: PRIMARY_COLOR,
     "&:hover": { backgroundColor: PRIMARY_COLOR_DARKER },
@@ -368,15 +393,30 @@ const Search = () => {
         <div className=" bg-[#FAF9FE] pt-24 sm:pt-32 pb-10">
           <div className="container mx-auto px-4">
             <div className="flex flex-wrap items-center gap-2 mb-6 overflow-x-auto pb-2">
-              {(!startDate || !endDate) && (
-                <button
-                  onClick={handleOpenDateModal}
-                  className={filterButtonStyle}
-                >
-                  <CalendarTodayIcon fontSize="small" className="mr-2" /> Select
-                  Dates
-                </button>
-              )}
+              <button
+                onClick={handleOpenDateModal}
+                className={
+                  startDate && endDate
+                    ? activeFilterButtonStyle
+                    : filterButtonStyle
+                }
+              >
+                <CalendarTodayIcon fontSize="small" className="mr-2" />
+                {startDate && endDate
+                  ? `${new Date(startDate).toLocaleDateString()} - ${new Date(
+                      endDate
+                    ).toLocaleDateString()}`
+                  : "Select Dates"}
+                {startDate && endDate && (
+                  <ClearFilterButton
+                    onClick={() => {
+                      setStartDate("");
+                      setEndDate("");
+                    }}
+                  />
+                )}
+              </button>
+
               <button
                 onClick={handleOpenPriceModal}
                 className={
@@ -389,7 +429,16 @@ const Search = () => {
                 {minPrice || maxPrice
                   ? `Price: ${minPrice || "Any"} - ${maxPrice || "Any"}`
                   : "Daily price"}
+                {(minPrice || maxPrice) && (
+                  <ClearFilterButton
+                    onClick={() => {
+                      setMinPrice("");
+                      setMaxPrice("");
+                    }}
+                  />
+                )}
               </button>
+
               <button
                 onClick={handleOpenMakeModelModal}
                 className={
@@ -402,7 +451,17 @@ const Search = () => {
                       selectedModel !== "any" ? " " + selectedModel : ""
                     }`
                   : "Make & model"}
+                {make !== "any" && (
+                  <ClearFilterButton
+                    onClick={() => {
+                      setMake("any");
+                      setSelectedModel("any");
+                      setModelList([]);
+                    }}
+                  />
+                )}
               </button>
+
               <button
                 onClick={handleOpenTransmissionModal}
                 className={
@@ -413,7 +472,11 @@ const Search = () => {
               >
                 <SettingsIcon fontSize="small" className="mr-2" />{" "}
                 {transmission !== "any" ? transmission : "Transmission"}
+                {transmission !== "any" && (
+                  <ClearFilterButton onClick={() => setTransmission("any")} />
+                )}
               </button>
+
               <button
                 onClick={handleOpenCategoryModal}
                 className={
@@ -424,7 +487,11 @@ const Search = () => {
               >
                 <CategoryIcon fontSize="small" className="mr-2" />{" "}
                 {category !== "any" ? category : "Category"}
+                {category !== "any" && (
+                  <ClearFilterButton onClick={() => setCategory("any")} />
+                )}
               </button>
+
               <button
                 onClick={() => setOpenAllFiltersModal(true)}
                 className={
@@ -438,29 +505,7 @@ const Search = () => {
               </button>
             </div>
 
-            {startDate && endDate && (
-              <div className="bg-white w-full max-w-md mx-auto sm:max-w-lg px-6 py-3 justify-between text-sm rounded-xl shadow border border-gray-200 flex items-center mb-6">
-                <div className="flex flex-col text-center">
-                  <div className="text-xs text-gray-500">Pick-up</div>
-                  <div className="font-medium">
-                    {new Date(startDate).toLocaleDateString()}
-                  </div>
-                </div>
-                <div className="text-gray-400 px-2">→</div>
-                <div className="flex flex-col text-center">
-                  <div className="text-xs text-gray-500">Drop-off</div>
-                  <div className="font-medium">
-                    {new Date(endDate).toLocaleDateString()}
-                  </div>
-                </div>
-                <button
-                  onClick={handleOpenDateModal}
-                  className={`ml-auto text-[${PRIMARY_COLOR}] hover:text-[${PRIMARY_COLOR_DARKER}] text-xs font-semibold`}
-                >
-                  Edit
-                </button>
-              </div>
-            )}
+            {/* The separate date display div is removed as its functionality is merged into the date filter button */}
           </div>
 
           <div className="flex lg:flex-row flex-col items-start w-full container mx-auto px-4">
@@ -475,7 +520,7 @@ const Search = () => {
                   <div className="w-full text-center py-10 text-red-600 bg-red-50 p-4 rounded-md">
                     {error}
                   </div>
-                ) : getFilteredVehicles().length > 0 ? (
+                ) : getFilteredVehicles().length > 0 ? ( // Check if there are vehicles after filtering
                   <>
                     <div className="text-lg sm:text-xl font-semibold mb-4">
                       {getFilteredVehicles().length} car
@@ -504,6 +549,7 @@ const Search = () => {
           </div>
         </div>
 
+        {/* Date Modal */}
         <Dialog
           open={openDateModal}
           onClose={() => setOpenDateModal(false)}
@@ -552,6 +598,7 @@ const Search = () => {
           </DialogActions>
         </Dialog>
 
+        {/* Price Modal */}
         <Dialog
           open={openPriceModal}
           onClose={() => setOpenPriceModal(false)}
@@ -598,6 +645,7 @@ const Search = () => {
           </DialogActions>
         </Dialog>
 
+        {/* Make/Model Modal */}
         <Dialog
           open={openMakeModelModal}
           onClose={() => setOpenMakeModelModal(false)}
@@ -660,6 +708,7 @@ const Search = () => {
           </DialogActions>
         </Dialog>
 
+        {/* Transmission Modal */}
         <Dialog
           open={openTransmissionModal}
           onClose={() => setOpenTransmissionModal(false)}
@@ -705,6 +754,7 @@ const Search = () => {
           </DialogActions>
         </Dialog>
 
+        {/* Category Modal */}
         <Dialog
           open={openCategoryModal}
           onClose={() => setOpenCategoryModal(false)}
@@ -750,6 +800,7 @@ const Search = () => {
           </DialogActions>
         </Dialog>
 
+        {/* All Filters Modal */}
         <Dialog
           open={openAllFiltersModal}
           onClose={() => setOpenAllFiltersModal(false)}
@@ -770,6 +821,7 @@ const Search = () => {
             <p className="mb-4 text-sm text-gray-600">
               Apply or modify all available filters here.
             </p>
+            {/* Price Range in All Filters */}
             <div className="mb-4 p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Price Range (ETB)</h3>
               <div className="flex gap-4">
@@ -791,6 +843,7 @@ const Search = () => {
                 />
               </div>
             </div>
+            {/* Vehicle Make/Model in All Filters */}
             <div className="mb-4 p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Vehicle</h3>
               <TextField
@@ -829,6 +882,7 @@ const Search = () => {
                 ))}
               </TextField>
             </div>
+            {/* Transmission in All Filters */}
             <div className="mb-4 p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Transmission</h3>
               <TextField
@@ -849,6 +903,7 @@ const Search = () => {
                 ))}
               </TextField>
             </div>
+            {/* Category in All Filters */}
             <div className="p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Category</h3>
               <TextField
@@ -895,10 +950,27 @@ const Search = () => {
               </Button>
               <Button
                 onClick={() => {
-                  handleApplyPrice();
-                  handleApplyMakeModel();
-                  handleApplyTransmission();
-                  handleApplyCategory();
+                  // Apply from All Filters modal
+                  // Price
+                  const tempMin = parseFloat(tempMinPrice) || 0;
+                  const tempMax = parseFloat(tempMaxPrice) || Infinity;
+                  if (tempMin < 0) {
+                    alert("Minimum price cannot be negative.");
+                    return;
+                  }
+                  if (tempMaxPrice !== "" && tempMax < tempMin) {
+                    alert("Maximum price must be greater than minimum price.");
+                    return;
+                  }
+                  setMinPrice(tempMinPrice);
+                  setMaxPrice(tempMaxPrice);
+                  // Make & Model
+                  setMake(tempMake);
+                  setSelectedModel(tempModel);
+                  // Transmission
+                  setTransmission(tempTransmission);
+                  // Category
+                  setCategory(tempCategory);
                   setOpenAllFiltersModal(false);
                 }}
                 variant="contained"

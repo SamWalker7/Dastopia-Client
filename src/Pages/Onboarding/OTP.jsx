@@ -6,6 +6,8 @@ import {
 } from "lucide-react/dist/cjs/lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import { IconButton } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close"; // For the close button
 
 const OTP = () => {
   const [otp, setOtp] = useState(new Array(6).fill(""));
@@ -14,7 +16,7 @@ const OTP = () => {
   const inputsRef = useRef([]);
   const location = useLocation();
   const navigate = useNavigate();
-  const { phone_number} = location.state || {};
+  const { phone_number } = location.state || {};
   const handleChange = (element, index) => {
     const value = element.value.replace(/[^0-9]/g, ""); // Allow only numeric values
     if (!value) return;
@@ -44,7 +46,7 @@ const OTP = () => {
     inputsRef.current[index].select();
   };
 
-  const handleSubmit = async() => {
+  const handleSubmit = async () => {
     if (otp.includes("")) {
       setIsOtpCorrect(false);
       return;
@@ -57,34 +59,47 @@ const OTP = () => {
         headers: { "Content-Type": "application/json" },
         method: "POST",
         body: JSON.stringify({
-          otp: otp.join("") ,
-          phone_number
+          otp: otp.join(""),
+          phone_number,
         }),
       }
     );
     if (response.ok) {
       setIsLoading(false);
       setIsOtpCorrect(true);
-      alert("You have successfully registered")
+      alert("You have successfully registered");
       navigate("/login");
-      
     }
     if (!response.ok) {
       setIsOtpCorrect(false);
       setIsLoading(false);
-        setOtp(new Array(6).fill("")); // Clear the input fields
-        inputsRef.current[0].focus(); // Focus on the first input
+      setOtp(new Array(6).fill("")); // Clear the input fields
+      inputsRef.current[0].focus(); // Focus on the first input
       const json = await response.json();
-      console.log("no ",json)
+      console.log("no ", json);
     }
-    
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="w-full max-w-xl mt-40 mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE]">
-        <h1 className="text-5xl font-bold my-8">Account Verification</h1>
-
+        <div className="flex w-full justify-between items-center ">
+          <h1 className="text-5xl font-bold my-8">Account Verification</h1>
+          <Link to="/" className="relative -mt-40">
+            {" "}
+            <IconButton
+              aria-label="close login modal"
+              sx={{
+                position: "absolute",
+                top: "12px", // Adjust as needed
+                right: "0px", // Adjust as needed
+                color: "text.secondary",
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Link>
+        </div>
         {/* Progress Bar */}
         <div className="flex items-center justify-center mb-6">
           <div className="w-1/2 border-b-4 border-blue-200"></div>
@@ -122,7 +137,7 @@ const OTP = () => {
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 onFocus={() => handleFocus(index)}
                 disabled={isOtpCorrect}
-                className="w-16 h-16 border-2 border-gray-300 rounded-lg text-center text-lg font-semibold focus:outline-none focus:ring-1 focus:ring-[#FB913C] transition duration-150"
+                className="w-12 h-12 border-2 border-gray-300 rounded-lg text-center text-lg font-semibold focus:outline-none focus:ring-1 focus:ring-[#FB913C] transition duration-150"
                 initial={{ scale: 1 }}
                 whileFocus={{ scale: 1.1 }}
                 whileHover={{ scale: 1.05 }}
