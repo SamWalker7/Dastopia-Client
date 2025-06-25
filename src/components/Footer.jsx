@@ -59,7 +59,7 @@ const Footer = () => {
   const googlePlayBadgeUrl =
     "https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png";
   const googlePlayLink =
-    "https://play.google.com/store/apps/details?id=YOUR_APP_ID_HERE";
+    "https://play.google.com/store/apps/details?id=org.dastechnologies.app";
 
   return (
     <footer className="bg-[#00173C] text-white pt-16 pb-8">

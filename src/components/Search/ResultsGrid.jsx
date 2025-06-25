@@ -6,7 +6,6 @@ import {
   FaUserFriends,
   FaSpinner,
   FaExclamationTriangle,
-  FaRedo,
   FaTimes, // For lightbox close
   FaChevronLeft, // For lightbox prev
   FaChevronRight, // For lightbox next
@@ -36,9 +35,14 @@ const ResultsGrid = ({
 
   const itemsPerPage = 10;
   const placeholderImage = "https://via.placeholder.com/400x225?text=Vehicle";
-  const fallbackImage = "/images/cars-big/toyota-box.png"; // Make sure this path is correct relative to your public folder
+
+  const fallbackImage = "/images/cars-big/toyota-box.png";
 
   const navigate = useNavigate();
+
+  // All hooks and functions (useEffect, fetchAndSetIndividualImage, processVehicles, etc.) remain unchanged.
+  // ...
+
 
   useEffect(() => {
     if (isMountedRef.current && prevPageRef.current !== currentPage) {
@@ -60,27 +64,55 @@ const ResultsGrid = ({
           setImageLoadStates((prev) => ({ ...prev, [vehicleId]: "error" }));
         return placeholderImage;
       }
-      if (isPrimary)
+
+      if (isPrimary) {
         setImageLoadStates((prev) => ({ ...prev, [vehicleId]: "loading" }));
-      try {
-        const pathResult = await getDownloadUrl(imageKey);
-        const imageUrl = pathResult?.body;
-        if (imageUrl) {
-          if (isPrimary)
-            setImageLoadStates((prev) => ({ ...prev, [vehicleId]: "loaded" }));
-          return imageUrl;
-        } else {
-          throw new Error("Image URL not found");
-        }
-      } catch (error) {
-        console.error(
-          `Error fetching image for key ${imageKey} (vehicle ${vehicleId}):`,
-          error
-        );
-        if (isPrimary)
-          setImageLoadStates((prev) => ({ ...prev, [vehicleId]: "error" }));
-        return fallbackImage;
       }
+
+      const MAX_RETRIES = 5;
+      const INITIAL_DELAY = 1000;
+
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          const pathResult = await getDownloadUrl(imageKey);
+          const imageUrl = pathResult?.body;
+
+          if (imageUrl) {
+            if (isPrimary) {
+              setImageLoadStates((prev) => ({
+                ...prev,
+                [vehicleId]: "loaded",
+              }));
+            }
+            return imageUrl;
+          }
+          throw new Error("Image URL not found in API response body.");
+        } catch (error) {
+          const delay = INITIAL_DELAY * Math.pow(2, attempt - 1);
+          console.warn(
+            `Attempt ${attempt} failed for image key ${imageKey}. Retrying in ${delay}ms...`,
+            error.message
+          );
+
+          if (attempt === MAX_RETRIES) {
+            console.error(
+              `All ${MAX_RETRIES} retries failed for image key ${imageKey} (vehicle ${vehicleId}):`,
+              error
+            );
+            if (isPrimary) {
+              setImageLoadStates((prev) => ({ ...prev, [vehicleId]: "error" }));
+            }
+            return fallbackImage;
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+
+      if (isPrimary) {
+        setImageLoadStates((prev) => ({ ...prev, [vehicleId]: "error" }));
+      }
+      return fallbackImage;
     },
     [fallbackImage, placeholderImage]
   );
@@ -125,13 +157,11 @@ const ResultsGrid = ({
                 typeof imageKeyObj === "string"
                   ? imageKeyObj
                   : imageKeyObj?.key;
-              // Only update primary image load state for the first image
               return fetchAndSetIndividualImage(vehicle.id, key, index === 0);
             })
           );
         }
 
-        // Filter out any null/undefined results from failed fetches if fetchAndSetIndividualImage could return them
         allResolvedImages = allResolvedImages.filter((url) => url);
         if (allResolvedImages.length === 0) {
           allResolvedImages = [placeholderImage];
@@ -139,19 +169,16 @@ const ResultsGrid = ({
 
         const displayImage = allResolvedImages[0];
 
-        // Ensure primary image load state is set to error if its specific fetch failed or no images
         if (
           displayImage === placeholderImage ||
           displayImage === fallbackImage
         ) {
           if (imageLoadStates[vehicle.id] !== "error") {
-            setImageLoadStates((prev) => ({ ...prev, [vehicle.id]: "error" }));
           }
         } else if (
           imageLoadStates[vehicle.id] !== "loaded" &&
           imageLoadStates[vehicle.id] !== "error"
         ) {
-          // If successfully loaded and not already set
           setImageLoadStates((prev) => ({ ...prev, [vehicle.id]: "loaded" }));
         }
 
@@ -224,7 +251,6 @@ const ResultsGrid = ({
     setLastEvaluated(lastEvaluatedKey || null);
 
     if (vehicles && Array.isArray(vehicles)) {
-      //   setImageLoadStates({}); // Reset image states only when primary vehicle source changes
       applyProcessedVehicles(vehicles.slice(0, itemsPerPage));
       if (currentPage !== newPage) setCurrentPage(newPage);
       else prevPageRef.current = newPage;
@@ -248,7 +274,6 @@ const ResultsGrid = ({
 
   // This effect handles pagination after the initial load.
   useEffect(() => {
-    // Skip if it's the initial load (handled by the effect above) or if page hasn't changed.
     if (currentPage === 1 && !isMountedRef.current) return;
     if (
       currentPage === prevPageRef.current &&
@@ -260,10 +285,8 @@ const ResultsGrid = ({
     if (vehicles && Array.isArray(vehicles)) {
       const startIdx = (currentPage - 1) * itemsPerPage;
       const endIdx = startIdx + itemsPerPage;
-      // No need to setIsLoadingData(true) here if applyProcessedVehicles handles it
       applyProcessedVehicles(vehicles.slice(startIdx, endIdx));
     } else if (!vehicles && currentPage > 1) {
-      // API pagination
       fetchVehiclesForPageAPI(currentPage, lastEvaluated);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -284,45 +307,11 @@ const ResultsGrid = ({
   const handleNavigation = (vehicle) => {
     navigate(`/details2/${vehicle.id}`, { state: { pickUpTime, DropOffTime } });
   };
+
   const handleImageError = (vehicleId) => {
     setImageLoadStates((prev) => ({ ...prev, [vehicleId]: "error" }));
   };
 
-  const retryImageLoad = (vehicleId) => {
-    const vehicle = currentVehicles.find((v) => v.id === vehicleId);
-    if (
-      vehicle &&
-      vehicle.vehicleImageKeys &&
-      vehicle.vehicleImageKeys.length > 0
-    ) {
-      const firstImageKey =
-        typeof vehicle.vehicleImageKeys[0] === "string"
-          ? vehicle.vehicleImageKeys[0]
-          : vehicle.vehicleImageKeys[0]?.key;
-      if (firstImageKey) {
-        setImageLoadStates((prev) => ({ ...prev, [vehicleId]: "loading" }));
-        fetchAndSetIndividualImage(vehicleId, firstImageKey, true).then(
-          (newImageUrl) => {
-            if (
-              newImageUrl !== fallbackImage &&
-              newImageUrl !== placeholderImage
-            ) {
-              setCurrentVehicles((prev) =>
-                prev.map((v) =>
-                  v.id === vehicleId ? { ...v, displayImage: newImageUrl } : v
-                )
-              );
-              // setImageLoadStates(prev => ({ ...prev, [vehicleId]: "loaded" })); // fetchAndSetIndividualImage handles this
-            } else {
-              //setImageLoadStates(prev => ({ ...prev, [vehicleId]: "error" })); // fetchAndSetIndividualImage handles this
-            }
-          }
-        );
-      }
-    }
-  };
-
-  // --- Fullscreen Image Viewer Functions ---
   const openFullScreenViewer = (vehicleAllImages, startIndex = 0) => {
     if (vehicleAllImages && vehicleAllImages.length > 0) {
       setFullScreenVehicleImages(vehicleAllImages);
@@ -387,28 +376,13 @@ const ResultsGrid = ({
                   {imageLoadStates[vehicle.id] === "loading" && (
                     <FaSpinner className="animate-spin text-2xl text-blue-600" />
                   )}
-                  {imageLoadStates[vehicle.id] === "error" &&
-                    vehicle.displayImage === fallbackImage && (
-                      <div className="flex flex-col items-center text-gray-500">
-                        <FaExclamationTriangle size={30} className="mb-2" />
-                        <p className="text-xs">Image unavailable</p>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent opening lightbox
-                            retryImageLoad(vehicle.id);
-                          }}
-                          className="mt-2 text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded flex items-center"
-                        >
-                          <FaRedo size={10} className="mr-1" /> Retry
-                        </button>
-                      </div>
-                    )}
-                  {(imageLoadStates[vehicle.id] === "loaded" ||
-                    (imageLoadStates[vehicle.id] !== "loading" &&
-                      imageLoadStates[vehicle.id] !== "error" &&
-                      vehicle.displayImage &&
-                      vehicle.displayImage !== placeholderImage &&
-                      vehicle.displayImage !== fallbackImage)) &&
+                  {imageLoadStates[vehicle.id] === "error" && (
+                    <div className="flex flex-col items-center text-gray-500">
+                      <FaExclamationTriangle size={30} className="mb-2" />
+                      <p className="text-sm">Image unavailable</p>
+                    </div>
+                  )}
+                  {imageLoadStates[vehicle.id] === "loaded" &&
                     vehicle.displayImage && (
                       <img
                         className="w-full h-full object-cover"
@@ -419,20 +393,7 @@ const ResultsGrid = ({
                         onError={() => handleImageError(vehicle.id)}
                       />
                     )}
-                  {/* Fallback for initial state or unexpected conditions */}
-                  {!(
-                    imageLoadStates[vehicle.id] === "loading" ||
-                    (imageLoadStates[vehicle.id] === "error" &&
-                      vehicle.displayImage === fallbackImage) ||
-                    (imageLoadStates[vehicle.id] === "loaded" &&
-                      vehicle.displayImage) ||
-                    (imageLoadStates[vehicle.id] !== "loading" &&
-                      imageLoadStates[vehicle.id] !== "error" &&
-                      vehicle.displayImage &&
-                      vehicle.displayImage !== placeholderImage &&
-                      vehicle.displayImage !== fallbackImage)
-                  ) && (
-                    // This will show a spinner if no other condition is met, e.g. displayImage is placeholder
+                  {!imageLoadStates[vehicle.id] && (
                     <FaSpinner className="animate-spin text-2xl text-blue-600" />
                   )}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-300 flex justify-center items-center">
@@ -441,7 +402,13 @@ const ResultsGrid = ({
                     </p>
                   </div>
                 </div>
-                <div className="flex w-full sm:w-3/5 flex-col p-5 justify-between text-black">
+
+                {/* --- START: MODIFIED JSX for clickable details area --- */}
+                <div
+                  className="flex w-full sm:w-3/5 flex-col p-5 justify-between text-black cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => handleNavigation(vehicle)}
+                >
+                  {/* --- END: MODIFIED JSX for clickable details area --- */}
                   <div>
                     <div className="flex w-full justify-between items-start mb-2">
                       <div>
@@ -478,18 +445,23 @@ const ResultsGrid = ({
                         {vehicle.price ? `${vehicle.price} Birr` : "N/A"}
                       </p>
                     </div>
+                    {/* --- START: MODIFIED JSX for button --- */}
                     <button
-                      onClick={() => handleNavigation(vehicle)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent parent div's onClick
+                        handleNavigation(vehicle);
+                      }}
                       className="bg-blue-950 hover:bg-blue-800 transition-colors text-white rounded-full px-6 py-2.5 text-sm font-medium"
                     >
                       View Details
                     </button>
+                    {/* --- END: MODIFIED JSX for button --- */}
                   </div>
                 </div>
               </div>
             ))
           : !isLoadingData &&
-            hasAttemptedFetchRef.current && ( // Show no vehicles message only after an attempt and not loading
+            hasAttemptedFetchRef.current && (
               <div className="w-full text-center py-10 text-black text-lg">
                 No vehicles found for your selection. Adjust your search
                 criteria.
@@ -525,7 +497,7 @@ const ResultsGrid = ({
                 (!vehicles &&
                   lastEvaluated === null &&
                   currentVehicles.length < itemsPerPage &&
-                  currentPage > 0) // Fixed condition
+                  currentPage > 0)
               }
               className={`px-4 py-2 mx-2 rounded-lg transition-colors ${
                 isLoadingData ||
@@ -533,7 +505,7 @@ const ResultsGrid = ({
                 (!vehicles &&
                   lastEvaluated === null &&
                   currentVehicles.length < itemsPerPage &&
-                  currentPage > 0) // Fixed condition
+                  currentPage > 0)
                   ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
@@ -543,7 +515,6 @@ const ResultsGrid = ({
           </div>
         )}
 
-      {/* Fullscreen Image Viewer Modal */}
       {isFullScreenOpen && fullScreenVehicleImages.length > 0 && (
         <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-90 z-[110] flex justify-center items-center p-4">
           <button

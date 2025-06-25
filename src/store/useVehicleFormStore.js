@@ -127,7 +127,48 @@ const useVehicleFormStore = create(
           throw error;
         }
       },
+      uploadImageForEditing: async (vehicleId, file) => {
+        try {
+          if (!vehicleId) {
+            throw new Error("Vehicle ID is required for image upload.");
+          }
 
+          // Get all necessary helper functions from the store's instance
+          const {
+            getPresignedUrl,
+            uploadToPreSignedUrl,
+            compressImage,
+            fileToBase64,
+          } = get();
+
+          // 1. Get Presigned URL for the new file
+          const preSignedData = await getPresignedUrl(
+            vehicleId,
+            file.name,
+            file.type,
+            "getPresignedUrl"
+          );
+          const newImageS3Key = preSignedData.key;
+
+          // 2. Compress and Upload the new file
+          const compressedFile = await compressImage(file);
+          await uploadToPreSignedUrl(
+            preSignedData.url,
+            compressedFile,
+            file.type
+          );
+
+          // 3. Get base64 for instant preview, just like in Step2.js
+          const base64 = await fileToBase64(compressedFile);
+
+          // 4. Return all necessary info to the calling component
+          return { success: true, newKey: newImageS3Key, base64: base64 };
+        } catch (error) {
+          console.error("Error in uploadImageForEditing:", error);
+          // Re-throw the error so the component can catch it
+          throw error;
+        }
+      },
       // Function to make API calls with automatic token refresh (EXACTLY AS PROVIDED ORIGINALLY)
       apiCallWithRetry: async (url, options, retryCount = 0) => {
         const storedUser = localStorage.getItem("customer");

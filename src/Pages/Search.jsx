@@ -8,6 +8,9 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  Slider, // Import Slider
+  Box, // Import Box for layout
+  Typography, // Import Typography for text
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -21,12 +24,14 @@ import ResultsGrid from "../components/Search/ResultsGrid";
 import makesData from "../api/makes.json";
 import modelData from "../api/models.json";
 import MapComponent from "../components/GoogleMaps";
-import { getDownloadUrl } from "../api";
 import Footer from "../components/Footer";
 
 // Primary color defined
 const PRIMARY_COLOR = "#172554";
 const PRIMARY_COLOR_DARKER = "#0d1732"; // For hover states
+
+// Price constant
+const MAX_PRICE = 50000;
 
 // Helper to create filter button style
 const filterButtonStyle =
@@ -60,6 +65,8 @@ const ClearFilterButton = ({ onClick }) => (
 const Search = () => {
   const [vehicles, setVehicles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [retryTrigger, setRetryTrigger] = useState(0);
 
   const ethiopianCities = [
     "Addis Ababa",
@@ -77,13 +84,11 @@ const Search = () => {
   const [selectedModel, setSelectedModel] = useState("any");
   const [transmission, setTransmission] = useState("any");
   const [category, setCategory] = useState("any");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  // *** CHANGE: Replaced min/max price with a range state ***
+  const [priceRange, setPriceRange] = useState([0, MAX_PRICE]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
-
-  const [error, setError] = useState("");
 
   // Modal States
   const [openDateModal, setOpenDateModal] = useState(false);
@@ -96,19 +101,33 @@ const Search = () => {
   // Temporary states for modal inputs
   const [tempStartDate, setTempStartDate] = useState("");
   const [tempEndDate, setTempEndDate] = useState("");
-  const [tempMinPrice, setTempMinPrice] = useState("");
-  const [tempMaxPrice, setTempMaxPrice] = useState("");
+  // *** CHANGE: Replaced temp min/max price with a temp range state ***
+  const [tempPriceRange, setTempPriceRange] = useState([0, MAX_PRICE]);
   const [tempMake, setTempMake] = useState("any");
   const [tempModel, setTempModel] = useState("any");
   const [tempTransmission, setTempTransmission] = useState("any");
   const [tempCategory, setTempCategory] = useState("any");
 
+  const primaryButtonStyle = {
+    backgroundColor: PRIMARY_COLOR,
+    "&:hover": { backgroundColor: PRIMARY_COLOR_DARKER },
+  };
+  const primaryOutlinedButtonStyle = {
+    borderColor: PRIMARY_COLOR,
+    color: PRIMARY_COLOR,
+    "&:hover": {
+      borderColor: PRIMARY_COLOR_DARKER,
+      color: PRIMARY_COLOR_DARKER,
+      backgroundColor: "rgba(23, 37, 84, 0.04)",
+    },
+  };
+
   useEffect(() => {
     const getQueryParam = (name) =>
       new URLSearchParams(window.location.search).get(name);
     const pickupLocation = getQueryParam("pickUpLocation");
-    const pickupDateQuery = getQueryParam("pickUpDate"); // Dates from URL
-    const dropOffDateQuery = getQueryParam("dropOffDate"); // Dates from URL
+    const pickupDateQuery = getQueryParam("pickUpDate");
+    const dropOffDateQuery = getQueryParam("dropOffDate");
 
     if (pickupLocation && ethiopianCities.includes(pickupLocation)) {
       setSelectedCity(pickupLocation);
@@ -119,7 +138,7 @@ const Search = () => {
     if (dropOffDateQuery) {
       setEndDate(dropOffDateQuery);
     }
-  }, []);
+  }, [ethiopianCities]);
 
   const handleOpenDateModal = () => {
     setTempStartDate(startDate);
@@ -161,24 +180,13 @@ const Search = () => {
     setError("");
   };
 
+  // *** CHANGE: Updated price modal handlers for the slider ***
   const handleOpenPriceModal = () => {
-    setTempMinPrice(minPrice);
-    setTempMaxPrice(maxPrice);
+    setTempPriceRange(priceRange);
     setOpenPriceModal(true);
   };
   const handleApplyPrice = () => {
-    const tempMin = parseFloat(tempMinPrice) || 0;
-    const tempMax = parseFloat(tempMaxPrice) || Infinity;
-    if (tempMin < 0) {
-      alert("Minimum price cannot be negative.");
-      return;
-    }
-    if (tempMaxPrice !== "" && tempMax < tempMin) {
-      alert("Maximum price must be greater than minimum price.");
-      return;
-    }
-    setMinPrice(tempMinPrice);
-    setMaxPrice(tempMaxPrice);
+    setPriceRange(tempPriceRange);
     setOpenPriceModal(false);
   };
 
@@ -247,27 +255,26 @@ const Search = () => {
     setOpenCategoryModal(false);
   };
 
-  const getFilteredVehicles = useCallback(() => {
-    const min = parseFloat(minPrice) || 0;
-    const max = parseFloat(maxPrice) || Infinity;
-    let filtered = vehicles.filter((vehicle) => {
-      const priceVal = parseFloat(vehicle.price) || 0;
-      return priceVal >= min && priceVal <= max;
-    });
-    return filtered.sort(
-      (a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0)
-    );
-  }, [vehicles, minPrice, maxPrice]);
+  // *** ADDED: Handler to populate all temp states before opening the All Filters modal ***
+  const handleOpenAllFiltersModal = () => {
+    setTempPriceRange(priceRange);
+    setTempMake(make);
+    setTempModel(selectedModel);
+    setTempTransmission(transmission);
+    setTempCategory(category);
 
-  const transmissionType = ["Automatic", "Manual"];
-  const CategoryList = [
-    "Sedan",
-    "SUV",
-    "Convertible",
-    "Minivan",
-    "Truck",
-    "Hatchback",
-  ];
+    if (make !== "any") {
+      const makeModelsData = modelData.find(
+        (m) => Object.keys(m)[0].toLowerCase() === make.toLowerCase()
+      );
+      setModelList(
+        makeModelsData ? makeModelsData[Object.keys(makeModelsData)[0]] : []
+      );
+    } else {
+      setModelList([]);
+    }
+    setOpenAllFiltersModal(true);
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -304,31 +311,19 @@ const Search = () => {
         const data = await response.json();
         const fetchedVehicles =
           data.body && Array.isArray(data.body) ? data.body : [];
-        const vehiclesWithImages = await Promise.all(
-          fetchedVehicles.map(async (vehicle) => {
-            const images = await Promise.all(
-              (vehicle.vehicleImageKeys || []).map(async (imageKeyObj) => {
-                try {
-                  if (imageKeyObj && imageKeyObj.key) {
-                    const pathResult = await getDownloadUrl(imageKeyObj.key);
-                    return (
-                      pathResult?.body || "https://via.placeholder.com/300"
-                    );
-                  }
-                  return "https://via.placeholder.com/300";
-                } catch {
-                  return "https://via.placeholder.com/300";
-                }
-              })
-            );
-            return { ...vehicle, images };
-          })
-        );
-        setVehicles(vehiclesWithImages);
+        setVehicles(fetchedVehicles);
       } catch (error) {
         if (error.name !== "AbortError") {
           console.error("Fetch error:", error);
-          setError(error.message || "Failed to fetch vehicles.");
+          let userMessage = "An unexpected error occurred. Please try again.";
+          if (error.message?.includes("status: 5")) {
+            userMessage =
+              "We're having some trouble on our end. Please try again in a moment.";
+          } else if (error.message?.toLowerCase().includes("failed to fetch")) {
+            userMessage =
+              "Could not connect to the server. Please check your internet connection and try again.";
+          }
+          setError(userMessage);
           setVehicles([]);
         }
       } finally {
@@ -337,15 +332,46 @@ const Search = () => {
     };
     fetchData();
     return () => controller.abort();
-  }, [make, selectedModel, transmission, category, startDate, endDate]);
+  }, [
+    make,
+    selectedModel,
+    transmission,
+    category,
+    startDate,
+    endDate,
+    retryTrigger,
+  ]);
+
+  // *** CHANGE: Updated filtering logic to use priceRange state ***
+  const getFilteredVehicles = useCallback(() => {
+    const [min, max] = priceRange;
+    let filtered = vehicles.filter((vehicle) => {
+      const priceVal = parseFloat(vehicle.price) || 0;
+      return priceVal >= min && priceVal <= max;
+    });
+    return filtered.sort(
+      (a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0)
+    );
+  }, [vehicles, priceRange]);
+
+  const transmissionType = ["Automatic", "Manual"];
+  const CategoryList = [
+    "Sedan",
+    "SUV",
+    "Convertible",
+    "Minivan",
+    "Truck",
+    "Hatchback",
+  ];
+
+  const isPriceFilterActive = priceRange[0] > 0 || priceRange[1] < MAX_PRICE;
 
   const countActiveFilters = () => {
     let count = 0;
-    if (startDate && endDate) count++; // Date filter is active if both dates are set
-    if (minPrice || maxPrice) count++;
+    if (startDate && endDate) count++;
+    // *** CHANGE: Check if price filter is active ***
+    if (isPriceFilterActive) count++;
     if (make !== "any") count++;
-    // Count model only if make is also selected, to avoid double counting just "any model"
-    // if (selectedModel !== "any" && make !== "any") count++; // This logic might be too complex for simple count, usually make implies model filter is engaged.
     if (transmission !== "any") count++;
     if (category !== "any") count++;
     return count;
@@ -358,14 +384,11 @@ const Search = () => {
     setModelList([]);
     setTransmission("any");
     setCategory("any");
-    setMinPrice("");
-    setMaxPrice("");
-    // setStartDate(""); // Keep dates as per original logic unless specified to clear
-    // setEndDate("");
+    // *** CHANGE: Reset price range state ***
+    setPriceRange([0, MAX_PRICE]);
     setTempMake("any");
     setTempModel("any");
-    setTempMinPrice("");
-    setTempMaxPrice("");
+    setTempPriceRange([0, MAX_PRICE]);
     setTempTransmission("any");
     setTempCategory("any");
     // setTempStartDate(""); // If dates are cleared, temp dates should also be cleared
@@ -373,19 +396,7 @@ const Search = () => {
     setOpenAllFiltersModal(false);
   };
 
-  const primaryButtonStyle = {
-    backgroundColor: PRIMARY_COLOR,
-    "&:hover": { backgroundColor: PRIMARY_COLOR_DARKER },
-  };
-  const primaryOutlinedButtonStyle = {
-    borderColor: PRIMARY_COLOR,
-    color: PRIMARY_COLOR,
-    "&:hover": {
-      borderColor: PRIMARY_COLOR_DARKER,
-      color: PRIMARY_COLOR_DARKER,
-      backgroundColor: "rgba(23, 37, 84, 0.04)",
-    },
-  };
+  const filteredVehicles = getFilteredVehicles();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -417,24 +428,22 @@ const Search = () => {
                 )}
               </button>
 
+              {/* *** CHANGE: Updated price filter button *** */}
               <button
                 onClick={handleOpenPriceModal}
                 className={
-                  minPrice || maxPrice
+                  isPriceFilterActive
                     ? activeFilterButtonStyle
                     : filterButtonStyle
                 }
               >
                 <AttachMoneyIcon fontSize="small" className="mr-2" />
-                {minPrice || maxPrice
-                  ? `Price: ${minPrice || "Any"} - ${maxPrice || "Any"}`
+                {isPriceFilterActive
+                  ? `ETB ${priceRange[0].toLocaleString()} - ${priceRange[1].toLocaleString()}`
                   : "Daily price"}
-                {(minPrice || maxPrice) && (
+                {isPriceFilterActive && (
                   <ClearFilterButton
-                    onClick={() => {
-                      setMinPrice("");
-                      setMaxPrice("");
-                    }}
+                    onClick={() => setPriceRange([0, MAX_PRICE])}
                   />
                 )}
               </button>
@@ -486,14 +495,14 @@ const Search = () => {
                 }
               >
                 <CategoryIcon fontSize="small" className="mr-2" />{" "}
-                {category !== "any" ? category : "Category"}
+                {category !== "any" ? category : "Car Type"}
                 {category !== "any" && (
                   <ClearFilterButton onClick={() => setCategory("any")} />
                 )}
               </button>
 
               <button
-                onClick={() => setOpenAllFiltersModal(true)}
+                onClick={handleOpenAllFiltersModal} // Use new handler
                 className={
                   activeFilterCount > 0
                     ? activeFilterButtonStyle
@@ -504,8 +513,6 @@ const Search = () => {
                 {activeFilterCount > 0 ? `(${activeFilterCount})` : ""}
               </button>
             </div>
-
-            {/* The separate date display div is removed as its functionality is merged into the date filter button */}
           </div>
 
           <div className="flex lg:flex-row flex-col items-start w-full container mx-auto px-4">
@@ -513,22 +520,29 @@ const Search = () => {
               <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
                 {isLoading ? (
                   <div className="w-full text-center py-20">
-                    {" "}
-                    <CircularProgress sx={{ color: PRIMARY_COLOR }} />{" "}
+                    <CircularProgress sx={{ color: PRIMARY_COLOR }} />
                   </div>
                 ) : error ? (
-                  <div className="w-full text-center py-10 text-red-600 bg-red-50 p-4 rounded-md">
-                    {error}
+                  <div className="w-full text-center py-10 text-red-600 bg-red-50 p-4 rounded-md flex flex-col items-center justify-center">
+                    <p className="mb-4 font-semibold">{error}</p>
+                    <Button
+                      onClick={() => setRetryTrigger((prev) => prev + 1)}
+                      variant="contained"
+                      sx={primaryButtonStyle}
+                    >
+                      Retry
+                    </Button>
                   </div>
-                ) : getFilteredVehicles().length > 0 ? ( // Check if there are vehicles after filtering
+                ) : filteredVehicles.length > 0 ? (
                   <>
                     <div className="text-lg sm:text-xl font-semibold mb-4">
-                      {getFilteredVehicles().length} car
-                      {getFilteredVehicles().length === 1 ? "" : "s"} available
+                      {filteredVehicles.length} car
+                      {filteredVehicles.length === 1 ? "" : "s"} available
                     </div>
                     <ResultsGrid
-                      key={`${make}-${selectedModel}-${transmission}-${category}-${minPrice}-${maxPrice}-${startDate}-${endDate}`}
-                      vehicles={getFilteredVehicles()}
+                      // *** CHANGE: Updated key to use priceRange ***
+                      key={`${make}-${selectedModel}-${transmission}-${category}-${priceRange[0]}-${priceRange[1]}-${startDate}-${endDate}`}
+                      vehicles={filteredVehicles}
                       pickUpTime={startDate}
                       DropOffTime={endDate}
                     />
@@ -543,7 +557,7 @@ const Search = () => {
             </div>
             <div className="sticky top-28 flex flex-col lg:w-2/5 xl:w-1/3 h-full w-full mt-8 lg:mt-0">
               <div className="bg-white w-full p-1 rounded-xl shadow-lg ">
-                <MapComponent vehicles={vehicles} />
+                <MapComponent vehicles={filteredVehicles} />
               </div>
             </div>
           </div>
@@ -598,7 +612,7 @@ const Search = () => {
           </DialogActions>
         </Dialog>
 
-        {/* Price Modal */}
+        {/* *** CHANGE: Price Modal now uses a Slider *** */}
         <Dialog
           open={openPriceModal}
           onClose={() => setOpenPriceModal(false)}
@@ -615,33 +629,39 @@ const Search = () => {
               <CloseIcon />
             </IconButton>
           </DialogTitle>
-          <DialogContent dividers>
-            <TextField
-              label="Min Price (ETB)"
-              type="number"
-              value={tempMinPrice}
-              onChange={(e) => setTempMinPrice(e.target.value)}
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              label="Max Price (ETB)"
-              type="number"
-              value={tempMaxPrice}
-              onChange={(e) => setTempMaxPrice(e.target.value)}
-              fullWidth
-              margin="normal"
-            />
+          <DialogContent dividers sx={{ pt: 3, pb: 2 }}>
+            <Box sx={{ width: "90%", mx: "auto" }}>
+              <Typography
+                gutterBottom
+                align="center"
+                variant="h6"
+                component="div"
+                sx={{ color: PRIMARY_COLOR, fontWeight: "bold" }}
+              >
+                ETB {tempPriceRange[0].toLocaleString()} -{" "}
+                {tempPriceRange[1].toLocaleString()}
+              </Typography>
+              <Slider
+                value={tempPriceRange}
+                onChange={(event, newValue) => setTempPriceRange(newValue)}
+                valueLabelDisplay="auto"
+                min={0}
+                max={MAX_PRICE}
+                step={1000}
+                getAriaLabel={() => "Price range"}
+                valueLabelFormat={(value) => `${value.toLocaleString()}`}
+                sx={{ color: PRIMARY_COLOR }}
+              />
+            </Box>
           </DialogContent>
           <DialogActions>
-            {" "}
             <Button
               onClick={handleApplyPrice}
               variant="contained"
               sx={primaryButtonStyle}
             >
               Apply Price
-            </Button>{" "}
+            </Button>
           </DialogActions>
         </Dialog>
 
@@ -819,30 +839,30 @@ const Search = () => {
             </IconButton>
           </DialogTitle>
           <DialogContent dividers>
-            <p className="mb-4 text-sm text-gray-600">
-              Apply or modify all available filters here.
-            </p>
-            {/* Price Range in All Filters */}
+            {/* *** CHANGE: Price inputs replaced with slider in All Filters Modal *** */}
             <div className="mb-4 p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Price Range (ETB)</h3>
-              <div className="flex gap-4">
-                <TextField
-                  label="Min Price"
-                  type="number"
-                  value={tempMinPrice}
-                  onChange={(e) => setTempMinPrice(e.target.value)}
-                  fullWidth
-                  size="small"
+              <Box sx={{ width: "95%", mx: "auto", mt: 2 }}>
+                <Typography
+                  gutterBottom
+                  align="center"
+                  sx={{ fontWeight: "medium" }}
+                >
+                  ETB {tempPriceRange[0].toLocaleString()} -{" "}
+                  {tempPriceRange[1].toLocaleString()}
+                </Typography>
+                <Slider
+                  value={tempPriceRange}
+                  onChange={(event, newValue) => setTempPriceRange(newValue)}
+                  valueLabelDisplay="auto"
+                  min={0}
+                  max={MAX_PRICE}
+                  step={1000}
+                  getAriaLabel={() => "Price range"}
+                  valueLabelFormat={(value) => `${value.toLocaleString()}`}
+                  sx={{ color: PRIMARY_COLOR }}
                 />
-                <TextField
-                  label="Max Price"
-                  type="number"
-                  value={tempMaxPrice}
-                  onChange={(e) => setTempMaxPrice(e.target.value)}
-                  fullWidth
-                  size="small"
-                />
-              </div>
+              </Box>
             </div>
             {/* Vehicle Make/Model in All Filters */}
             <div className="mb-4 p-4 border rounded-lg">
@@ -950,27 +970,12 @@ const Search = () => {
                 Cancel
               </Button>
               <Button
+                // *** CHANGE: Simplified apply logic for All Filters modal ***
                 onClick={() => {
-                  // Apply from All Filters modal
-                  // Price
-                  const tempMin = parseFloat(tempMinPrice) || 0;
-                  const tempMax = parseFloat(tempMaxPrice) || Infinity;
-                  if (tempMin < 0) {
-                    alert("Minimum price cannot be negative.");
-                    return;
-                  }
-                  if (tempMaxPrice !== "" && tempMax < tempMin) {
-                    alert("Maximum price must be greater than minimum price.");
-                    return;
-                  }
-                  setMinPrice(tempMinPrice);
-                  setMaxPrice(tempMaxPrice);
-                  // Make & Model
+                  setPriceRange(tempPriceRange);
                   setMake(tempMake);
                   setSelectedModel(tempModel);
-                  // Transmission
                   setTransmission(tempTransmission);
-                  // Category
                   setCategory(tempCategory);
                   setOpenAllFiltersModal(false);
                 }}

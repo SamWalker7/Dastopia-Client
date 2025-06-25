@@ -21,7 +21,7 @@ import {
 import PriceBreakdown from "./PriceBreakdown"; // ADJUST PATH
 import Dropdown from "../../components/Search/Dropdown"; // ADJUST PATH
 import useVehicleFormStore from "../../store/useVehicleFormStore"; // ADJUST PATH
-
+import { format, parseISO, isSameDay, addDays, isBefore } from "date-fns";
 // --- CONFIGURATION ---
 const GOOGLE_MAPS_API_KEY = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4"; // <<<--- REPLACE THIS IF NEEDED
 const PLACEHOLDER_IMAGE_URL =
@@ -824,6 +824,54 @@ export default function Details2() {
       </div>
     );
 
+  function groupConsecutiveDates(dates) {
+    if (!dates || dates.length === 0) return [];
+
+    const sorted = dates
+      .map((dateStr) => parseISO(dateStr))
+      .sort((a, b) => a - b);
+
+    const groups = [];
+    let currentGroup = [sorted[0]];
+
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = currentGroup[currentGroup.length - 1];
+      const curr = sorted[i];
+
+      if (isSameDay(curr, addDays(prev, 1))) {
+        currentGroup.push(curr);
+      } else {
+        groups.push([...currentGroup]);
+        currentGroup = [curr];
+      }
+    }
+
+    groups.push([...currentGroup]);
+    return groups;
+  }
+
+  function formatDateRange(group) {
+    const start = group[0];
+    const end = group[group.length - 1];
+
+    if (isSameDay(start, end)) {
+      return format(start, "MMMM d, yyyy");
+    }
+
+    if (format(start, "yyyy") !== format(end, "yyyy")) {
+      return `${format(start, "MMMM d, yyyy")} – ${format(
+        end,
+        "MMMM d, yyyy"
+      )}`;
+    }
+
+    if (format(start, "MMMM") !== format(end, "MMMM")) {
+      return `${format(start, "MMMM d")} – ${format(end, "MMMM d, yyyy")}`;
+    }
+
+    return `${format(start, "MMMM d")}–${format(end, "d, yyyy")}`;
+  }
+
   return (
     <div className="py-32 md:py-8 lg:flex-row flex-col bg-[#FAF9FE] md:px-16 p-4 gap-10 flex">
       <PopupNotification
@@ -1030,17 +1078,19 @@ export default function Details2() {
                 vehicleDetails.unavailableDates &&
                 vehicleDetails.unavailableDates.length > 0 ? (
                   <div className="space-y-2">
-                    {vehicleDetails.unavailableDates.map((isoDateString, i) => (
-                      <div
-                        key={`unavailable-${i}`}
-                        className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-md"
-                      >
-                        <FaCalendarAlt className="text-red-600" size={16} />
-                        <span className="text-sm text-red-700">
-                          {formatDateInternal(isoDateString)}
-                        </span>
-                      </div>
-                    ))}
+                    {groupConsecutiveDates(vehicleDetails.unavailableDates).map(
+                      (dateGroup, i) => (
+                        <div
+                          key={`unavailable-${i}`}
+                          className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-md"
+                        >
+                          <FaCalendarAlt className="text-red-600" size={16} />
+                          <span className="text-sm text-red-700">
+                            {formatDateRange(dateGroup)}
+                          </span>
+                        </div>
+                      )
+                    )}
                   </div>
                 ) : (
                   <p className="text-gray-500 text-sm">
