@@ -50,6 +50,7 @@ import Step5 from "./Pages/Add Car/Step5";
 import { useDispatch, useSelector } from "react-redux";
 import { refreshToken } from "./store/auth/authThunks";
 import Review from "./components/Review";
+import PaymentSuccessModal from "./Pages/PaymentSuccessModal";
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -126,6 +127,7 @@ function App() {
         {/* Public Routes */}
         <Route index path="/" element={<Home user={user} />} />
         <Route path="about" element={<About />} />
+        <Route path="paymentsuccess" element={<PaymentSuccessModal />} />
         <Route path="howitworks" element={<HowItWorks />} />
         <Route path="testimonials" element={<TestimonialsPage />} />
         <Route path="team" element={<Team />} />
