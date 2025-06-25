@@ -35,14 +35,12 @@ const ResultsGrid = ({
 
   const itemsPerPage = 10;
   const placeholderImage = "https://via.placeholder.com/400x225?text=Vehicle";
-
   const fallbackImage = "/images/cars-big/toyota-box.png";
 
   const navigate = useNavigate();
 
   // All hooks and functions (useEffect, fetchAndSetIndividualImage, processVehicles, etc.) remain unchanged.
   // ...
-
 
   useEffect(() => {
     if (isMountedRef.current && prevPageRef.current !== currentPage) {

@@ -21,7 +21,7 @@ const ContactForm = () => {
   const [submissionResult, setSubmissionResult] = useState(null); // Can be 'success' or 'error'
 
   // Your unique access key from Web3Forms
-  const accessKey = "YOUR_ACCESS_KEY_HERE"; // <--- IMPORTANT: REPLACE THIS
+  const accessKey = "f4b888a1-641b-4033-b7a0-d77f81c7b687"; // <--- IMPORTANT: REPLACE THIS
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -106,7 +106,7 @@ const ContactForm = () => {
                   <FaPhoneAlt /> +251946888444
                 </p>
                 <p className="flex items-center gap-3">
-                  <FaEnvelope /> contact@dastechnologies.org
+                  <FaEnvelope /> support@dastechnologies.org
                 </p>
               </div>
             </div>

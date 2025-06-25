@@ -106,7 +106,12 @@ const Details = ({ selectedVehicleId }) => {
 
         const images = await Promise.all(imagePromises);
 
-        const initialFormData = { ...fetchedData, images };
+        // **NEW**: Add status to form data, defaulting to 'active' if not provided
+        const initialFormData = {
+          ...fetchedData,
+          images,
+          status: fetchedData.status || "active",
+        };
 
         setOriginalVehicle(initialFormData);
         setFormData(initialFormData);
@@ -242,14 +247,16 @@ const Details = ({ selectedVehicleId }) => {
   const handleSaveChanges = async () => {
     setUiState((prev) => ({ ...prev, isSaving: true, saveError: null }));
 
+    // Prepare main payload, excluding fields handled by other endpoints
     const payload = { ...formData };
     payload.vehicleImageKeys = formData.images.map((img) => img.s3Key);
-    delete payload.images;
-
     payload.vehichleNumber = formData.vehicleNumber;
+    delete payload.images;
     delete payload.vehicleNumber;
+    delete payload.status; // Status is handled by a separate endpoint
 
     try {
+      // 1. Save main vehicle details
       await apiCallWithRetry(
         `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/${selectedVehicleId}`,
         {
@@ -259,6 +266,18 @@ const Details = ({ selectedVehicleId }) => {
         }
       );
 
+      // 2. Handle status change if necessary, using its dedicated endpoint
+      if (formData.status !== originalVehicle.status) {
+        const statusEndpoint =
+          formData.status === "active"
+            ? `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/activate_status/${selectedVehicleId}`
+            : `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/deactivate_status/${selectedVehicleId}`;
+
+        // This API call is a GET request as per the provided specification
+        await apiCallWithRetry(statusEndpoint, { method: "GET" });
+      }
+
+      // 3. On full success, update the 'original' state and UI
       setOriginalVehicle(formData);
       setUiState((prev) => ({
         ...prev,
@@ -421,6 +440,7 @@ const Details = ({ selectedVehicleId }) => {
         {/* --- Form Fields --- */}
         <h4 className="mt-8 text-xl font-semibold">Car Specification</h4>
         <div className="grid lg:grid-cols-3 grid-cols-2 gap-4 mt-4">
+          {/* ... existing fields from original code ... */}
           <div>
             <span className="text-gray-500">Make</span>
             {uiState.isEditing ? (
@@ -548,6 +568,44 @@ const Details = ({ selectedVehicleId }) => {
             )}
           </div>
         </div>
+
+        {/* --- NEW: Vehicle Status Section --- */}
+        <section className="my-12">
+          <h2 className="font-semibold text-lg mb-4">Vehicle Status</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <span className="text-gray-500">Current Status</span>
+              {uiState.isEditing ? (
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  className="font-medium p-2 border rounded w-full bg-white"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              ) : (
+                <p
+                  className={`font-medium flex items-center gap-2 capitalize ${
+                    displayData.status === "active"
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full ${
+                      displayData.status === "active"
+                        ? "bg-green-500"
+                        : "bg-red-500"
+                    }`}
+                  ></span>
+                  {displayData.status}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
 
         <section className="my-12">
           <h2 className="font-semibold text-lg mb-4">Features</h2>

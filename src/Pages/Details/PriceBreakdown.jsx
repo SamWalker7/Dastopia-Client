@@ -42,6 +42,7 @@ const PaymentDetailsModal = ({
   totalPrice,
   id, // carId
   ownerId,
+  owenerId,
   dropOffTime,
   pickUpTime,
   pickUpLocation,
@@ -71,7 +72,7 @@ const PaymentDetailsModal = ({
     if (viewMode === "success") {
       redirectTimer = setTimeout(() => {
         handleProceedAfterSuccess();
-      }, 3200); // Auto-proceed after 3.2 seconds
+      }, 5200); // Auto-proceed after 3.2 seconds
     }
     return () => clearTimeout(redirectTimer);
   }, [viewMode]); // Only re-run if viewMode changes
@@ -115,7 +116,7 @@ const PaymentDetailsModal = ({
       const dropOffArray = Array.isArray(dropOffLocation)
         ? dropOffLocation
         : [dropOffLocation];
-
+      const key = ownerId ? "ownerId" : "owenerId";
       const bookingResponse = await fetch(
         "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/",
         {
@@ -125,7 +126,7 @@ const PaymentDetailsModal = ({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            ownerId: ownerId,
+            [key]: ownerId || owenerId,
             renteeId: USER_ID,
             carId: id,
             startDate: pickUpTime,
@@ -140,7 +141,7 @@ const PaymentDetailsModal = ({
       if (bookingResponse.ok) {
         const bookingData = await bookingResponse.json();
         console.log("Booking created successfully", bookingData);
-        setSuccessMessage("Booking successful! Redirecting to homepage...");
+        setSuccessMessage("Booking successful!");
         setViewMode("success"); // Switch to success view
         // setIsLoading(false); // Keep loading true to disable original modal interaction
         // until navigation or modal closure
@@ -332,6 +333,7 @@ export default function PriceBreakdown({
   totalPrice,
   id,
   ownerId,
+  owenerId,
   dropOffTime,
   pickUpTime,
   pickUpLocation,
@@ -349,7 +351,8 @@ export default function PriceBreakdown({
     setShowPaymentDetails(true);
   };
 
-  const canRequestBooking = pickUpLocation && dropOffLocation && id && ownerId;
+  const canRequestBooking =
+    pickUpLocation && dropOffLocation && id && (ownerId || owenerId);
   return (
     <div className="flex items-center justify-center ">
       <div className="bg-[#0d1b3e] text-gray-300 shadow-lg p-6 rounded-2xl w-full max-w-md">
@@ -396,6 +399,7 @@ export default function PriceBreakdown({
           totalPrice={totalPrice}
           id={id}
           ownerId={ownerId}
+          owenerId={owenerId}
           dropOffTime={dropOffTime}
           pickUpTime={pickUpTime}
           pickUpLocation={pickUpLocation}

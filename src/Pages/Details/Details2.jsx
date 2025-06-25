@@ -1328,6 +1328,7 @@ export default function Details2() {
           totalPrice={totalPrice}
           id={vehicleDetails?.id}
           ownerId={vehicleDetails?.ownerId}
+          owenerId={vehicleDetails?.owenerId}
           dropOffTime={
             currentDropOffDate ? currentDropOffDate.toISOString() : ""
           }
