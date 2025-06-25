@@ -18,12 +18,11 @@ const Owner = () => {
     <div className="flex flex-col items-center w-full">
       {/* Introductory Paragraph */}
       <p className="px-6 md:px-8 lg:px-12 py-8 md:py-12 w-full md:w-3/4 lg:w-2/3 text-center text-base md:text-lg lg:text-xl text-gray-700">
-        At DASGUZO, we believe that renting a car should be as easy as getting a
-        ride. We’re not just another car rental service—we’re a community-driven
-        platform that connects car owners with those in need of a vehicle.
-        Whether you’re planning a weekend getaway or need a reliable ride for a
-        business trip, DASGUZO offers a seamless, affordable, and trustworthy
-        solution for all your car rental needs.
+        At DASGUZO, we empower car owners to make the most of their vehicles.
+        Instead of letting your car sit idle, put it to work and earn extra
+        income on your terms. Whether you drive a compact sedan or a full-size
+        SUV, our community-driven platform makes it easy to list your car,
+        connect with verified renters, and get paid—safely and securely.
       </p>
 
       {/* Section 1: List Your Car */}

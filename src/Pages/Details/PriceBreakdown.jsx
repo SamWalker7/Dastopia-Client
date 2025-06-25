@@ -90,7 +90,7 @@ const PaymentDetailsModal = ({
 
   const handleProceedAfterSuccess = () => {
     onClose(); // Close the modal
-    navigate("/"); // Navigate to the homepage
+    // navigate("/"); // Navigate to the homepage
   };
 
   const handleApproveBooking = async () => {

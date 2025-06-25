@@ -31,10 +31,9 @@ const SuccessPopup = ({ onClose }) => (
   </div>
 );
 
-const Step5 = (/* { prevStep } */) => {
-  // prevStep is no longer needed
+const Step5 = () => {
   const { vehicleData, uploadedPhotos, resetStore } = useVehicleFormStore();
-  const [showSuccessPopup, setShowSuccessPopup] = useState(true); // Show popup on mount
+  const [showSuccessPopup, setShowSuccessPopup] = useState(true);
 
   // Get all uploaded images (base64 for display)
   const getAllImages = () => {
@@ -44,7 +43,7 @@ const Step5 = (/* { prevStep } */) => {
       uploadedPhotos.left,
       uploadedPhotos.right,
       uploadedPhotos.interior,
-    ].filter((img) => img !== null && img.base64); // Ensure img and base64 exist
+    ].filter((img) => img !== null && img.base64);
 
     const additionalImages = uploadedPhotos.additional.filter(
       (img) => img !== null && img.base64
@@ -55,11 +54,10 @@ const Step5 = (/* { prevStep } */) => {
 
   const allImages = getAllImages();
   const [selectedImage, setSelectedImage] = useState(
-    allImages[0]?.base64 || "/default-car.jpg" // Default if no images
+    allImages[0]?.base64 || "/default-car.jpg"
   );
 
   useEffect(() => {
-    // Update selectedImage if allImages changes and selectedImage is no longer valid
     if (
       allImages.length > 0 &&
       !allImages.find((img) => img.base64 === selectedImage)
@@ -71,20 +69,62 @@ const Step5 = (/* { prevStep } */) => {
   }, [allImages, selectedImage]);
 
   // Helper function to format ISO date strings
-  const formatDate = (dateString) => {
-    if (!dateString) return "Not specified";
-    const date = new Date(dateString);
-    // Check if date is valid, and specifically if it's not the Unix epoch (which can indicate an error or empty date)
+  const formatDate = (dateInput) => {
+    if (!dateInput) return "Not specified";
+    const date = new Date(dateInput);
     if (isNaN(date.getTime()) || date.getTime() === 0) return "Invalid date";
     return date.toLocaleDateString(undefined, {
-      // undefined for locale uses browser default
       year: "numeric",
       month: "long",
       day: "numeric",
     });
   };
 
-  // Reset store on component unmount (when user navigates away from this success page)
+  // *** START: NEW - Function to group dates into ranges ***
+  const groupConsecutiveDates = (dateStrings = []) => {
+    if (!dateStrings || dateStrings.length === 0) {
+      return [];
+    }
+
+    // 1. Convert strings to Date objects, normalize to midnight UTC, and sort
+    const sortedDates = dateStrings
+      .map((dateStr) => {
+        const d = new Date(dateStr);
+        return new Date(
+          Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+        );
+      })
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    // 2. Group sorted dates into ranges
+    const ranges = [];
+    let currentRange = { start: sortedDates[0], end: sortedDates[0] };
+
+    for (let i = 1; i < sortedDates.length; i++) {
+      const currentDate = sortedDates[i];
+      const prevDate = currentRange.end;
+
+      const expectedNextDateTimestamp =
+        prevDate.getTime() + 24 * 60 * 60 * 1000;
+
+      if (currentDate.getTime() === expectedNextDateTimestamp) {
+        // This date is consecutive, extend the current range
+        currentRange.end = currentDate;
+      } else {
+        // A gap was found, push the completed range and start a new one
+        ranges.push(currentRange);
+        currentRange = { start: currentDate, end: currentDate };
+      }
+    }
+
+    // 3. Push the last processed range
+    ranges.push(currentRange);
+
+    return ranges;
+  };
+  // *** END: NEW - Function to group dates into ranges ***
+
+  // Reset store on component unmount
   useEffect(() => {
     return () => {
       console.log("Step5 unmounting, resetting store...");
@@ -94,16 +134,17 @@ const Step5 = (/* { prevStep } */) => {
 
   const handleClosePopup = () => {
     setShowSuccessPopup(false);
-    // Optionally, navigate to a dashboard or listings page here
-    // e.g., history.push('/dashboard');
   };
 
-  // Price from vehicleData, ensure it's a string for display.
-  // The store already handles making it a string for submission if it's a number.
   const displayPrice =
     vehicleData.price !== null && vehicleData.price !== undefined
       ? String(vehicleData.price)
       : "0";
+
+  // Create the date ranges to be displayed
+  const unavailableDateRanges = groupConsecutiveDates(
+    vehicleData.unavailableDates
+  );
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 bg-[#F8F8FF] min-h-screen p-4 sm:p-6 lg:p-8">
@@ -111,7 +152,7 @@ const Step5 = (/* { prevStep } */) => {
 
       {/* Main Content Area */}
       <div className="w-full lg:w-8/12 xl:w-9/12 bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 lg:p-12 text-sm sm:text-base">
-        {/* Progress Bar */}
+        {/* Progress Bar and Header */}
         <div className="flex items-center justify-center mb-6">
           <div className="w-full border-b-4 border-[#00113D]"></div>
         </div>
@@ -138,7 +179,7 @@ const Step5 = (/* { prevStep } */) => {
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 {allImages.map((img, index) => (
                   <img
-                    key={img.key || `thumb-${index}`} // Use S3 key if available, else index
+                    key={img.key || `thumb-${index}`}
                     src={img.base64}
                     alt={`Thumbnail ${index + 1}`}
                     onClick={() => setSelectedImage(img.base64)}
@@ -269,8 +310,9 @@ const Step5 = (/* { prevStep } */) => {
           </div>
         </div>
 
-        {(vehicleData.pickUp && vehicleData.pickUp.length > 0) ||
-        (vehicleData.dropOff && vehicleData.dropOff.length > 0) ? (
+        {/* Locations Section */}
+        {((vehicleData.pickUp && vehicleData.pickUp.length > 0) ||
+          (vehicleData.dropOff && vehicleData.dropOff.length > 0)) && (
           <div className="p-4 sm:p-6 bg-white rounded-xl shadow-lg">
             <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">
               Locations
@@ -326,22 +368,28 @@ const Step5 = (/* { prevStep } */) => {
               </div>
             )}
           </div>
-        ) : null}
+        )}
 
         <div className="p-4 sm:p-6 bg-white rounded-xl shadow-lg">
           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">
             Vehicle Unavailability
           </h3>
-          {vehicleData.unavailableDates &&
-          vehicleData.unavailableDates.length > 0 ? (
-            <div className="max-h-48 overflow-y-auto space-y-1.5 pr-2">
-              {vehicleData.unavailableDates.map((dateString, index) => (
+          {/* *** UPDATED UNAVAILABILITY DISPLAY *** */}
+          {unavailableDateRanges.length > 0 ? (
+            <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
+              {unavailableDateRanges.map((range, index) => (
                 <div
                   key={index}
                   className="flex items-center gap-2 text-xs sm:text-sm text-gray-600"
                 >
                   <FaCalendarAlt size={14} className="text-red-500 shrink-0" />
-                  <span>{formatDate(dateString)}</span>
+                  <span>
+                    {formatDate(range.start)}
+                    {/* Check if start and end dates are different */}
+                    {range.start.getTime() !== range.end.getTime() && (
+                      <span> - {formatDate(range.end)}</span>
+                    )}
+                  </span>
                 </div>
               ))}
             </div>

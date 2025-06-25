@@ -494,9 +494,9 @@ const Step3 = ({ nextStep, prevStep }) => {
     parseFloat(vehicleData.price) >= 0;
 
   const allRequiredFieldsFilled =
-    isAdvanceNoticePeriodFilled &&
+    //isAdvanceNoticePeriodFilled &&
     // isAvailabilityDatesFilled && // This might be optional now
-    isInstantBookingFilled &&
+    // isInstantBookingFilled &&
     isPriceFilled;
   // --- End Validation Logic ---
 
@@ -595,7 +595,7 @@ const Step3 = ({ nextStep, prevStep }) => {
           </h2>
 
           {/* Advance Notice Period */}
-          <div className="mb-8">
+          {/* <div className="mb-8">
             <h3 className="text-base sm:text-lg font-semibold mb-3">
               Advance Notice Period
             </h3>
@@ -622,7 +622,7 @@ const Step3 = ({ nextStep, prevStep }) => {
                 This field is required.
               </p>
             )}
-          </div>
+          </div> */}
 
           {/* Set Car Unavailability Dates */}
           <div className="mb-8">

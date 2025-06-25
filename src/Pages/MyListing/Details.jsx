@@ -1,538 +1,632 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import audia1 from "../../images/cars-big/toyota-box.png";
 import {
-  FaCalendar,
+  FaTrash,
+  FaSync,
+  FaSpinner,
+  FaPlus,
+  FaCheckCircle,
+  FaExclamationTriangle,
+  // Other icons from your original file
   FaCogs,
   FaGasPump,
   FaTag,
   FaUserFriends,
-  FaStar,
 } from "react-icons/fa";
-import { FaCalendarAlt } from "react-icons/fa";
 import useVehicleFormStore from "../../store/useVehicleFormStore";
-import { getDownloadUrl } from "../../api";
-const customer = JSON.parse(localStorage.getItem("customer"));
-const fetchPlaceName = async (lat, lng) => {
-  const apiKey = "AIzaSyC3TxwdUzV5gbwZN-61Hb1RyDJr0PRSfW4";
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+import { getDownloadUrl } from "../../api"; // **THE FIX: Using your provided function**
+import imageCompression from "browser-image-compression";
 
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    if (data.status === "OK") {
-      return data.results[0].formatted_address;
-    } else {
-      console.error("Geocoding failed:", data.status);
-      return `Lat: ${lat}, Lng: ${lng}`;
-    }
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    return `Lat: ${lat}, Lng: ${lng}`;
-  }
-};
-const Details = ({ selectedVehicleId }) => {
-  const [vehicleDetails, setVehicleDetails] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [status, setStatus] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const { apiCallWithRetry } = useVehicleFormStore();
-  const [imageUrls, setImageUrls] = useState({});
-  const [parsedCalendar, setParsedCalendar] = useState([]);
+// --- Helper functions for image processing, kept within the component file ---
 
-  const Status = ["Active", "Inactive"];
-  const [pickUpLocations, setPickUpLocations] = useState([]);
-  const [dropOffLocations, setDropOffLocations] = useState([]);
-  const [ratings, setRatings] = useState([]);
-  const [averageRating, setAverageRating] = useState(0);
-
-  const fetchRatings = async (carID) => {
-    try {
-      const response = await fetch(
-        "https://xo55y7ogyj.execute-api.us-east-1.amazonaws.com/prod/add_vehicle",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            operation: "getRatingsbyID",
-            carId: carID,
-          }),
-        }
-      );
-      const data = await response.json();
-      if (data.statusCode === 200 && data.body.success) {
-        return {
-          ratings: data.body.data.ratings,
-          averageRating: data.body.data.averageRating,
-        };
-      } else {
-        console.error("Failed to fetch ratings:", data);
-        return { ratings: [], averageRating: 0 };
-      }
-    } catch (error) {
-      console.error("Error fetching ratings:", error);
-      return { ratings: [], averageRating: 0 };
-    }
+const compressImage = async (file) => {
+  const options = {
+    maxSizeMB: 0.5,
+    maxWidthOrHeight: 1024,
+    useWebWorker: true,
   };
+  return imageCompression(file, options);
+};
 
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
+};
+
+/**
+ * A robust, self-contained component for displaying and editing vehicle details.
+ * It manages its own state and handles the entire image upload workflow internally.
+ *
+ * @param {{selectedVehicleId: string}} props - The component props.
+ */
+const Details = ({ selectedVehicleId }) => {
+  // --- STATE MANAGEMENT ---
+
+  // The single source of truth for all form data during editing.
+  const [formData, setFormData] = useState(null);
+  // The pristine, original data fetched from the server.
+  const [originalVehicle, setOriginalVehicle] = useState(null);
+  // A single state object for all UI flags.
+  const [uiState, setUiState] = useState({
+    isLoading: true,
+    isEditing: false,
+    isSaving: false,
+    isUploading: false,
+    fetchError: null,
+    saveError: null,
+    saveSuccess: "",
+  });
+
+  // --- HOOKS and REFS ---
+  const { apiCallWithRetry } = useVehicleFormStore();
+  const fileInputRef = useRef(null);
+  const keyToReplaceRef = useRef(null);
+
+  // --- DATA FETCHING ---
   useEffect(() => {
-    if (selectedVehicleId) {
-      fetchRatings(selectedVehicleId)
-        .then((data) => {
-          setRatings(data.ratings);
-          setAverageRating(data.averageRating);
-        })
-        .catch((error) => console.error("Error setting ratings:", error));
-    }
-  }, [selectedVehicleId]);
-
-  useEffect(() => {
-    const fetchLocations = async (locations, setLocations) => {
-      if (Array.isArray(locations)) {
-        const placeNames = await Promise.all(
-          locations.map(async (location) => {
-            if (Array.isArray(location) && location.length === 2) {
-              return await fetchPlaceName(location[0], location[1]);
-            }
-            return "Invalid location";
-          })
-        );
-        setLocations(placeNames);
-      }
-    };
-
-    if (vehicleDetails?.pickUp) {
-      fetchLocations(vehicleDetails.pickUp, setPickUpLocations);
+    if (!selectedVehicleId) {
+      setUiState((prev) => ({ ...prev, isLoading: false }));
+      return;
     }
 
-    if (vehicleDetails?.dropOff) {
-      fetchLocations(vehicleDetails.dropOff, setDropOffLocations);
-    }
-  }, [vehicleDetails]);
-
-  useEffect(() => {
-    const fetchVehicleDetails = async () => {
-      setLoading(true);
-      setError(null);
+    const fetchDetails = async () => {
+      setUiState((prev) => ({ ...prev, isLoading: true, fetchError: null }));
       try {
-        if (!selectedVehicleId) {
-          setError("Vehicle ID is missing.");
-          setLoading(false);
-          return;
-        }
         const response = await apiCallWithRetry(
           `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/${selectedVehicleId}`,
-          {
-            method: "GET",
+          { method: "GET" }
+        );
+
+        if (!response || !response.body) {
+          throw new Error("Invalid data structure received from server.");
+        }
+
+        const fetchedData = response.body;
+
+        // **THE FIX IS HERE: Correctly fetch download URLs using your function**
+        const imagePromises = (fetchedData.vehicleImageKeys || []).map(
+          async (key) => {
+            try {
+              // Using the imported `getDownloadUrl` function directly
+              const urlResponse = await getDownloadUrl(key);
+              return { s3Key: key, displayUrl: urlResponse?.body || audia1 };
+            } catch (error) {
+              console.error(
+                `Failed to get download URL for key ${key}:`,
+                error
+              );
+              return { s3Key: key, displayUrl: audia1 }; // Fallback on error
+            }
           }
         );
-        if (response && response.body) {
-          console.log("API Response for Vehicle Details:", response.body);
-          setVehicleDetails(response.body);
-          setStatus(response.body.isActive ? "Active" : "Inactive");
 
-          if (
-            response.body.vehicleImageKeys &&
-            response.body.vehicleImageKeys.length > 0
-          ) {
-            const urls = {};
-            for (const imageKey of response.body.vehicleImageKeys) {
-              try {
-                const downloadURL = await getDownloadUrl(imageKey);
-                urls[imageKey] = downloadURL?.body;
-                console.log(
-                  "Download URL for",
-                  imageKey,
-                  ":",
-                  downloadURL.body
-                );
-                if (!selectedImage) {
-                  setSelectedImage(imageKey);
-                }
-              } catch (downloadUrlError) {
-                console.error(
-                  `Failed to fetch download URL for ${imageKey}:`,
-                  downloadUrlError
-                );
-                urls[imageKey] = audia1;
-                if (!selectedImage) {
-                  setSelectedImage(audia1);
-                }
-              }
-            }
-            setImageUrls(urls);
-            if (!selectedImage && response.body.vehicleImageKeys.length > 0) {
-              setSelectedImage(response.body.vehicleImageKeys[0]);
-            }
-          } else {
-            setSelectedImage(audia1);
-          }
-          // Use vehicleDetails.events directly for calendar data
-          if (vehicleDetails?.events) {
-            setParsedCalendar(vehicleDetails.events);
-          } else {
-            setParsedCalendar([]); // Ensure parsedCalendar is always an array, even if no events
-          }
-        } else {
-          setError(
-            "Failed to fetch vehicle details or invalid response format."
-          );
-        }
+        const images = await Promise.all(imagePromises);
+
+        const initialFormData = { ...fetchedData, images };
+
+        setOriginalVehicle(initialFormData);
+        setFormData(initialFormData);
       } catch (err) {
-        console.error("Error fetching vehicle details:", err);
-        setError("Error fetching vehicle details.");
+        setUiState((prev) => ({
+          ...prev,
+          fetchError: "Failed to fetch vehicle details.",
+        }));
       } finally {
-        setLoading(false);
+        setUiState((prev) => ({ ...prev, isLoading: false }));
       }
     };
 
-    fetchVehicleDetails();
-  }, [
-    selectedVehicleId,
-    apiCallWithRetry,
-    selectedImage,
-    customer.AccessToken,
-  ]);
+    fetchDetails();
+    // `apiCallWithRetry` is stable, dependency is on `selectedVehicleId`
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVehicleId]);
 
-  const handleStatus = async (e) => {
-    const newStatusValue = e.target.value;
-    setStatus(newStatusValue);
-    setLoading(true);
-    setError(null);
-    try {
-      let response;
-      if (newStatusValue === "Active") {
-        response = await apiCallWithRetry(
-          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/activate_status/${selectedVehicleId}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${customer.AccessToken}`,
-            },
-          }
-        );
-      } else if (newStatusValue === "Inactive") {
-        response = await apiCallWithRetry(
-          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/deactivate_status/${selectedVehicleId}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${customer.AccessToken}`,
-            },
-          }
-        );
-      }
+  // --- INTERNAL API HELPERS ---
 
-      if (response && response.status === 200) {
-        console.log("Vehicle status updated successfully");
-      } else if (response && response.status === 404) {
-        setError("Vehicle not found.");
-      } else if (response && response.status === 401) {
-        setError("Unauthorized.");
-      } else if (response) {
-        setError(`Failed to update status. Status code: ${response.status}`);
-      } else {
-        setError("Failed to update status. No response received.");
+  const getPresignedUrl = async (filename, contentType) => {
+    const response = await apiCallWithRetry(
+      "https://xo55y7ogyj.execute-api.us-east-1.amazonaws.com/prod/add_vehicle",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          operation: "getPresignedUrl",
+          vehicleId: selectedVehicleId,
+          filename,
+          contentType,
+        }),
       }
-    } catch (error) {
-      console.error("Error updating vehicle status:", error);
-      setError("Error updating vehicle status.");
-    } finally {
-      setLoading(false);
+    );
+    if (!response?.body?.url || !response?.body?.key) {
+      throw new Error("Failed to get a valid presigned URL.");
+    }
+    return response.body;
+  };
+
+  const uploadToS3 = async (presignedUrl, file, contentType) => {
+    const response = await fetch(presignedUrl, {
+      method: "PUT",
+      headers: { "Content-Type": contentType },
+      body: file,
+    });
+    if (!response.ok) {
+      throw new Error("File upload to S3 failed.");
     }
   };
 
-  if (loading) {
-    return console.log("Loading...");
-  }
+  // --- EVENT HANDLERS ---
 
-  if (error) {
-    console.log("Error:", error);
+  const handleStartEditing = () => {
+    setUiState((prev) => ({
+      ...prev,
+      isEditing: true,
+      saveError: null,
+      saveSuccess: "",
+    }));
+  };
+
+  const handleCancelEdit = () => {
+    setUiState((prev) => ({ ...prev, isEditing: false }));
+    // Reset form data to the pristine original version
+    setFormData(originalVehicle);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    const val = type === "checkbox" ? checked : value;
+    setFormData((prev) => ({ ...prev, [name]: val }));
+  };
+
+  const handleFeaturesChange = (e) => {
+    const features = e.target.value
+      .split(",")
+      .map((f) => f.trim())
+      .filter(Boolean);
+    setFormData((prev) => ({ ...prev, carFeatures: features }));
+  };
+
+  const triggerFileInput = (keyToReplace = null) => {
+    keyToReplaceRef.current = keyToReplace;
+    fileInputRef.current.click();
+  };
+
+  const handleFileSelected = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const oldS3Key = keyToReplaceRef.current;
+
+    setUiState((prev) => ({ ...prev, isUploading: true, saveError: null }));
+
+    try {
+      const { url: presignedUrl, key: newS3Key } = await getPresignedUrl(
+        file.name,
+        file.type
+      );
+      const compressedFile = await compressImage(file);
+      await uploadToS3(presignedUrl, compressedFile, file.type);
+      const base64Preview = await fileToBase64(compressedFile);
+
+      const newImageObject = { s3Key: newS3Key, displayUrl: base64Preview };
+
+      setFormData((prev) => {
+        const currentImages = prev.images || [];
+        const updatedImages = oldS3Key
+          ? currentImages.map((img) =>
+              img.s3Key === oldS3Key ? newImageObject : img
+            )
+          : [...currentImages, newImageObject];
+        return { ...prev, images: updatedImages };
+      });
+    } catch (error) {
+      setUiState((prev) => ({
+        ...prev,
+        saveError: "Image upload failed. Please try again.",
+      }));
+    } finally {
+      setUiState((prev) => ({ ...prev, isUploading: false }));
+      event.target.value = null;
+    }
+  };
+
+  const handleDeleteImage = (keyToDelete) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((img) => img.s3Key !== keyToDelete),
+    }));
+  };
+
+  const handleSaveChanges = async () => {
+    setUiState((prev) => ({ ...prev, isSaving: true, saveError: null }));
+
+    const payload = { ...formData };
+    payload.vehicleImageKeys = formData.images.map((img) => img.s3Key);
+    delete payload.images;
+
+    payload.vehichleNumber = formData.vehicleNumber;
+    delete payload.vehicleNumber;
+
+    try {
+      await apiCallWithRetry(
+        `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/${selectedVehicleId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      setOriginalVehicle(formData);
+      setUiState((prev) => ({
+        ...prev,
+        isEditing: false,
+        saveSuccess: "Vehicle updated successfully!",
+      }));
+      setTimeout(
+        () => setUiState((prev) => ({ ...prev, saveSuccess: "" })),
+        4000
+      );
+    } catch (err) {
+      setUiState((prev) => ({
+        ...prev,
+        saveError: err.message || "An unexpected error occurred while saving.",
+      }));
+    } finally {
+      setUiState((prev) => ({ ...prev, isSaving: false }));
+    }
+  };
+
+  // --- RENDER LOGIC ---
+
+  if (uiState.isLoading) {
     return (
-      <div>
-        {" "}
-        <h3 className="text-base  mt-4">
-          {" "}
-          Click "See Details" To See more information{" "}
-        </h3>
+      <div className="p-10 text-center">
+        <FaSpinner className="animate-spin mr-2" /> Loading...
       </div>
     );
   }
-
-  if (!vehicleDetails) {
-    return console.log("Vehicle Details not found");
+  if (uiState.fetchError) {
+    return (
+      <div className="p-10 bg-red-100 text-red-700 rounded-md flex items-center gap-3">
+        <FaExclamationTriangle /> {uiState.fetchError}
+      </div>
+    );
+  }
+  if (!formData) {
+    return <div className="p-10">No vehicle data available.</div>;
   }
 
-  const getImageUrl = (imageKey) => {
-    return imageUrls[imageKey] || audia1;
-  };
-
-  const formatDate = (dateString) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Unknown Date";
-    }
-  };
+  const displayData = uiState.isEditing ? formData : originalVehicle;
 
   return (
-    <div className=" w-full">
-      <div className="p-10 bg-white w-full shadow-lg rounded-lg">
-        <h1 className="text-2xl my-4 mb-8 font-semibold">Detail Listing</h1>
-
-        <div className="flex lg:flex-row flex-col space-x-4 w-full">
-          <img
-            src={selectedImage ? getImageUrl(selectedImage) : audia1}
-            alt={vehicleDetails.model || "Vehicle Image"}
-            className="w-1/2 h-2/3 rounded-md mb-4"
-          />
-
-          <div className="grid md:grid-cols-3 grid-cols-2 justify-start gap-2 ">
-            {vehicleDetails.vehicleImageKeys &&
-              vehicleDetails.vehicleImageKeys.map((imageKey, index) => (
-                <img
-                  key={index}
-                  src={getImageUrl(imageKey)}
-                  alt={`Thumbnail ${index + 1}`}
-                  onClick={() => setSelectedImage(imageKey)}
-                  className="w-full max-w-32 h-20 cursor-pointer rounded-md"
-                />
-              ))}
-          </div>
-        </div>
-
-        <div className="relative inline-block my-8 text-base w-[200px] ">
-          <label className="absolute -top-2 left-3 text-sm bg-white px-1 text-gray-500">
-            Status
-          </label>
-          <select
-            className="border border-gray-400 flex justify-between w-full p-3 py-2 bg-white text-gray-500 rounded-md hover:bg-gray-100 focus:outline focus:outline-1 focus:outline-blue-400 "
-            value={status}
-            onChange={handleStatus}
-          >
-            {Status.map((stat, index) => (
-              <option
-                className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md max-h-60 overflow-y-auto z-10"
-                key={index}
-                value={stat}
+    <div className="w-full">
+      <div className="p-10 bg-white shadow-lg rounded-lg">
+        {/* --- Header & Action Buttons --- */}
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-semibold">Detail Listing</h1>
+          <div className="flex space-x-2">
+            {uiState.isEditing ? (
+              <>
+                <button
+                  onClick={handleSaveChanges}
+                  disabled={uiState.isSaving || uiState.isUploading}
+                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:bg-gray-400 flex items-center gap-2"
+                >
+                  {uiState.isSaving ? (
+                    <FaSpinner className="animate-spin" />
+                  ) : (
+                    <FaCheckCircle />
+                  )}{" "}
+                  {uiState.isSaving ? "Saving..." : "Save Changes"}
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  disabled={uiState.isSaving || uiState.isUploading}
+                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 disabled:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleStartEditing}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
               >
-                {stat}
-              </option>
+                Edit Details
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* --- User Feedback Banners --- */}
+        {uiState.saveSuccess && (
+          <div className="bg-green-100 text-green-700 p-3 rounded-md mb-4 text-sm flex items-center gap-2">
+            <FaCheckCircle /> {uiState.saveSuccess}
+          </div>
+        )}
+        {uiState.saveError && (
+          <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4 text-sm flex items-center gap-2">
+            <FaExclamationTriangle /> {uiState.saveError}
+          </div>
+        )}
+
+        {/* --- Reusable Hidden File Input --- */}
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={handleFileSelected}
+          style={{ display: "none" }}
+        />
+
+        {/* --- Image Section --- */}
+        <div className="flex lg:flex-row flex-col gap-4 w-full mb-8 relative">
+          {uiState.isUploading && (
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-md z-20">
+              <FaSpinner className="animate-spin text-white text-4xl" />
+            </div>
+          )}
+
+          <div className="w-full lg:w-1/2">
+            <img
+              src={displayData.images?.[0]?.displayUrl || audia1}
+              alt="Main vehicle view"
+              className="w-full h-auto object-cover rounded-md"
+            />
+          </div>
+
+          <div className="w-full lg:w-1/2 grid grid-cols-2 md:grid-cols-3 gap-2 content-start">
+            {displayData.images?.map((img) => (
+              <div key={img.s3Key} className="relative group">
+                <img
+                  src={img.displayUrl}
+                  alt="Thumbnail"
+                  className="w-full h-24 object-cover rounded-md ring-1 ring-gray-200"
+                />
+                {uiState.isEditing && (
+                  <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-md z-10">
+                    <button
+                      onClick={() => triggerFileInput(img.s3Key)}
+                      className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700"
+                      title="Change Image"
+                    >
+                      <FaSync />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteImage(img.s3Key)}
+                      className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700"
+                      title="Delete Image"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                )}
+              </div>
             ))}
-          </select>
-        </div>
-
-        <div className="flex  items-center">
-          <h3 className="text-xl font-semibold">
-            {vehicleDetails.make} {vehicleDetails.model}
-          </h3>
-        </div>
-
-        <div className="grid lg:grid-cols-4 grid-cols-2 justify-between space-x-6 items-center  my-8 w-fit text-gray-800 text-sm">
-          <div className="bg-blue-100 flex text-blue-700 py-2 items-center px-3 rounded-lg text-center ">
-            <FaTag size={12} className="mx-2" />
-            {vehicleDetails.price} Birr
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <FaGasPump size={12} />
-            <span>{vehicleDetails.fuelType || "Unknown"}</span>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <FaCogs size={12} />
-            <span>{vehicleDetails.transmission || "Unknown"}</span>
-          </div>
-
-          <div className="flex items-center w-28 space-x-2">
-            <FaUserFriends size={13} />
-            <span>{vehicleDetails.seats || "Unknown"} People</span>
+            {uiState.isEditing && (
+              <button
+                onClick={() => triggerFileInput(null)}
+                className="w-full h-24 border-2 border-dashed border-gray-400 rounded-md flex flex-col items-center justify-center text-gray-500 hover:bg-gray-100"
+              >
+                <FaPlus size={24} />
+                <span className="text-xs mt-1">Add Image</span>
+              </button>
+            )}
           </div>
         </div>
 
+        {/* --- Form Fields --- */}
         <h4 className="mt-8 text-xl font-semibold">Car Specification</h4>
         <div className="grid lg:grid-cols-3 grid-cols-2 gap-4 mt-4">
           <div>
-            <span className="text-gray-500">Car Brand</span>
-            <p className="font-medium">{vehicleDetails.make || "Unknown"}</p>
+            <span className="text-gray-500">Make</span>
+            {uiState.isEditing ? (
+              <input
+                type="text"
+                name="make"
+                value={formData.make}
+                onChange={handleInputChange}
+                className="font-medium p-1 border rounded w-full"
+              />
+            ) : (
+              <p className="font-medium">{displayData.make}</p>
+            )}
           </div>
           <div>
-            <span className="text-gray-500">Car Model</span>
-            <p className="font-medium">{vehicleDetails.model || "Unknown"}</p>
+            <span className="text-gray-500">Model</span>
+            {uiState.isEditing ? (
+              <input
+                type="text"
+                name="model"
+                value={formData.model}
+                onChange={handleInputChange}
+                className="font-medium p-1 border rounded w-full"
+              />
+            ) : (
+              <p className="font-medium">{displayData.model}</p>
+            )}
           </div>
           <div>
-            <span className="text-gray-500">Manufacture Date</span>
-            <p className="font-medium">{vehicleDetails.year || "Unknown"}</p>
+            <span className="text-gray-500">Year</span>
+            {uiState.isEditing ? (
+              <input
+                type="number"
+                name="year"
+                value={formData.year}
+                onChange={handleInputChange}
+                className="font-medium p-1 border rounded w-full"
+              />
+            ) : (
+              <p className="font-medium">{displayData.year}</p>
+            )}
           </div>
           <div>
             <span className="text-gray-500">Mileage</span>
-            <p className="font-medium">{vehicleDetails.mileage || "Unknown"}</p>
-          </div>
-          <div>
-            <span className="text-gray-500">Color</span>
-            <p className="font-medium">{vehicleDetails.color || "Unknown"}</p>
+            {uiState.isEditing ? (
+              <input
+                type="text"
+                name="mileage"
+                value={formData.mileage}
+                onChange={handleInputChange}
+                className="font-medium p-1 border rounded w-full"
+              />
+            ) : (
+              <p className="font-medium">{displayData.mileage}</p>
+            )}
           </div>
           <div>
             <span className="text-gray-500">Vehicle Number</span>
-            <p className="font-medium">
-              {vehicleDetails.vehicleNumber || "Unknown"}
-            </p>
+            {uiState.isEditing ? (
+              <input
+                type="text"
+                name="vehicleNumber"
+                value={formData.vehicleNumber}
+                onChange={handleInputChange}
+                className="font-medium p-1 border rounded w-full"
+              />
+            ) : (
+              <p className="font-medium">{displayData.vehicleNumber}</p>
+            )}
+          </div>
+          <div>
+            <span className="text-gray-500">Color</span>
+            {uiState.isEditing ? (
+              <input
+                type="text"
+                name="color"
+                value={formData.color}
+                onChange={handleInputChange}
+                className="font-medium p-1 border rounded w-full"
+              />
+            ) : (
+              <p className="font-medium">{displayData.color}</p>
+            )}
+          </div>
+          <div>
+            <span className="text-gray-500">Seats</span>
+            {uiState.isEditing ? (
+              <input
+                type="number"
+                name="seats"
+                value={formData.seats}
+                onChange={handleInputChange}
+                className="font-medium p-1 border rounded w-full"
+              />
+            ) : (
+              <p className="font-medium">{displayData.seats}</p>
+            )}
+          </div>
+          <div>
+            <span className="text-gray-500">Fuel Type</span>
+            {uiState.isEditing ? (
+              <input
+                type="text"
+                name="fuelType"
+                value={formData.fuelType}
+                onChange={handleInputChange}
+                className="font-medium p-1 border rounded w-full"
+              />
+            ) : (
+              <p className="font-medium">{displayData.fuelType}</p>
+            )}
+          </div>
+          <div>
+            <span className="text-gray-500">Transmission</span>
+            {uiState.isEditing ? (
+              <input
+                type="text"
+                name="transmission"
+                value={formData.transmission}
+                onChange={handleInputChange}
+                className="font-medium p-1 border rounded w-full"
+              />
+            ) : (
+              <p className="font-medium">{displayData.transmission}</p>
+            )}
           </div>
         </div>
 
-        <div className=" text-[#000000]">
-          <section className="my-16">
-            <h2 className="font-semibold text-lg mb-4">Features</h2>
+        <section className="my-12">
+          <h2 className="font-semibold text-lg mb-4">Features</h2>
+          {uiState.isEditing ? (
+            <textarea
+              className="w-full p-2 border rounded"
+              rows="3"
+              placeholder="e.g., GPS, Sunroof, Bluetooth"
+              value={(formData.carFeatures || []).join(", ")}
+              onChange={handleFeaturesChange}
+            />
+          ) : (
             <div className="flex flex-wrap gap-2">
-              {vehicleDetails.carFeatures &&
-                vehicleDetails.carFeatures.map((feature, index) => (
-                  <span
-                    key={index}
-                    className="border border-gray-400 text-base px-3 py-1 rounded-xl"
-                  >
-                    {feature}
-                  </span>
-                ))}
-            </div>
-          </section>
-
-          <section className="flex flex-col my-16 gap-4">
-            <div className="flex space-x-4 items-center text-lg ">
-              <h3 className="font-semibold mb-1">Booking</h3>
-              <span className="border border-gray-400 text-sm px-4 py-2 rounded-xl">
-                {vehicleDetails.instantBooking
-                  ? "Instant"
-                  : "Requires Approval"}
-              </span>
-            </div>
-
-            <div className="flex space-x-4 items-center text-lg">
-              <h3 className="font-semibold mb-1">Notice Period For Rent</h3>
-              <span className="border border-gray-400 text-sm px-4 py-2 rounded-xl">
-                {vehicleDetails.advanceNoticePeriod || "Not specified"}
-              </span>
-            </div>
-          </section>
-
-          <section className="my-16">
-            <h2 className="font-semibold text-lg mb-4">Pick up Locations</h2>
-            <div className="flex flex-wrap gap-2">
-              {pickUpLocations.map((place, index) => (
+              {(displayData.carFeatures || []).map((feature, index) => (
                 <span
                   key={index}
-                  className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
+                  className="border border-gray-400 text-base px-3 py-1 rounded-xl"
                 >
-                  {place}
+                  {feature}
                 </span>
               ))}
             </div>
-          </section>
+          )}
+        </section>
 
-          <section className="my-16">
-            <h2 className="font-semibold text-2xl my-4 mb-4">
-              Drop off Locations
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {dropOffLocations.map((place, index) => (
-                <span
-                  key={index}
-                  className="border border-gray-400 text-sm px-3 py-1 rounded-xl"
-                >
-                  {place}
-                </span>
-              ))}
+        <section className="my-12">
+          <h2 className="font-semibold text-lg mb-4">Booking & Pricing</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <span className="text-gray-500">Price (Birr)</span>
+              {uiState.isEditing ? (
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  className="font-medium p-1 border rounded w-full"
+                />
+              ) : (
+                <p className="font-medium">{displayData.price}</p>
+              )}
             </div>
-          </section>
-          <section className="my-16">
-            <h2 className="font-semibold text-lg mb-4">
-              Available Rental Dates
-            </h2>
-            <div className="space-y-4">
-              {status === "Active" &&
-                parsedCalendar.map((dateRange, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <FaCalendarAlt size={16} />
-                    <span className="text-sm">{`${formatDate(
-                      dateRange.startDate
-                    )} - ${formatDate(dateRange.endDate)}`}</span>
-                  </div>
-                ))}
+            <div>
+              <span className="text-gray-500">Notice Period</span>
+              {uiState.isEditing ? (
+                <input
+                  type="text"
+                  name="advanceNoticePeriod"
+                  value={formData.advanceNoticePeriod}
+                  onChange={handleInputChange}
+                  className="font-medium p-1 border rounded w-full"
+                />
+              ) : (
+                <p className="font-medium">{displayData.advanceNoticePeriod}</p>
+              )}
             </div>
-          </section>
-
-          {/* Rating & Reviews Section */}
-          <section className="my-16">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">
-              Rating & Reviews
-            </h3>
-            <div className="flex items-center mb-2">
-              <span className="font-semibold text-gray-700 mr-2">
-                Average Rating:
-              </span>
-              <div className="text-yellow-500 text-base">
-                {Array.from({ length: Math.round(averageRating) }).map(
-                  (_, i) => (
-                    <FaStar key={`star-${i}`} className="inline-block" />
-                  )
-                )}
-                {Array.from({ length: 5 - Math.round(averageRating) }).map(
-                  (_, i) => (
-                    <FaStar
-                      key={`empty-star-${i}`}
-                      className="inline-block text-gray-300"
-                    />
-                  )
-                )}
-              </div>
-              <span className="ml-2 text-gray-600">
-                ({averageRating?.toFixed(2)})
-              </span>
-            </div>
-            {ratings.length > 0 ? (
-              ratings.map((review, index) => (
-                <div
-                  key={index}
-                  className="mb-4 p-4 border rounded-md shadow-sm"
-                >
-                  <div className="flex items-center">
-                    {/* Basic star rating - you might want a more visual component */}
-                    <div className="text-yellow-500 text-base">
-                      {Array.from({ length: review.rating }).map((_, i) => (
-                        <FaStar
-                          key={`review-star-${index}-${i}`}
-                          className="inline-block"
-                        />
-                      ))}
-                      {Array.from({ length: 5 - review.rating }).map((_, i) => (
-                        <FaStar
-                          key={`review-empty-star-${index}-${i}`}
-                          className="inline-block text-gray-300"
-                        />
-                      ))}
-                    </div>
-                    <p className="ml-3 text-base text-gray-700">
-                      {review.rating}/5
-                    </p>
-                  </div>
-                  <p className="text-base text-gray-700 mt-1">
-                    {review.userName}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">{review.review}</p>
+            <div className="flex items-center mt-4">
+              {uiState.isEditing ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="instantBooking"
+                    name="instantBooking"
+                    checked={formData.instantBooking}
+                    onChange={handleInputChange}
+                    className="h-5 w-5"
+                  />
+                  <label htmlFor="instantBooking">Instant Booking</label>
                 </div>
-              ))
-            ) : (
-              <p className="text-gray-500">No reviews yet.</p>
-            )}
-          </section>
-        </div>
+              ) : (
+                <p className="font-medium">
+                  {displayData.instantBooking
+                    ? "Instant Booking Enabled"
+                    : "Requires Approval"}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
