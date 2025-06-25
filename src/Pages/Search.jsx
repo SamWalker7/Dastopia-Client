@@ -391,6 +391,8 @@ const Search = () => {
     setTempPriceRange([0, MAX_PRICE]);
     setTempTransmission("any");
     setTempCategory("any");
+    // setTempStartDate(""); // If dates are cleared, temp dates should also be cleared
+    // setTempEndDate("");
     setOpenAllFiltersModal(false);
   };
 
@@ -561,6 +563,7 @@ const Search = () => {
           </div>
         </div>
 
+        {/* Date Modal */}
         <Dialog
           open={openDateModal}
           onClose={() => setOpenDateModal(false)}
