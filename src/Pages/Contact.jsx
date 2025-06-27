@@ -1,12 +1,20 @@
-import React, { useState } from "react"; // Import useState
+import React, { useState } from "react";
 import BackgroundImage from "../images/testimonials/OBJECTS2.png";
 import image from "../images/image.png";
-
 import BackgroundImage1 from "../images/howitworks/bgHow.png";
 import Footer from "../components/Footer";
 
 // You can add react-icons for a better UI
 import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+
+// --- Options for the "Where did you hear about us?" dropdown ---
+const hearAboutUsOptions = [
+  "Social Media (Facebook, Instagram, etc.)",
+  "Friend or Colleague",
+  "Search Engine (Google, Bing, etc.)",
+  "Online Advertisement",
+  "Other",
+];
 
 const ContactForm = () => {
   // --- START: STATE MANAGEMENT ---
@@ -14,6 +22,10 @@ const ContactForm = () => {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "", // <-- New field
+    role: "", // <-- New field
+    companyName: "", // <-- New field
+    hearAboutUs: "", // <-- New field
     message: "",
   });
 
@@ -29,14 +41,14 @@ const ContactForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
     setIsSubmitting(true);
     setSubmissionResult(null);
 
     const payload = {
       ...formData,
       access_key: accessKey,
-      subject: `New Contact Form Submission from ${formData.firstName}`, // Optional: Customize email subject
+      subject: `New Contact Form Submission from ${formData.firstName}`,
     };
 
     try {
@@ -53,8 +65,17 @@ const ContactForm = () => {
 
       if (result.success) {
         setSubmissionResult("success");
-        // Clear the form on successful submission
-        setFormData({ firstName: "", lastName: "", email: "", message: "" });
+        // Clear the form on successful submission, including new fields
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          role: "",
+          companyName: "",
+          hearAboutUs: "",
+          message: "",
+        });
       } else {
         console.error("Submission failed:", result);
         setSubmissionResult("error");
@@ -85,9 +106,7 @@ const ContactForm = () => {
             className="w-full relative bg-cover bg-center md:w-1/3 p-8 rounded-t-xl md:rounded-l-xl md:rounded-tr-none"
             style={{ backgroundImage: `url(${BackgroundImage})` }}
           >
-            {/* Overlay for background darkening */}
             <div className="absolute inset-0 bg-[#FABD05] opacity-95 rounded-t-xl md:rounded-l-xl md:rounded-tr-none"></div>
-
             <div className="relative z-10">
               <h2 className="text-5xl font-bold text-[#00113D] mb-4">
                 Contact Us
@@ -114,8 +133,8 @@ const ContactForm = () => {
 
           {/* Right Panel */}
           <div className="w-full md:w-1/2 p-8">
-            {/* Use the new handleSubmit function */}
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* First Name */}
               <div className="relative inline-block my-3 text-lg w-full">
                 <label
                   htmlFor="firstName"
@@ -125,15 +144,16 @@ const ContactForm = () => {
                 </label>
                 <input
                   type="text"
-                  id="firstName" // Changed from first-name to match state
+                  id="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
-                  required // Good practice to add validation
+                  required
                   className="mt-1 block w-full px-4 py-4 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter your first name"
                 />
               </div>
 
+              {/* Last Name */}
               <div className="relative inline-block my-3 text-lg w-full">
                 <label
                   htmlFor="lastName"
@@ -143,7 +163,7 @@ const ContactForm = () => {
                 </label>
                 <input
                   type="text"
-                  id="lastName" // Changed from last-name to match state
+                  id="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
                   required
@@ -152,6 +172,7 @@ const ContactForm = () => {
                 />
               </div>
 
+              {/* Email Address */}
               <div className="relative inline-block my-3 text-lg w-full">
                 <label
                   htmlFor="email"
@@ -170,12 +191,101 @@ const ContactForm = () => {
                 />
               </div>
 
+              {/* --- NEW: Phone Number --- */}
+              <div className="relative inline-block my-3 text-lg w-full">
+                <label
+                  htmlFor="phone"
+                  className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
+                >
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  required
+                  className="mt-1 block w-full px-4 py-4 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your phone number"
+                />
+              </div>
+
+              {/* --- NEW: Role Dropdown --- */}
+              <div className="relative inline-block my-3 text-lg w-full">
+                <label
+                  htmlFor="role"
+                  className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
+                >
+                  Your Role
+                </label>
+                <select
+                  id="role"
+                  value={formData.role}
+                  onChange={handleInputChange}
+                  required
+                  className="mt-1 block w-full px-4 py-4 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="" disabled>
+                    Select your role...
+                  </option>
+                  <option value="Renter">Renter</option>
+                  <option value="Owner">Owner</option>
+                  <option value="Both">Both</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {/* --- NEW: Company Name --- */}
+              <div className="relative inline-block my-3 text-lg w-full">
+                <label
+                  htmlFor="companyName"
+                  className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
+                >
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  id="companyName"
+                  value={formData.companyName}
+                  onChange={handleInputChange}
+                  required
+                  className="mt-1 block w-full px-4 py-4 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your company name"
+                />
+              </div>
+
+              {/* --- NEW: Where did you hear about us? Dropdown --- */}
+              <div className="relative inline-block my-3 text-lg w-full">
+                <label
+                  htmlFor="hearAboutUs"
+                  className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
+                >
+                  Where did you hear about us?
+                </label>
+                <select
+                  id="hearAboutUs"
+                  value={formData.hearAboutUs}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full px-4 py-4 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="" disabled>
+                    Select an option...
+                  </option>
+                  {hearAboutUsOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Message */}
               <div className="relative inline-block my-3 text-lg w-full">
                 <label
                   htmlFor="message"
                   className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
                 >
-                  Message/comments
+                  Message/Comments
                 </label>
                 <textarea
                   id="message"
@@ -202,7 +312,7 @@ const ContactForm = () => {
 
               <button
                 type="submit"
-                disabled={isSubmitting} // Disable button while sending
+                disabled={isSubmitting}
                 className="w-full py-3 bg-[#00113D] text-white rounded-full text-lg hover:bg-[#000a29] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting ? "Sending..." : "Send Message"}
