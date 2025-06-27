@@ -172,7 +172,6 @@ const ResultsGrid = ({
           displayImage === fallbackImage
         ) {
           if (imageLoadStates[vehicle.id] !== "error") {
-            // Let the retry logic handle final error state
           }
         } else if (
           imageLoadStates[vehicle.id] !== "loaded" &&
@@ -269,8 +268,9 @@ const ResultsGrid = ({
       else prevPageRef.current = newPage;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vehicles, lastEvaluatedKey]);
+  }, [vehicles, lastEvaluatedKey]); // Removed applyProcessedVehicles, fetchVehiclesForPageAPI, processVehicles to avoid loop due to imageLoadStates
 
+  // This effect handles pagination after the initial load.
   useEffect(() => {
     if (currentPage === 1 && !isMountedRef.current) return;
     if (
@@ -288,7 +288,7 @@ const ResultsGrid = ({
       fetchVehiclesForPageAPI(currentPage, lastEvaluated);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
+  }, [currentPage]); // Listen only to currentPage for pagination changes.
 
   const handlePageChange = (newPage) => {
     if (newPage < 1 || isLoadingData || newPage === currentPage) return;
