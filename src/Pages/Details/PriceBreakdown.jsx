@@ -136,6 +136,7 @@ const PaymentDetailsModal = ({
         console.log("Booking created successfully", bookingData);
         setSuccessMessage("Booking successful!");
         setViewMode("success");
+
       } else {
         const errorData = await bookingResponse.json().catch(() => ({
           message: "Failed to create booking. Server returned an error.",
