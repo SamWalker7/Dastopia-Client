@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react"; // Import useMemo for calculations
 import { useNavigate } from "react-router-dom";
 
-// A simple Popup Notification Component (remains the same, for errors)
+// A simple Popup Notification Component (remains the same)
 const PopupNotification = ({ message, type, visible, onClose }) => {
   useEffect(() => {
     let timer;
@@ -21,12 +21,7 @@ const PopupNotification = ({ message, type, visible, onClose }) => {
 
   const baseStyle =
     "fixed bottom-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl text-white text-sm z-50 transition-all duration-300 ease-in-out";
-  const typeStyle =
-    type === "success" // Should not be used by PaymentDetailsModal for success anymore
-      ? "bg-green-500"
-      : type === "error"
-      ? "bg-red-500"
-      : "bg-gray-700";
+  const typeStyle = type === "error" ? "bg-red-500" : "bg-gray-700";
 
   return (
     <div className={`${baseStyle} ${typeStyle}`}>
@@ -38,9 +33,10 @@ const PopupNotification = ({ message, type, visible, onClose }) => {
   );
 };
 
+// PaymentDetailsModal remains unchanged as requested
 const PaymentDetailsModal = ({
-  totalPrice,
-  id, // carId
+  totalPrice, // This will now be the final total price including fees
+  id,
   ownerId,
   owenerId,
   dropOffTime,
@@ -52,12 +48,11 @@ const PaymentDetailsModal = ({
   const [isChecked, setIsChecked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [popup, setPopup] = useState({
-    // For error popups
     visible: false,
     message: "",
     type: "",
   });
-  const [viewMode, setViewMode] = useState("details"); // 'details' or 'success'
+  const [viewMode, setViewMode] = useState("details");
   const [successMessage, setSuccessMessage] = useState("");
 
   const navigate = useNavigate();
@@ -66,16 +61,15 @@ const PaymentDetailsModal = ({
   const USER_ID =
     customer?.userAttributes?.find((attr) => attr.Name === "sub")?.Value || "";
 
-  // Effect to handle auto-navigation after success view is shown
   useEffect(() => {
     let redirectTimer;
     if (viewMode === "success") {
       redirectTimer = setTimeout(() => {
         handleProceedAfterSuccess();
-      }, 5200); // Auto-proceed after 3.2 seconds
+      }, 5200);
     }
     return () => clearTimeout(redirectTimer);
-  }, [viewMode]); // Only re-run if viewMode changes
+  }, [viewMode]);
 
   const handleCheckboxChange = (event) => {
     setIsChecked(event.target.checked);
@@ -90,8 +84,7 @@ const PaymentDetailsModal = ({
   };
 
   const handleProceedAfterSuccess = () => {
-    onClose(); // Close the modal
-    // navigate("/"); // Navigate to the homepage
+    onClose();
   };
 
   const handleApproveBooking = async () => {
@@ -131,7 +124,7 @@ const PaymentDetailsModal = ({
             carId: id,
             startDate: pickUpTime,
             endDate: dropOffTime,
-            price: totalPrice.toString(),
+            price: totalPrice.toString(), // The final total price is sent to the API
             pickUp: pickUpArray,
             dropOff: dropOffArray,
           }),
@@ -142,9 +135,8 @@ const PaymentDetailsModal = ({
         const bookingData = await bookingResponse.json();
         console.log("Booking created successfully", bookingData);
         setSuccessMessage("Booking successful!");
-        setViewMode("success"); // Switch to success view
-        // setIsLoading(false); // Keep loading true to disable original modal interaction
-        // until navigation or modal closure
+        setViewMode("success");
+
       } else {
         const errorData = await bookingResponse.json().catch(() => ({
           message: "Failed to create booking. Server returned an error.",
@@ -164,7 +156,6 @@ const PaymentDetailsModal = ({
       showErrorPopup(`Booking failed: ${error.message || "Network error"}`);
       setIsLoading(false);
     }
-    // No finally setIsLoading(false) here as success view handles UI state
   };
 
   const renderDetailsView = () => (
@@ -304,7 +295,7 @@ const PaymentDetailsModal = ({
     <>
       <div
         className="fixed inset-0 bg-black opacity-50 z-20"
-        onClick={viewMode === "details" && !isLoading ? onClose : undefined} // Only allow close from backdrop in details view and not loading
+        onClick={viewMode === "details" && !isLoading ? onClose : undefined}
       ></div>
       <div
         className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 flex flex-col items-start p-6 gap-4 w-11/12 md:w-2/4 lg:w-1/3 ${
@@ -326,11 +317,11 @@ const PaymentDetailsModal = ({
   );
 };
 
-// The PriceBreakdown component remains the same
+// The PriceBreakdown component is updated with fee calculations
 export default function PriceBreakdown({
   days,
   dailyPrice,
-  totalPrice,
+  // totalPrice prop is no longer used for calculation, but can be kept for other purposes if needed
   id,
   ownerId,
   owenerId,
@@ -340,6 +331,22 @@ export default function PriceBreakdown({
   dropOffLocation,
 }) {
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
+
+  // --- START: FEE AND TOTAL PRICE CALCULATION ---
+  const { subtotal, serviceFee, turnoverTax, finalTotalPrice } = useMemo(() => {
+    const sub = (days || 0) * (dailyPrice || 0);
+    const service = sub * 0.1; // 10% service fee
+    const tax = sub * 0.1; // 10% TOT
+    const finalTotal = sub + service + tax;
+
+    return {
+      subtotal: sub,
+      serviceFee: service,
+      turnoverTax: tax,
+      finalTotalPrice: finalTotal,
+    };
+  }, [days, dailyPrice]);
+  // --- END: FEE AND TOTAL PRICE CALCULATION ---
 
   const handleRequestBooking = () => {
     if (!pickUpLocation || !dropOffLocation) {
@@ -353,27 +360,30 @@ export default function PriceBreakdown({
 
   const canRequestBooking =
     pickUpLocation && dropOffLocation && id && (ownerId || owenerId);
+
   return (
     <div className="flex items-center justify-center ">
       <div className="bg-[#0d1b3e] text-gray-300 shadow-lg p-6 rounded-2xl w-full max-w-md">
         <h1 className="text-xl md:text-2xl text-white mb-4">Price Breakdown</h1>
         <div className="space-y-3">
           <div className="flex justify-between text-xs md:text-sm">
-            <span>Daily Fee</span>
-            <span>{dailyPrice} birr</span>
+            <span>Daily Fee (x{days} days)</span>
+            <span>{subtotal.toFixed(2)} birr</span>
           </div>
           <div className="flex justify-between text-xs md:text-sm">
-            <span>Rental days</span>
-            <span>{days} days</span>
+            <span>Service Fee (10%)</span>
+            <span>{serviceFee.toFixed(2)} birr</span>
           </div>
+          {/* --- NEW: TOT Row --- */}
           <div className="flex justify-between text-xs md:text-sm">
-            <span>Service Fee</span>
-            <span>0 birr</span>
+            <span>TOT (10%)</span>
+            <span>{turnoverTax.toFixed(2)} birr</span>
           </div>
           <div className="h-px bg-white/20 my-3" />
           <div className="flex justify-between text-sm font-semibold text-white">
             <span>Total cost</span>
-            <span>{totalPrice} birr</span>
+            {/* --- NEW: Display Final Total Price --- */}
+            <span>{finalTotalPrice.toFixed(2)} birr</span>
           </div>
         </div>
         <button
@@ -396,7 +406,8 @@ export default function PriceBreakdown({
       </div>
       {showPaymentDetails && canRequestBooking && (
         <PaymentDetailsModal
-          totalPrice={totalPrice}
+          // --- NEW: Pass the final calculated total price to the modal ---
+          totalPrice={finalTotalPrice}
           id={id}
           ownerId={ownerId}
           owenerId={owenerId}
