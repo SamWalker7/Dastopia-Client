@@ -332,19 +332,22 @@ export default function PriceBreakdown({
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
 
   // --- START: FEE AND TOTAL PRICE CALCULATION ---
-  const { subtotal, serviceFee, turnoverTax, finalTotalPrice } = useMemo(() => {
-    const sub = (days || 0) * (dailyPrice || 0);
-    const service = sub * 0.1; // 10% service fee
-    const tax = sub * 0.1; // 10% TOT
-    const finalTotal = sub + service + tax;
+  const { subtotal, price, serviceFee, turnoverTax, finalTotalPrice } =
+    useMemo(() => {
+      const pricing = (days || 0) * (dailyPrice || 0);
+      const service = pricing * 0.1; // 10% service fee
+      const sub = pricing + service; // Subtotal includes service fee
+      const tax = sub * 0.1; // 10% TOT
+      const finalTotal = sub + tax;
 
-    return {
-      subtotal: sub,
-      serviceFee: service,
-      turnoverTax: tax,
-      finalTotalPrice: finalTotal,
-    };
-  }, [days, dailyPrice]);
+      return {
+        subtotal: sub,
+        price: pricing,
+        serviceFee: service,
+        turnoverTax: tax,
+        finalTotalPrice: finalTotal,
+      };
+    }, [days, dailyPrice]);
   // --- END: FEE AND TOTAL PRICE CALCULATION ---
 
   const handleRequestBooking = () => {
@@ -367,11 +370,15 @@ export default function PriceBreakdown({
         <div className="space-y-3">
           <div className="flex justify-between text-xs md:text-sm">
             <span>Daily Fee (x{days} days)</span>
-            <span>{subtotal.toFixed(2)} birr</span>
+            <span>{price.toFixed(2)} birr</span>
           </div>
           <div className="flex justify-between text-xs md:text-sm">
             <span>Service Fee (10%)</span>
             <span>{serviceFee.toFixed(2)} birr</span>
+          </div>
+          <div className="flex justify-between text-xs md:text-sm">
+            <span>Sub Total </span>
+            <span>{subtotal.toFixed(2)} birr</span>
           </div>
           {/* --- NEW: TOT Row --- */}
           <div className="flex justify-between text-xs md:text-sm">

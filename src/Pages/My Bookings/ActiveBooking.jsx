@@ -62,7 +62,23 @@ const ActivBooking = () => {
   // const ownerFamilyName = customer?.family_name || customer?.lastName || "";
   // customerAccessToken is now handled internally by apiCallWithRetry from the store
   // const customerAccessToken = customer?.AccessToken;
-
+  // Add this helper function at the top of the file
+  const processLocation = (loc) => {
+    if (!loc) return "N/A";
+    if (typeof loc === "string") return loc;
+    if (Array.isArray(loc) && loc.length > 0) {
+      // Check if the array contains a string address
+      const address = loc.find((item) => typeof item === "string");
+      if (address) return address;
+      // If no string, check for a coordinate object
+      if (typeof loc[0] === "object" && loc[0] !== null && "lng" in loc[0]) {
+        return "Coordinates available";
+      }
+      return "N/A"; // Default for other array contents
+    }
+    if (typeof loc === "object" && loc.name) return loc.name;
+    return "N/A";
+  };
   const conditions = [
     "Scratches",
     "Dents",
@@ -953,10 +969,7 @@ const ActivBooking = () => {
                                     {/* PickUp location on booking */}
                                     <p>
                                       Location:{" "}
-                                      {Array.isArray(selectedBooking.pickUp)
-                                        ? selectedBooking.pickUp?.[0] || "N/A"
-                                        : "N/A"}{" "}
-                                      {/* Added Location label, check if array */}
+                                      {processLocation(selectedBooking.pickUp)}
                                     </p>
                                   </div>
                                 </div>
@@ -981,10 +994,7 @@ const ActivBooking = () => {
                                     {/* DropOff location on booking */}
                                     <p>
                                       Location:{" "}
-                                      {Array.isArray(selectedBooking.dropOff)
-                                        ? selectedBooking.dropOff?.[0] || "N/A"
-                                        : "N/A"}{" "}
-                                      {/* Added Location label, check if array */}
+                                      {processLocation(selectedBooking.dropOff)}
                                     </p>
                                   </div>
                                 </div>
