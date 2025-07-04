@@ -577,7 +577,7 @@ const RentalRequests = () => {
                     Driver Requested
                   </span>
                   <p className="text-gray-600">
-                    {selectedRequest.driverRequest ? "Yes" : "No"}
+                    {selectedRequest.driverProvided ? "Yes" : "No"}
                   </p>
                 </div>
                 <div className="mt-4 text-sm">
