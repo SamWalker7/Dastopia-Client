@@ -415,6 +415,10 @@ const ResultsGrid = ({
                           <span className="font-medium">
                             {vehicle.model || "N/A"}
                           </span>
+                          <span className="font-medium text-gray-500">
+                            {" "}
+                            <t /> ({vehicle.year || "N/A"})
+                          </span>
                         </h3>
                         <p className="text-sm mt-1">
                           {vehicle.category || "N/A"}
