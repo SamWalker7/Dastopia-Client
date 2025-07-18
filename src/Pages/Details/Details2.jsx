@@ -976,7 +976,7 @@ export default function Details2() {
               <h4 className="mt-6 text-lg font-semibold">Car Specification</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 text-base gap-4 mt-4">
                 <div>
-                  <span className="font-medium">Brand</span>
+                  <span className="font-medium">Make</span>
                   <p className="text-gray-500">
                     {vehicleDetails.make || "N/A"}
                   </p>

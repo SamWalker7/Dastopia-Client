@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react"; // Import useMemo for calculations
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 // A simple Popup Notification Component (remains the same)
@@ -10,11 +10,7 @@ const PopupNotification = ({ message, type, visible, onClose }) => {
         onClose();
       }, 3000);
     }
-    return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-    };
+    return () => clearTimeout(timer);
   }, [visible, onClose]);
 
   if (!visible) return null;
@@ -33,9 +29,9 @@ const PopupNotification = ({ message, type, visible, onClose }) => {
   );
 };
 
-// PaymentDetailsModal remains unchanged as requested
+// PaymentDetailsModal is updated to accept the 'driverProvided' prop
 const PaymentDetailsModal = ({
-  totalPrice, // This will now be the final total price including fees
+  totalPrice,
   id,
   ownerId,
   owenerId,
@@ -43,20 +39,16 @@ const PaymentDetailsModal = ({
   pickUpTime,
   pickUpLocation,
   dropOffLocation,
+  driverProvided, // --- NEW PROP ---
   onClose,
 }) => {
   const [isChecked, setIsChecked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [popup, setPopup] = useState({
-    visible: false,
-    message: "",
-    type: "",
-  });
+  const [popup, setPopup] = useState({ visible: false, message: "", type: "" });
   const [viewMode, setViewMode] = useState("details");
   const [successMessage, setSuccessMessage] = useState("");
 
   const navigate = useNavigate();
-
   const customer = JSON.parse(localStorage.getItem("customer"));
   const USER_ID =
     customer?.userAttributes?.find((attr) => attr.Name === "sub")?.Value || "";
@@ -71,32 +63,19 @@ const PaymentDetailsModal = ({
     return () => clearTimeout(redirectTimer);
   }, [viewMode]);
 
-  const handleCheckboxChange = (event) => {
-    setIsChecked(event.target.checked);
-  };
-
-  const showErrorPopup = (message) => {
+  const handleCheckboxChange = (event) => setIsChecked(event.target.checked);
+  const showErrorPopup = (message) =>
     setPopup({ visible: true, message, type: "error" });
-  };
-
-  const closeErrorPopup = () => {
+  const closeErrorPopup = () =>
     setPopup({ visible: false, message: "", type: "" });
-  };
-
-  const handleProceedAfterSuccess = () => {
-    onClose();
-  };
+  const handleProceedAfterSuccess = () => onClose();
 
   const handleApproveBooking = async () => {
     if (!pickUpLocation || !dropOffLocation) {
       showErrorPopup("Pickup and Dropoff locations are required.");
       return;
     }
-    if (!USER_ID) {
-      showErrorPopup("User not identified. Please log in again.");
-      return;
-    }
-    if (!customer || !customer.AccessToken) {
+    if (!USER_ID || !customer?.AccessToken) {
       showErrorPopup("Authentication error. Please log in again.");
       return;
     }
@@ -124,9 +103,10 @@ const PaymentDetailsModal = ({
             carId: id,
             startDate: pickUpTime,
             endDate: dropOffTime,
-            price: totalPrice.toString(), // The final total price is sent to the API
+            price: totalPrice.toString(),
             pickUp: pickUpArray,
             dropOff: dropOffArray,
+            driverProvided: driverProvided, // --- USE THE NEW PROP HERE ---
           }),
         }
       );
@@ -136,24 +116,19 @@ const PaymentDetailsModal = ({
         console.log("Booking created successfully", bookingData);
         setSuccessMessage("Booking successful!");
         setViewMode("success");
-
       } else {
+        const bookingData = await bookingResponse.json();
+
         const errorData = await bookingResponse.json().catch(() => ({
           message: "Failed to create booking. Server returned an error.",
         }));
-        console.error(
-          "Failed to create booking",
-          bookingResponse.status,
-          errorData
-        );
         showErrorPopup(
-          `Booking failed: ${errorData.message || bookingResponse.statusText}`
+          `Booking failed: ${JSON.stringify(bookingData.body.message, null, 2)}`
         );
         setIsLoading(false);
       }
     } catch (error) {
-      console.error("Error creating booking:", error);
-      showErrorPopup(`Booking failed: ${error.message || "Network error"}`);
+      showErrorPopup(`Booking failed 2: ${error.message || "Network error"}`);
       setIsLoading(false);
     }
   };
@@ -189,7 +164,7 @@ const PaymentDetailsModal = ({
           </li>
           <li>
             Rental Period: The rental period is defined in the booking
-            confirmation. Early returns will not be refunded.
+            confirmation.
           </li>
           <li>
             Usage: The vehicle is to be used for personal use only and not for
@@ -197,18 +172,18 @@ const PaymentDetailsModal = ({
           </li>
           <li>
             Responsibility: You are responsible for the vehicle and any damage
-            that occurs during the rental period. Report any issues immediately.
+            that occurs.
           </li>
         </ol>
         <h3 className="font-semibold text-black mt-3 mb-2">Payment Terms</h3>
         <ol className="list-decimal pl-5 text-gray-700 space-y-1">
           <li>
-            Charges: The rental fee includes the daily rate, any additional
-            mileage charges, and applicable taxes.
+            Charges: The rental fee includes the daily rate and applicable
+            taxes.
           </li>
           <li>
             Security Deposit: A security deposit may be held and refunded upon
-            safe return of the vehicle.
+            safe return.
           </li>
           <li>
             Payment Method: Payments are processed via our integrated payment
@@ -219,13 +194,10 @@ const PaymentDetailsModal = ({
           Insurance and Liability
         </h3>
         <ol className="list-decimal pl-5 text-gray-700 space-y-1">
-          <li>
-            Insurance: Basic insurance coverage is included. Additional options
-            may be available.
-          </li>
+          <li>Insurance: Basic insurance coverage is included.</li>
           <li>
             Accidents: In the event of an accident, contact local authorities
-            and inform the car owner immediately.
+            and inform the owner.
           </li>
           <li>
             Damages: Any damages not covered by insurance may be your
@@ -317,11 +289,10 @@ const PaymentDetailsModal = ({
   );
 };
 
-// The PriceBreakdown component is updated with fee calculations
+// PriceBreakdown is updated with the driver toggle switch
 export default function PriceBreakdown({
   days,
   dailyPrice,
-  // totalPrice prop is no longer used for calculation, but can be kept for other purposes if needed
   id,
   ownerId,
   owenerId,
@@ -331,27 +302,29 @@ export default function PriceBreakdown({
   dropOffLocation,
 }) {
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
+  // --- NEW STATE for the driver toggle ---
+  const [driverProvided, setDriverProvided] = useState(false);
 
-  // --- START: FEE AND TOTAL PRICE CALCULATION ---
-  const { subtotal, serviceFee, turnoverTax, finalTotalPrice } = useMemo(() => {
-    const sub = (days || 0) * (dailyPrice || 0);
-    const service = sub * 0.1; // 10% service fee
-    const tax = sub * 0.1; // 10% TOT
-    const finalTotal = sub + service + tax;
-
-    return {
-      subtotal: sub,
-      serviceFee: service,
-      turnoverTax: tax,
-      finalTotalPrice: finalTotal,
-    };
-  }, [days, dailyPrice]);
-  // --- END: FEE AND TOTAL PRICE CALCULATION ---
+  const { subtotal, price, serviceFee, turnoverTax, finalTotalPrice } =
+    useMemo(() => {
+      const pricing = (days || 0) * (dailyPrice || 0);
+      const service = pricing * 0.1;
+      const sub = pricing + service;
+      const tax = sub * 0.1;
+      const finalTotal = sub + tax;
+      return {
+        subtotal: sub,
+        price: pricing,
+        serviceFee: service,
+        turnoverTax: tax,
+        finalTotalPrice: finalTotal,
+      };
+    }, [days, dailyPrice]);
 
   const handleRequestBooking = () => {
     if (!pickUpLocation || !dropOffLocation) {
       alert(
-        "Please ensure pickup and dropoff locations are selected for the car before booking."
+        "Please ensure pickup and dropoff locations are selected before booking."
       );
       return;
     }
@@ -362,19 +335,22 @@ export default function PriceBreakdown({
     pickUpLocation && dropOffLocation && id && (ownerId || owenerId);
 
   return (
-    <div className="flex items-center justify-center ">
+    <div className="flex items-center justify-center">
       <div className="bg-[#0d1b3e] text-gray-300 shadow-lg p-6 rounded-2xl w-full max-w-md">
         <h1 className="text-xl md:text-2xl text-white mb-4">Price Breakdown</h1>
         <div className="space-y-3">
           <div className="flex justify-between text-xs md:text-sm">
             <span>Daily Fee (x{days} days)</span>
-            <span>{subtotal.toFixed(2)} birr</span>
+            <span>{price.toFixed(2)} birr</span>
           </div>
           <div className="flex justify-between text-xs md:text-sm">
             <span>Service Fee (10%)</span>
             <span>{serviceFee.toFixed(2)} birr</span>
           </div>
-          {/* --- NEW: TOT Row --- */}
+          <div className="flex justify-between text-xs md:text-sm">
+            <span>Sub Total </span>
+            <span>{subtotal.toFixed(2)} birr</span>
+          </div>
           <div className="flex justify-between text-xs md:text-sm">
             <span>TOT (10%)</span>
             <span>{turnoverTax.toFixed(2)} birr</span>
@@ -382,14 +358,34 @@ export default function PriceBreakdown({
           <div className="h-px bg-white/20 my-3" />
           <div className="flex justify-between text-sm font-semibold text-white">
             <span>Total cost</span>
-            {/* --- NEW: Display Final Total Price --- */}
             <span>{finalTotalPrice.toFixed(2)} birr</span>
           </div>
         </div>
+
+        {/* --- NEW: Driver Request Toggle Switch --- */}
+        <div className="flex items-center justify-between mt-6">
+          <span className="text-sm font-medium text-white">
+            Request a Driver?
+          </span>
+          <label
+            htmlFor="driver-toggle"
+            className="relative inline-flex items-center cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              id="driver-toggle"
+              className="sr-only peer"
+              checked={driverProvided}
+              onChange={() => setDriverProvided(!driverProvided)}
+            />
+            <div className="w-11 h-6 bg-gray-500 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+          </label>
+        </div>
+
         <button
           onClick={handleRequestBooking}
           disabled={!canRequestBooking}
-          className={`w-full text-[#0d1b3e] font-medium py-2 text-xs md:text-sm rounded-full mt-6 transition-colors duration-150 ${
+          className={`w-full text-[#0d1b3e] font-medium py-2 text-xs md:text-sm rounded-full mt-4 transition-colors duration-150 ${
             canRequestBooking
               ? "bg-white hover:bg-gray-200"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -406,7 +402,6 @@ export default function PriceBreakdown({
       </div>
       {showPaymentDetails && canRequestBooking && (
         <PaymentDetailsModal
-          // --- NEW: Pass the final calculated total price to the modal ---
           totalPrice={finalTotalPrice}
           id={id}
           ownerId={ownerId}
@@ -415,6 +410,7 @@ export default function PriceBreakdown({
           pickUpTime={pickUpTime}
           pickUpLocation={pickUpLocation}
           dropOffLocation={dropOffLocation}
+          driverProvided={driverProvided} // --- Pass the state to the modal ---
           onClose={() => setShowPaymentDetails(false)}
         />
       )}

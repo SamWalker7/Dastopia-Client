@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { FaRegCircle } from "react-icons/fa";
-// Use the fallback image directly now
 import image from "../../images/testimonials/avatar.png";
 import {
   IoChatboxOutline,
@@ -16,7 +15,7 @@ const formatTime = (seconds) => {
   if (isNaN(seconds) || seconds < 0) return "Expired";
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60); // Ensure 's' is an integer for padStart
+  const s = Math.floor(seconds % 60);
   return [h, m, s].map((unit) => String(unit).padStart(2, "0")).join(":");
 };
 
@@ -24,6 +23,7 @@ const RentalRequests = () => {
   const navigate = useNavigate();
 
   const [rentalRequests, setRentalRequests] = useState([]);
+  const [extensionRequests, setExtensionRequests] = useState([]); // Separate state for extensions
   const [vehicleDetailsMap, setVehicleDetailsMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -38,130 +38,8 @@ const RentalRequests = () => {
   );
 
   const ownerId = useMemo(() => customer?.username || customer?.id, [customer]);
-  // ownerGivenName and ownerFamilyName are not used in handleChatWithRentee if not part of URL
-  // const ownerGivenName = useMemo(() => customer?.given_name || customer?.firstName || "", [customer]);
-  // const ownerFamilyName = useMemo(() => customer?.family_name || customer?.lastName || "", [customer]);
 
-  const handleChatWithRentee = useCallback(
-    (booking) => {
-      const renteeId = booking?.renteeId;
-      const bookingId = booking?.id;
-      const carId = booking?.carId;
-      const renteeInfo = booking?.renteeInfo;
-      const renteeGivenName = renteeInfo?.given_name || "";
-      const renteeFamilyName = renteeInfo?.family_name || "";
-      console.error("Chat with rentee clicked", renteeId);
-
-      if (!ownerId) {
-        console.error("Chat Error: Owner ID not found in localStorage.");
-        alert("Your user ID is missing. Cannot initiate chat.");
-        return;
-      }
-      if (!renteeId) {
-        console.error("Chat Error: Rentee ID not found for this request.");
-        alert("Rentee details missing. Cannot initiate chat.");
-        return;
-      }
-
-      // const chatUrl = `/chat?userId1=${encodeURIComponent(
-      //   ownerId
-      // )}&userId2=${encodeURIComponent(renteeId)}&bookingId=${encodeURIComponent(
-      //   bookingId
-      // )}&carId=${encodeURIComponent(carId)}&given_name=${encodeURIComponent(
-      //   renteeGivenName
-      // )}&family_name=${encodeURIComponent(renteeFamilyName)}`;
-
-      // console.log(
-      //   `Navigating to chat: Owner ID=${ownerId}, Rentee ID=${renteeId}, Booking ID=${bookingId}, Car ID=${carId}`
-      // );
-      navigate(
-        `/chat?renteeId=${renteeId}&reservationId=${renteeId}&given_name=${renteeGivenName}&family_name=${renteeFamilyName}`
-      );
-      // navigate(chatUrl);
-    },
-    [navigate, ownerId]
-  );
-
-  const handleApproveRequest = useCallback(
-    async (bookingId) => {
-      setActionLoading(true);
-      setActionError(null);
-      try {
-        const response = await apiCallWithRetry(
-          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/approve_booking/${bookingId}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${customer.AccessToken}`,
-            },
-          }
-        );
-
-        if (response && response.statusCode === 200) {
-          console.log(`Booking ${bookingId} approved successfully.`);
-          setRentalRequests((prevRequests) =>
-            prevRequests.filter((request) => request.id !== bookingId)
-          );
-          if (selectedRequest?.id === bookingId) {
-            setSelectedRequest(null);
-          }
-        } else {
-          const errorMessage = `Failed to approve booking ${bookingId}. ${
-            response?.body?.message || "Unknown error"
-          }`;
-          console.error("Approve failed:", response);
-          setActionError(errorMessage);
-        }
-      } catch (err) {
-        console.error("Error approving booking:", err);
-        setActionError(`Error approving booking ${bookingId}: ${err.message}`);
-      } finally {
-        setActionLoading(false);
-      }
-    },
-    [apiCallWithRetry, customer?.AccessToken, selectedRequest?.id]
-  );
-
-  const handleRejectRequest = useCallback(
-    async (bookingId) => {
-      setActionLoading(true);
-      setActionError(null);
-      try {
-        const response = await apiCallWithRetry(
-          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/deny_booking/${bookingId}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${customer.AccessToken}`,
-            },
-          }
-        );
-
-        if (response && response.statusCode === 200) {
-          console.log(`Booking ${bookingId} rejected successfully.`);
-          setRentalRequests((prevRequests) =>
-            prevRequests.filter((request) => request.id !== bookingId)
-          );
-          if (selectedRequest?.id === bookingId) {
-            setSelectedRequest(null);
-          }
-        } else {
-          const errorMessage = `Failed to reject booking ${bookingId}. ${
-            response?.body?.message || "Unknown error"
-          }`;
-          console.error("Reject failed:", response);
-          setActionError(errorMessage);
-        }
-      } catch (err) {
-        console.error("Error rejecting booking:", err);
-        setActionError(`Error rejecting booking ${bookingId}: ${err.message}`);
-      } finally {
-        setActionLoading(false);
-      }
-    },
-    [apiCallWithRetry, customer?.AccessToken, selectedRequest?.id]
-  );
-
+  // --- Function order corrected to prevent initialization errors ---
   const fetchVehicleDetails = useCallback(
     async (carId) => {
       if (!carId || !customer?.AccessToken) return null;
@@ -170,19 +48,10 @@ const RentalRequests = () => {
           `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/${carId}`,
           {
             method: "GET",
-            headers: {
-              Authorization: `Bearer ${customer.AccessToken}`,
-            },
+            headers: { Authorization: `Bearer ${customer.AccessToken}` },
           }
         );
-        if (vehicleResponse && vehicleResponse.body) {
-          return vehicleResponse.body;
-        }
-        console.warn(
-          `Vehicle details not found for carId: ${carId}`,
-          vehicleResponse
-        );
-        return null;
+        return vehicleResponse?.body || null;
       } catch (error) {
         console.error(
           `Error fetching vehicle details for carId ${carId}:`,
@@ -194,292 +63,341 @@ const RentalRequests = () => {
     [apiCallWithRetry, customer?.AccessToken]
   );
 
-  const fetchRentalRequests = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setActionError(null);
-    setRentalRequests([]);
-    setVehicleDetailsMap({});
-    setSelectedRequest(null);
+  const processLocation = (loc) => {
+    if (!loc) return "Location not specified";
+    if (typeof loc === "string") return loc;
+    if (Array.isArray(loc)) {
+      if (loc.length > 1 && typeof loc[1] === "string") return loc[1];
+      if (typeof loc[0] === "string") return loc[0];
+      if (typeof loc[0] === "object" && loc[0] !== null && "lng" in loc[0])
+        return "Coordinates available";
+    }
+    if (typeof loc === "object" && loc.name) return loc.name;
+    return "Location not specified";
+  };
 
+  const fetchRentalRequests = useCallback(async () => {
     if (!customer?.AccessToken) {
-      setError("Authentication failed: Please log in again.");
       setLoading(false);
       return;
     }
-
     try {
       const response = await apiCallWithRetry(
         "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/get_all_owner_booking",
         {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${customer.AccessToken}`,
-          },
+          headers: { Authorization: `Bearer ${customer.AccessToken}` },
         }
       );
-
       if (response && Array.isArray(response.body)) {
         const pendingRequests = response.body.filter(
-          (request) => request.approvedStatus?.toLowerCase() === "pending"
+          (req) => req.approvedStatus?.toLowerCase() === "pending"
         );
-
         pendingRequests.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
-
         const vehicleIds = [
           ...new Set(pendingRequests.map((req) => req.carId).filter(Boolean)),
         ];
-
         const vehicleResults = await Promise.all(
           vehicleIds.map(fetchVehicleDetails)
         );
-
         const fetchedVehicleDetailsMap = {};
         vehicleResults.filter(Boolean).forEach((detail) => {
           if (detail?.id) fetchedVehicleDetailsMap[detail.id] = detail;
         });
-        setVehicleDetailsMap(fetchedVehicleDetailsMap);
-
-        const requestsWithExpiryAndDetails = pendingRequests.map((request) => {
-          const createdAt = new Date(request.createdAt);
-          const expiryTime = new Date(
-            createdAt.getTime() + 24 * 60 * 60 * 1000
-          );
-          const expiresInSeconds = Math.max(
+        setVehicleDetailsMap((prev) => ({
+          ...prev,
+          ...fetchedVehicleDetailsMap,
+        }));
+        const requestsWithDetails = pendingRequests.map((req) => ({
+          ...req,
+          isNewRequest: true,
+          expiresInSeconds: Math.max(
             0,
-            Math.floor((expiryTime.getTime() - new Date().getTime()) / 1000)
-          );
-
-          const renteeName = `${request.renteeInfo?.given_name || ""} ${
-            request.renteeInfo?.family_name || ""
-          }`.trim();
-
-          // --- START: Location Data Processing ---
-          let displayPickUp = "Location not specified";
-          if (
-            request.pickUp &&
-            Array.isArray(request.pickUp) &&
-            request.pickUp.length > 0
-          ) {
-            if (
-              typeof request.pickUp[0] === "object" &&
-              request.pickUp[0] !== null &&
-              "lng" in request.pickUp[0]
-            ) {
-              // First element is coordinates object
-              if (
-                request.pickUp.length > 1 &&
-                typeof request.pickUp[1] === "string"
-              ) {
-                displayPickUp = request.pickUp[1]; // Assume address string is the second element
-              } else {
-                displayPickUp = "Coordinates available"; // No string address found with coordinates
-              }
-            } else if (typeof request.pickUp[0] === "string") {
-              displayPickUp = request.pickUp[0]; // First element is already a string
-            }
-          } else if (typeof request.pickUp === "string") {
-            displayPickUp = request.pickUp;
-          } else if (
-            request.pickUp &&
-            typeof request.pickUp === "object" &&
-            request.pickUp.name
-          ) {
-            // Check if pickUp is an object with a name property
-            displayPickUp = request.pickUp.name;
-          }
-
-          let displayDropOff = "Location not specified";
-          if (
-            request.dropOff &&
-            Array.isArray(request.dropOff) &&
-            request.dropOff.length > 0
-          ) {
-            if (
-              typeof request.dropOff[0] === "object" &&
-              request.dropOff[0] !== null &&
-              "lng" in request.dropOff[0]
-            ) {
-              if (
-                request.dropOff.length > 1 &&
-                typeof request.dropOff[1] === "string"
-              ) {
-                displayDropOff = request.dropOff[1];
-              } else {
-                displayDropOff = "Coordinates available";
-              }
-            } else if (typeof request.dropOff[0] === "string") {
-              displayDropOff = request.dropOff[0];
-            }
-          } else if (typeof request.dropOff === "string") {
-            displayDropOff = request.dropOff;
-          } else if (
-            request.dropOff &&
-            typeof request.dropOff === "object" &&
-            request.dropOff.name
-          ) {
-            // Check if dropOff is an object with a name property
-            displayDropOff = request.dropOff.name;
-          }
-          // --- END: Location Data Processing ---
-
-          return {
-            ...request,
-            expiresInSeconds,
-            vehicleDetail: fetchedVehicleDetailsMap[request.carId],
-            renterName: renteeName || "Unknown Rentee",
-            renterPhone: request.renteeInfo?.phone_number || "Unknown",
-            renterAvatarUrl: image,
-            displayPickUpLocation: displayPickUp, // Add processed location
-            displayDropOffLocation: displayDropOff, // Add processed location
-          };
-        });
-
-        setRentalRequests(requestsWithExpiryAndDetails);
+            Math.floor(
+              (new Date(req.createdAt).getTime() +
+                24 * 3600 * 1000 -
+                Date.now()) /
+                1000
+            )
+          ),
+          vehicleDetail: fetchedVehicleDetailsMap[req.carId],
+          renterName:
+            `${req.renteeInfo?.given_name || ""} ${
+              req.renteeInfo?.family_name || ""
+            }`.trim() || "Unknown",
+          renterAvatarUrl: image,
+          displayPickUpLocation: processLocation(req.pickUp),
+          displayDropOffLocation: processLocation(req.dropOff),
+        }));
+        setRentalRequests(requestsWithDetails);
       } else {
-        const msg =
-          "Failed to fetch rental requests or invalid response format.";
-        console.error(msg, response);
-        setError(msg);
-        setRentalRequests([]);
+        setError((prev) => (prev || "") + " Failed to fetch new requests.");
       }
     } catch (err) {
-      const msg = "Error fetching rental requests: " + err.message;
-      console.error(msg, err);
-      setError(msg);
-      setRentalRequests([]);
-    } finally {
-      setLoading(false);
+      setError(
+        (prev) => (prev || "") + " Error fetching new requests: " + err.message
+      );
     }
   }, [apiCallWithRetry, customer?.AccessToken, fetchVehicleDetails]);
 
-  useEffect(() => {
-    fetchRentalRequests();
-  }, [fetchRentalRequests]);
+  const fetchExtensionRequests = useCallback(async () => {
+    if (!customer?.AccessToken) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await apiCallWithRetry(
+        "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/get_all_owner_booking",
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${customer.AccessToken}` },
+        }
+      );
+      if (response && Array.isArray(response.body)) {
+        const pendingExtensions = response.body.filter(
+          (req) => req.extensionStatus?.toLowerCase() === "pending"
+        );
+        pendingExtensions.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        const vehicleIds = [
+          ...new Set(pendingExtensions.map((req) => req.carId).filter(Boolean)),
+        ];
+        const vehicleResults = await Promise.all(
+          vehicleIds.map(fetchVehicleDetails)
+        );
+        const fetchedVehicleDetailsMap = {};
+        vehicleResults.filter(Boolean).forEach((detail) => {
+          if (detail?.id) fetchedVehicleDetailsMap[detail.id] = detail;
+        });
+        setVehicleDetailsMap((prev) => ({
+          ...prev,
+          ...fetchedVehicleDetailsMap,
+        }));
+        const requestsWithDetails = pendingExtensions.map((req) => ({
+          ...req,
+          isNewRequest: false,
+          vehicleDetail: fetchedVehicleDetailsMap[req.carId],
+          renterName:
+            `${req.renteeInfo?.given_name || ""} ${
+              req.renteeInfo?.family_name || ""
+            }`.trim() || "Unknown",
+          renterAvatarUrl: image,
+          displayPickUpLocation: processLocation(req.pickUp),
+          displayDropOffLocation: processLocation(req.dropOff),
+        }));
+        setExtensionRequests(requestsWithDetails);
+      } else {
+        setError(
+          (prev) => (prev || "") + " Failed to fetch extension requests."
+        );
+      }
+    } catch (err) {
+      setError(
+        (prev) =>
+          (prev || "") + " Error fetching extension requests: " + err.message
+      );
+    }
+  }, [apiCallWithRetry, customer?.AccessToken, fetchVehicleDetails]);
+
+  const handleApproveRequest = useCallback(
+    async (bookingId) => {
+      setActionLoading(true);
+      setActionError(null);
+      try {
+        const res = await apiCallWithRetry(
+          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/approve_booking/${bookingId}`,
+          {
+            method: "GET",
+            headers: { Authorization: `Bearer ${customer.AccessToken}` },
+          }
+        );
+        if (res && res.statusCode === 200) {
+          await fetchRentalRequests();
+        } else {
+          setActionError(
+            `Failed to approve: ${res?.body?.message || "Unknown"}`
+          );
+        }
+      } catch (err) {
+        setActionError(`Error: ${err.message}`);
+      } finally {
+        setActionLoading(false);
+      }
+    },
+    [apiCallWithRetry, customer?.AccessToken, fetchRentalRequests]
+  );
+
+  const handleRejectRequest = useCallback(
+    async (bookingId) => {
+      setActionLoading(true);
+      setActionError(null);
+      try {
+        const res = await apiCallWithRetry(
+          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/deny_booking/${bookingId}`,
+          {
+            method: "GET",
+            headers: { Authorization: `Bearer ${customer.AccessToken}` },
+          }
+        );
+        if (res && res.statusCode === 200) {
+          await fetchRentalRequests();
+        } else {
+          setActionError(
+            `Failed to reject: ${res?.body?.message || "Unknown"}`
+          );
+        }
+      } catch (err) {
+        setActionError(`Error: ${err.message}`);
+      } finally {
+        setActionLoading(false);
+      }
+    },
+    [apiCallWithRetry, customer?.AccessToken, fetchRentalRequests]
+  );
+
+  const handleExtensionAction = useCallback(
+    async (bookingId, extensionId, action) => {
+      setActionLoading(true);
+      setActionError(null);
+      try {
+        await apiCallWithRetry(
+          `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/approveextension`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${customer.AccessToken}`,
+            },
+            body: JSON.stringify({ action, extensionId, bookingId }),
+          }
+        );
+        await fetchExtensionRequests(); // Refresh the extensions list
+      } catch (err) {
+        setActionError(`Failed to ${action} extension: ${err.message}`);
+      } finally {
+        setActionLoading(false);
+      }
+    },
+    [apiCallWithRetry, customer.AccessToken, fetchExtensionRequests]
+  );
+
+  const handleChatWithRentee = useCallback(
+    (booking) => {
+      // Preserved original function
+      const renteeId = booking?.renteeId;
+      const renteeGivenName = booking?.renteeInfo?.given_name || "";
+      const renteeFamilyName = booking?.renteeInfo?.family_name || "";
+      navigate(
+        `/chat?renteeId=${renteeId}&reservationId=${renteeId}&given_name=${renteeGivenName}&family_name=${renteeFamilyName}`
+      );
+    },
+    [navigate]
+  );
 
   useEffect(() => {
-    if (!loading && rentalRequests.length > 0 && selectedRequest === null) {
-      setSelectedRequest(rentalRequests[0]);
-    } else if (
-      !loading &&
-      rentalRequests.length === 0 &&
-      selectedRequest !== null
-    ) {
-      setSelectedRequest(null);
-    }
-    if (
-      selectedRequest &&
-      !rentalRequests.find((req) => req.id === selectedRequest.id)
-    ) {
-      setSelectedRequest(rentalRequests.length > 0 ? rentalRequests[0] : null);
-    }
-  }, [loading, rentalRequests, selectedRequest]);
+    setLoading(true);
+    Promise.all([fetchRentalRequests(), fetchExtensionRequests()]).finally(
+      () => {
+        setLoading(false);
+      }
+    );
+  }, [fetchRentalRequests, fetchExtensionRequests]);
 
-  if (loading && rentalRequests.length === 0) {
+  useEffect(() => {
+    if (!loading) {
+      const allRequests = [...rentalRequests, ...extensionRequests];
+      if (!selectedRequest && allRequests.length > 0) {
+        setSelectedRequest(allRequests[0]);
+      } else if (
+        selectedRequest &&
+        !allRequests.some((r) => r.id === selectedRequest.id)
+      ) {
+        setSelectedRequest(allRequests[0] || null);
+      }
+    }
+  }, [loading, rentalRequests, extensionRequests, selectedRequest]);
+
+  const pendingExtension = useMemo(() => {
+    if (selectedRequest?.extensionStatus?.toLowerCase() !== "pending")
+      return null;
+    return (
+      selectedRequest.extensions?.find(
+        (ext) => ext.status?.toLowerCase() === "pending"
+      ) || null
+    );
+  }, [selectedRequest]);
+
+  if (
+    loading &&
+    rentalRequests.length === 0 &&
+    extensionRequests.length === 0
+  ) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        Loading rental requests...
-      </div>
-    );
-  }
-
-  if (error && rentalRequests.length === 0) {
-    return (
-      <div className="flex justify-center items-center min-h-screen text-red-600">
-        Error: {error}
+        Loading all requests...
       </div>
     );
   }
 
   return (
     <div className="flex md:flex-row flex-col justify-center md:pt-32 px-4 sm:px-10 md:px-20 p-6 pt-28 bg-[#F8F8FF] min-h-screen">
-      <div className="md:w-1/3 w-full bg-white p-6 rounded-xl shadow-lg space-y-4 overflow-y-auto md:max-h-[calc(100vh-10rem)] mb-6 md:mb-0">
-        <h2 className="text-xl font-bold text-[#00113D]">
-          Rental Requests ({rentalRequests.length})
-        </h2>
-        {loading && rentalRequests.length > 0 && (
-          <p className="text-center text-gray-500">Updating list...</p>
-        )}
-        {error && rentalRequests.length > 0 && (
-          <p className="text-center text-red-500">
-            Error updating list: {error}
-          </p>
-        )}
-
-        {rentalRequests.length === 0 && !loading ? (
-          <div className="text-center py-8">
-            <IoFileTray className="mx-auto text-4xl text-gray-400 mb-2" />
-            <p className="text-gray-500">
-              You have no pending rental requests.
-            </p>
-            {error && (
-              <p className="text-red-500 text-sm mt-2">
-                Could not load requests: {error}
-              </p>
-            )}
-          </div>
-        ) : (
-          rentalRequests.map((request) => (
-            <div
-              key={request.id}
-              className={`p-4 w-full space-y-3 rounded-lg shadow-blue-100 shadow-md cursor-pointer transition-all duration-150 ${
-                selectedRequest?.id === request.id
-                  ? "border-2 border-[#00113D] bg-blue-50 scale-105"
-                  : "hover:bg-gray-50 hover:shadow-lg"
-              }`}
-              onClick={() => setSelectedRequest(request)}
-            >
+      <div className="md:w-1/3 w-full bg-white p-6 rounded-xl shadow-lg space-y-6 overflow-y-auto md:max-h-[calc(100vh-10rem)] mb-6 md:mb-0">
+        <div>
+          <h2 className="text-xl font-bold text-[#00113D]">
+            New Rental Requests ({rentalRequests.length})
+          </h2>
+          {rentalRequests.length === 0 && !loading ? (
+            <div className="text-center py-4">
+              <p className="text-gray-500">No new rental requests.</p>
+            </div>
+          ) : (
+            rentalRequests.map((request) => (
               <div
-                className={`p-3 flex justify-between items-center border border-dashed ${
-                  request.expiresInSeconds <= 0
-                    ? "border-red-500 bg-red-50 text-red-600"
-                    : "border-blue-500 bg-blue-50 text-blue-600"
-                } rounded-lg`}
+                key={request.id}
+                className={`p-4 mt-4 w-full space-y-3 rounded-lg shadow-blue-100 shadow-md cursor-pointer ${
+                  selectedRequest?.id === request.id
+                    ? "border-2 border-[#00113D] bg-blue-50"
+                    : "hover:bg-gray-50"
+                }`}
+                onClick={() => setSelectedRequest(request)}
               >
-                <span className="font-semibold text-sm text-black">
-                  Expires in
-                </span>
-                <span
-                  className={`px-3 py-1 text-xs font-medium rounded-full text-white ${
-                    request.expiresInSeconds <= 0 ? "bg-red-700" : "bg-blue-800"
+                <div
+                  className={`p-3 flex justify-between items-center border border-dashed rounded-lg ${
+                    request.expiresInSeconds <= 0
+                      ? "border-red-500 bg-red-50"
+                      : "border-blue-500 bg-blue-50"
                   }`}
                 >
-                  {formatTime(request.expiresInSeconds)}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 text-xs text-gray-600 w-full gap-3 mt-2">
-                <div className="flex items-center w-full gap-2">
-                  <img
-                    src={request.renterAvatarUrl}
-                    alt="Renter Profile"
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                  <div className="w-full">
-                    <span className="font-medium text-sm text-black block truncate">
-                      Rentee
-                    </span>
-                    <p className="truncate">{request.renterName}</p>
-                  </div>
-                </div>
-                <div className="h-full flex flex-col justify-center w-full">
-                  <span className="font-medium text-sm text-black block">
-                    Duration
+                  <span className="font-semibold text-sm text-black">
+                    Expires in
                   </span>
-                  <p>
-                    {request.startDate && request.endDate
-                      ? `${Math.ceil(
-                          (new Date(request.endDate) -
-                            new Date(request.startDate)) /
-                            (1000 * 60 * 60 * 24)
-                        )} Days`
-                      : "N/A"}
-                  </p>
+                  <span
+                    className={`px-3 py-1 text-xs font-medium rounded-full text-white ${
+                      request.expiresInSeconds <= 0
+                        ? "bg-red-700"
+                        : "bg-blue-800"
+                    }`}
+                  >
+                    {formatTime(request.expiresInSeconds)}
+                  </span>
                 </div>
-              </div>
-              <div className="text-xs mt-2 space-y-1 w-full text-gray-600">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 text-xs text-gray-600 w-full gap-3 mt-2">
+                  <div className="flex items-center w-full gap-2">
+                    <img
+                      src={request.renterAvatarUrl}
+                      alt="Renter"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <span className="font-medium text-sm text-black block truncate">
+                        Rentee
+                      </span>
+                      <p className="truncate">{request.renterName}</p>
+                    </div>
+                  </div>
                   <div>
                     <span className="font-medium text-sm text-black block">
                       Car
@@ -489,19 +407,66 @@ const RentalRequests = () => {
                       {request.vehicleDetail?.model || ""}
                     </p>
                   </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        <div className="border-t pt-6">
+          <h2 className="text-xl font-bold text-purple-800">
+            Pending Extension Requests ({extensionRequests.length})
+          </h2>
+          {extensionRequests.length === 0 && !loading ? (
+            <div className="text-center py-4">
+              <p className="text-gray-500">No pending extension requests.</p>
+            </div>
+          ) : (
+            extensionRequests.map((request) => (
+              <div
+                key={request.id}
+                className={`p-4 mt-4 w-full space-y-3 rounded-lg shadow-purple-100 shadow-md cursor-pointer ${
+                  selectedRequest?.id === request.id
+                    ? "border-2 border-purple-800 bg-purple-50"
+                    : "hover:bg-gray-50"
+                }`}
+                onClick={() => setSelectedRequest(request)}
+              >
+                <div className="p-3 flex justify-between items-center border border-dashed rounded-lg border-purple-500 bg-purple-50">
+                  <span className="font-semibold text-sm text-black">
+                    Extension Review
+                  </span>
+                  <span className="px-3 py-1 text-xs font-medium rounded-full text-white bg-purple-800">
+                    Review Needed
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 text-xs text-gray-600 w-full gap-3 mt-2">
+                  <div className="flex items-center w-full gap-2">
+                    <img
+                      src={request.renterAvatarUrl}
+                      alt="Renter"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <span className="font-medium text-sm text-black block truncate">
+                        Rentee
+                      </span>
+                      <p className="truncate">{request.renterName}</p>
+                    </div>
+                  </div>
                   <div>
                     <span className="font-medium text-sm text-black block">
-                      Total Payment
+                      Car
                     </span>
-                    <p className="font-semibold text-black">
-                      {request.amount ? `${request.amount} ETB` : "N/A"}
+                    <p className="truncate">
+                      {request.vehicleDetail?.make || "N/A"}{" "}
+                      {request.vehicleDetail?.model || ""}
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
 
       <div className="md:w-2/3 md:pl-6 flex w-full space-y-6 flex-col">
@@ -522,33 +487,27 @@ const RentalRequests = () => {
                   <div className="text-right">
                     <p className="font-medium text-[#00113D]">Request Date</p>
                     <p className="text-[#5A5A5A]">
-                      {selectedRequest.createdAt
-                        ? new Date(
-                            selectedRequest.createdAt
-                          ).toLocaleDateString()
-                        : "N/A"}
+                      {new Date(selectedRequest.createdAt).toLocaleDateString()}
                       <br />
-                      {selectedRequest.createdAt
-                        ? new Date(
-                            selectedRequest.createdAt
-                          ).toLocaleTimeString()
-                        : ""}
+                      {new Date(selectedRequest.createdAt).toLocaleTimeString()}
                     </p>
                   </div>
                 </div>
-                <div
-                  className={`w-full text-center py-2 px-4 text-sm rounded-lg mt-4 ${
-                    selectedRequest.expiresInSeconds <= 0
-                      ? "bg-red-100 text-red-700"
-                      : "bg-[#E9F1FE] text-[#4478EB]"
-                  }`}
-                >
-                  {selectedRequest.expiresInSeconds <= 0
-                    ? "Request Expired"
-                    : `Expires in: ${formatTime(
-                        selectedRequest.expiresInSeconds
-                      )}`}
-                </div>
+                {selectedRequest.isNewRequest && (
+                  <div
+                    className={`w-full text-center py-2 px-4 text-sm rounded-lg mt-4 ${
+                      selectedRequest.expiresInSeconds <= 0
+                        ? "bg-red-100 text-red-700"
+                        : "bg-[#E9F1FE] text-[#4478EB]"
+                    }`}
+                  >
+                    {selectedRequest.expiresInSeconds <= 0
+                      ? "Request Expired"
+                      : `Expires in: ${formatTime(
+                          selectedRequest.expiresInSeconds
+                        )}`}
+                  </div>
+                )}
                 <h2 className="text-lg mt-8 mb-4 font-semibold text-[#00113D]">
                   Car Details
                 </h2>
@@ -592,11 +551,8 @@ const RentalRequests = () => {
                     <div className="flex-grow">
                       <p className="font-semibold text-black">Pick Up</p>
                       <p>
-                        {selectedRequest.startDate
-                          ? new Date(selectedRequest.startDate).toLocaleString()
-                          : "N/A"}
+                        {new Date(selectedRequest.startDate).toLocaleString()}
                       </p>
-                      {/* Use processed location string */}
                       <p className="text-xs text-gray-500">
                         {selectedRequest.displayPickUpLocation}
                       </p>
@@ -608,11 +564,8 @@ const RentalRequests = () => {
                     <div className="flex-grow">
                       <p className="font-semibold text-black">Drop Off</p>
                       <p>
-                        {selectedRequest.endDate
-                          ? new Date(selectedRequest.endDate).toLocaleString()
-                          : "N/A"}
+                        {new Date(selectedRequest.endDate).toLocaleString()}
                       </p>
-                      {/* Use processed location string */}
                       <p className="text-xs text-gray-500">
                         {selectedRequest.displayDropOffLocation}
                       </p>
@@ -624,7 +577,7 @@ const RentalRequests = () => {
                     Driver Requested
                   </span>
                   <p className="text-gray-600">
-                    {selectedRequest.driverRequest ? "Yes" : "No"}
+                    {selectedRequest.driverProvided ? "Yes" : "No"}
                   </p>
                 </div>
                 <div className="mt-4 text-sm">
@@ -641,7 +594,7 @@ const RentalRequests = () => {
             </div>
 
             <section className="h-fit bg-white p-6 space-y-6 rounded-xl shadow-lg">
-              <h2 className="text-lg font-semibold text-[#00113D] mb-6">
+              <h2 className="text-lg font-semibold text-[#00113D]">
                 Rentee Details
               </h2>
               <div className="items-center flex md:flex-row flex-col gap-6 md:gap-8">
@@ -655,74 +608,112 @@ const RentalRequests = () => {
                     <IoPersonOutline size={18} className="text-gray-500" />
                     <span>{selectedRequest.renterName}</span>
                   </div>
-                  {/* <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
-                    <MdOutlineLocalPhone size={18} className="text-gray-500" />
-                    <span>{selectedRequest.renterPhone}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
-                    <MdOutlineMail size={18} className="text-gray-500" />
-                    <span>{selectedRequest.renteeInfo?.email || "N/A"}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
-                    <IoLocationOutline size={18} className="text-gray-500" />
-                    <span>Address N/A</span>
-                  </div> */}
                 </div>
               </div>
-              {/* <button
-                className="w-full md:w-auto mt-4 px-8 py-3 text-sm border rounded-full border-[#00113D] text-[#00113D] bg-white hover:bg-[#00113D] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                onClick={() => handleChatWithRentee(selectedRequest)}
-                disabled={
-                  !ownerId ||
-                  !selectedRequest?.renteeId ||
-                  !selectedRequest?.id ||
-                  actionLoading
-                }
-              >
-                <IoChatboxOutline size={16} />
-                Chat With Rentee
-              </button> */}
               {actionError && (
                 <p className="text-red-500 text-sm text-center mt-2">
                   {actionError}
                 </p>
               )}
-              <div className="flex text-base gap-4 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => handleRejectRequest(selectedRequest.id)}
-                  className="flex-1 py-3 rounded-full bg-red-50 text-red-700 border border-red-600 hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={
-                    actionLoading ||
-                    !selectedRequest?.id ||
-                    selectedRequest.expiresInSeconds <= 0
-                  }
-                >
-                  {actionLoading && selectedRequest.id === selectedRequest?.id
-                    ? "Rejecting..."
-                    : "Reject Request"}
-                </button>
-                <button
-                  className="flex-1 py-3 rounded-full bg-[#00113D] text-white hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => handleApproveRequest(selectedRequest.id)}
-                  disabled={
-                    actionLoading ||
-                    !selectedRequest?.id ||
-                    selectedRequest.expiresInSeconds <= 0
-                  }
-                >
-                  {actionLoading && selectedRequest.id === selectedRequest?.id
-                    ? "Approving..."
-                    : "Approve Request"}
-                </button>
-              </div>
+
+              {selectedRequest.isNewRequest && (
+                <div className="flex text-base gap-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => handleRejectRequest(selectedRequest.id)}
+                    disabled={
+                      actionLoading || selectedRequest.expiresInSeconds <= 0
+                    }
+                    className="flex-1 py-3 rounded-full bg-red-50 text-red-700 border border-red-600 hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50"
+                  >
+                    {actionLoading && selectedRequest.id === selectedRequest?.id
+                      ? "Rejecting..."
+                      : "Reject Request"}
+                  </button>
+                  <button
+                    onClick={() => handleApproveRequest(selectedRequest.id)}
+                    disabled={
+                      actionLoading || selectedRequest.expiresInSeconds <= 0
+                    }
+                    className="flex-1 py-3 rounded-full bg-[#00113D] text-white hover:bg-blue-800 transition-colors disabled:opacity-50"
+                  >
+                    {actionLoading && selectedRequest.id === selectedRequest?.id
+                      ? "Approving..."
+                      : "Approve Request"}
+                  </button>
+                </div>
+              )}
+
+              {!selectedRequest.isNewRequest && pendingExtension && (
+                <div className="p-4 border-t border-purple-200 bg-purple-50 rounded-lg">
+                  <h3 className="text-md font-bold text-purple-800 mb-3">
+                    Pending Extension Details
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-black block">
+                        New End Date
+                      </span>
+                      <p className="text-gray-600">
+                        {new Date(
+                          pendingExtension.newEndDate
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-black block">
+                        Additional Days
+                      </span>
+                      <p className="text-gray-600">
+                        {pendingExtension.additionalDays}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-black block">
+                        Additional Cost
+                      </span>
+                      <p className="text-gray-600 font-semibold">
+                        {pendingExtension.additionalAmount.toFixed(2)} ETB
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex text-base gap-4 pt-4 mt-4 border-t border-purple-200">
+                    <button
+                      onClick={() =>
+                        handleExtensionAction(
+                          selectedRequest.id,
+                          pendingExtension.id,
+                          "reject"
+                        )
+                      }
+                      disabled={actionLoading}
+                      className="flex-1 py-3 rounded-full bg-red-50 text-red-700 border border-red-600 hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50"
+                    >
+                      Reject Extension
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleExtensionAction(
+                          selectedRequest.id,
+                          pendingExtension.id,
+                          "approve"
+                        )
+                      }
+                      disabled={actionLoading}
+                      className="flex-1 py-3 rounded-full bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+                    >
+                      Approve Extension
+                    </button>
+                  </div>
+                </div>
+              )}
             </section>
           </>
         ) : (
           <div className="md:w-2/3 w-full bg-white p-6 rounded-xl shadow-lg h-[400px] flex justify-center items-center">
             <p className="text-gray-500">
-              {rentalRequests.length > 0
-                ? "Select a rental request from the left to see details."
-                : "No pending requests."}
+              {rentalRequests.length > 0 || extensionRequests.length > 0
+                ? "Select a request to see details."
+                : "No pending actions."}
             </p>
           </div>
         )}
