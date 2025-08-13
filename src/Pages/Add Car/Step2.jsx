@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react"; // IMPORT useCallback
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { IoFileTray } from "react-icons/io5";
 import LibraryAddOutlined from "@mui/icons-material/LibraryAddOutlined";
@@ -15,6 +15,11 @@ const Step2 = ({ nextStep, prevStep }) => {
     deleteAdminDocument,
     updateVehicleImage,
     updateAdminDocument,
+    uploadedPowerOfAttorney,
+    updateVehicleData,
+    uploadPowerOfAttorney,
+    deletePowerOfAttorney,
+    updatePowerOfAttorney,
   } = useVehicleFormStore();
 
   const [localUploadedPhotos, setLocalUploadedPhotos] =
@@ -22,7 +27,6 @@ const Step2 = ({ nextStep, prevStep }) => {
   const [localUploadedDocuments, setLocalUploadedDocuments] =
     useState(uploadedDocuments);
 
-  // Sync local state with central state
   useEffect(() => {
     setLocalUploadedPhotos(uploadedPhotos);
   }, [uploadedPhotos]);
@@ -31,7 +35,6 @@ const Step2 = ({ nextStep, prevStep }) => {
     setLocalUploadedDocuments(uploadedDocuments);
   }, [uploadedDocuments]);
 
-  // --- Validation Logic ---
   const requiredPhotoKeys = [
     "front",
     "back",
@@ -49,52 +52,130 @@ const Step2 = ({ nextStep, prevStep }) => {
     const allRequiredDocumentsUploaded = requiredDocumentKeys.every(
       (key) => uploadedDocuments[key]?.name
     );
-    return allRequiredPhotosUploaded && allRequiredDocumentsUploaded;
-  }, [uploadedPhotos, uploadedDocuments]);
 
-  // --- Handlers (Unchanged) ---
-  const handlePhotoUpload = async (e, key) => {
-    const files = Array.from(e.target.files);
-    const filesToProcess =
-      requiredPhotoKeys.includes(key) && files.length > 0 ? [files[0]] : files;
-    if (filesToProcess.length === 0) return;
-    for (const file of filesToProcess) {
-      await uploadVehicleImage(file, key);
+    let isOwnerSectionValid = false;
+    if (vehicleData.isPostedByOwner === "true") {
+      isOwnerSectionValid = true;
+    } else if (vehicleData.isPostedByOwner === "false") {
+      isOwnerSectionValid =
+        !!vehicleData.representativeFirstName &&
+        !!vehicleData.representativeLastName &&
+        !!vehicleData.representativePhone &&
+        !!uploadedPowerOfAttorney?.key;
     }
-    e.target.value = null;
-  };
 
-  const handleDocumentUpload = async (e, key) => {
-    const file = e.target.files[0];
-    if (file) {
-      await uploadAdminDocument(file, key);
-    }
-    e.target.value = null;
-  };
+    return (
+      isOwnerSectionValid &&
+      allRequiredPhotosUploaded &&
+      allRequiredDocumentsUploaded
+    );
+  }, [
+    vehicleData,
+    uploadedPhotos,
+    uploadedDocuments,
+    uploadedPowerOfAttorney,
+    requiredPhotoKeys,
+    requiredDocumentKeys,
+  ]);
 
-  const handleDeletePhoto = (key, imageKey) => {
-    deleteVehicleImage(key, imageKey);
-  };
+  // --- FIX: Wrap handlers in useCallback with dependencies ---
 
-  const handleDeleteDocument = (key, documentKey) => {
-    deleteAdminDocument(key, documentKey);
-  };
+  const handlePhotoUpload = useCallback(
+    async (e, key) => {
+      const files = Array.from(e.target.files);
+      const filesToProcess =
+        requiredPhotoKeys.includes(key) && files.length > 0
+          ? [files[0]]
+          : files;
+      if (filesToProcess.length === 0) return;
+      for (const file of filesToProcess) {
+        await uploadVehicleImage(file, key);
+      }
+      e.target.value = null;
+    },
+    [requiredPhotoKeys, uploadVehicleImage]
+  );
 
-  const handleEditPhoto = async (e, key, oldImageKey) => {
-    const file = e.target.files[0];
-    if (file) {
-      await updateVehicleImage(file, key, oldImageKey);
-    }
-    e.target.value = null;
-  };
+  const handleDocumentUpload = useCallback(
+    async (e, key) => {
+      const file = e.target.files[0];
+      if (file) {
+        await uploadAdminDocument(file, key);
+      }
+      e.target.value = null;
+    },
+    [uploadAdminDocument]
+  );
 
-  const handleEditDocument = async (e, key, oldDocumentKey) => {
-    const file = e.target.files[0];
-    if (file) {
-      await updateAdminDocument(file, key, oldDocumentKey);
-    }
-    e.target.value = null;
-  };
+  const handleDeletePhoto = useCallback(
+    (key, imageKey) => {
+      deleteVehicleImage(key, imageKey);
+    },
+    [deleteVehicleImage]
+  );
+
+  const handleDeleteDocument = useCallback(
+    (key, documentKey) => {
+      deleteAdminDocument(key, documentKey);
+    },
+    [deleteAdminDocument]
+  );
+
+  const handleEditPhoto = useCallback(
+    async (e, key, oldImageKey) => {
+      const file = e.target.files[0];
+      if (file) {
+        await updateVehicleImage(file, key, oldImageKey);
+      }
+      e.target.value = null;
+    },
+    [updateVehicleImage]
+  );
+
+  const handleEditDocument = useCallback(
+    async (e, key, oldDocumentKey) => {
+      const file = e.target.files[0];
+      if (file) {
+        await updateAdminDocument(file, key, oldDocumentKey);
+      }
+      e.target.value = null;
+    },
+    [updateAdminDocument]
+  );
+
+  const handleRepChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      updateVehicleData({ [name]: value });
+    },
+    [updateVehicleData]
+  );
+
+  const handlePoaUpload = useCallback(
+    async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        await uploadPowerOfAttorney(file);
+      }
+      e.target.value = null;
+    },
+    [uploadPowerOfAttorney]
+  );
+
+  const handlePoaEdit = useCallback(
+    async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        await updatePowerOfAttorney(file);
+      }
+      e.target.value = null;
+    },
+    [updatePowerOfAttorney]
+  );
+
+  const handleDeletePoa = useCallback(() => {
+    deletePowerOfAttorney();
+  }, [deletePowerOfAttorney]);
 
   const renderImagePreview = (base64, alt) => {
     return (
@@ -117,7 +198,6 @@ const Step2 = ({ nextStep, prevStep }) => {
   return (
     <div className="flex gap-10 bg-[#F8F8FF]">
       <div className="mx-auto p-8 md:w-2/3 w-full bg-white rounded-2xl shadow-sm">
-        {/* Progress Bar and Heading (Unchanged) */}
         <div className="flex items-center justify-center">
           <div className="w-2/5 border-b-4 border-[#00113D] mr-2"></div>
           <div className="w-3/5 border-b-4 border-blue-200"></div>
@@ -129,8 +209,144 @@ const Step2 = ({ nextStep, prevStep }) => {
             </p>
           </div>
         </div>
-
-        {/* Photos Section (Unchanged) */}
+        <div className="mb-10">
+          <h2 className="text-3xl font-semibold my-8">Listing Details</h2>
+          <div className="p-4 border border-gray-200 rounded-lg">
+            <label className="block text-gray-700 text-lg font-medium mb-4">
+              Are you the owner of the car?{" "}
+              <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center space-x-8 mb-6">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="isPostedByOwner"
+                  value="true"
+                  checked={vehicleData.isPostedByOwner === "true"}
+                  onChange={(e) =>
+                    updateVehicleData({ isPostedByOwner: e.target.value })
+                  }
+                  className="h-5 w-5 text-[#00113D] focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-3 text-gray-700">Yes, I am the owner</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="isPostedByOwner"
+                  value="false"
+                  checked={vehicleData.isPostedByOwner === "false"}
+                  onChange={(e) =>
+                    updateVehicleData({ isPostedByOwner: e.target.value })
+                  }
+                  className="h-5 w-5 text-[#00113D] focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-3 text-gray-700">
+                  No, I am a representative
+                </span>
+              </label>
+            </div>
+            {vehicleData.isPostedByOwner === "false" && (
+              <div className="mt-6 border-t pt-6">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800">
+                  Representative Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <input
+                    type="text"
+                    name="representativeFirstName"
+                    placeholder="First Name *"
+                    value={vehicleData.representativeFirstName}
+                    onChange={handleRepChange}
+                    required
+                    className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="text"
+                    name="representativeLastName"
+                    placeholder="Last Name *"
+                    value={vehicleData.representativeLastName}
+                    onChange={handleRepChange}
+                    required
+                    className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="tel"
+                    name="representativePhone"
+                    placeholder="Phone Number *"
+                    value={vehicleData.representativePhone}
+                    onChange={handleRepChange}
+                    required
+                    className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="email"
+                    name="representativeEmail"
+                    placeholder="Email (Optional)"
+                    value={vehicleData.representativeEmail}
+                    onChange={handleRepChange}
+                    className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <h3 className="text-lg font-medium mb-4 text-gray-800">
+                  Power of Attorney <span className="text-red-500">*</span>
+                </h3>
+                <div
+                  className={`relative border-2 border-dashed p-4 rounded-lg flex items-center justify-center cursor-pointer group w-full ${
+                    uploadedPowerOfAttorney?.name
+                      ? "border-gray-300 bg-white"
+                      : " bg-gray-50"
+                  }`}
+                  onClick={() =>
+                    !uploadedPowerOfAttorney?.name &&
+                    document.getElementById("upload-poa-doc").click()
+                  }
+                >
+                  <input
+                    id="upload-poa-doc"
+                    type="file"
+                    className="hidden"
+                    onChange={handlePoaUpload}
+                  />
+                  {uploadedPowerOfAttorney?.name ? (
+                    <>
+                      <div className="text-blue-500 underline truncate">
+                        {uploadedPowerOfAttorney.name}
+                      </div>
+                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center">
+                        <label className="cursor-pointer mx-2">
+                          <input
+                            type="file"
+                            className="hidden"
+                            onChange={handlePoaEdit}
+                          />
+                          <FaEdit className="text-white text-xl hover:text-blue-300" />
+                        </label>
+                        <FaTrash
+                          className="text-white text-xl cursor-pointer mx-2 hover:text-red-500"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeletePoa();
+                          }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-gray-500 flex items-center justify-center text-sm">
+                      <div className="bg-gray-200 py-2 mx-2 rounded-lg px-4">
+                        <IoFileTray size={14} />
+                      </div>
+                      <span className="text-blue-500 underline mr-2">
+                        Click here
+                      </span>{" "}
+                      to upload
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
         <div className="mb-10">
           <h2 className="text-3xl font-semibold my-8">Upload Photos</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -246,8 +462,6 @@ const Step2 = ({ nextStep, prevStep }) => {
               ))}
           </div>
         </div>
-
-        {/* Documents Section */}
         <div className="md:mb-0 mb-8">
           <h2 className="text-3xl font-semibold mb-8 mt-16">
             Upload Documents
@@ -276,7 +490,6 @@ const Step2 = ({ nextStep, prevStep }) => {
                     document.getElementById(`upload-${key}-doc`).click()
                   }
                 >
-                  {/* *** CHANGE HERE: Removed accept attribute *** */}
                   <input
                     id={`upload-${key}-doc`}
                     type="file"
@@ -290,7 +503,6 @@ const Step2 = ({ nextStep, prevStep }) => {
                       </div>
                       <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center">
                         <label className="cursor-pointer mx-2">
-                          {/* *** CHANGE HERE: Removed accept attribute *** */}
                           <input
                             type="file"
                             className="hidden"
@@ -332,8 +544,6 @@ const Step2 = ({ nextStep, prevStep }) => {
             ))}
           </div>
         </div>
-
-        {/* Navigation Buttons (Unchanged) */}
         <div className="w-full justify-between items-end gap-4 flex-col md:flex-row flex">
           <button
             onClick={prevStep}
