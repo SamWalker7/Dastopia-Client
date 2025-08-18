@@ -8,16 +8,16 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  Slider, // Import Slider
-  Box, // Import Box for layout
-  Typography, // Import Typography for text
+  Slider,
+  Box,
+  Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
-import SettingsIcon from "@mui/icons-material/Settings"; // For Transmission
+import SettingsIcon from "@mui/icons-material/Settings";
 import CategoryIcon from "@mui/icons-material/Category";
 
 import ResultsGrid from "../components/Search/ResultsGrid";
@@ -26,35 +26,29 @@ import modelData from "../api/models.json";
 import MapComponent from "../components/GoogleMaps";
 import Footer from "../components/Footer";
 
-// Primary color defined
 const PRIMARY_COLOR = "#172554";
-const PRIMARY_COLOR_DARKER = "#0d1732"; // For hover states
-
-// Price constant
+const PRIMARY_COLOR_DARKER = "#0d1732";
 const MAX_PRICE = 50000;
 
-// Helper to create filter button style
 const filterButtonStyle =
   "bg-white border border-gray-300 hover:border-gray-500 text-gray-700 px-4 py-2 rounded-md text-sm flex items-center justify-center shadow-sm transition-colors duration-150 ease-in-out";
-// Active filter buttons will use the primary color for border and text
 const activeFilterButtonStyle = `bg-gray-50 border-[${PRIMARY_COLOR}] text-[${PRIMARY_COLOR}] hover:bg-gray-100 px-4 py-2 rounded-md text-sm flex items-center justify-center shadow-sm transition-colors duration-150 ease-in-out`;
 
-// Helper component for the clear icon button
 const ClearFilterButton = ({ onClick }) => (
   <IconButton
     size="small"
     onClick={(e) => {
-      e.stopPropagation(); // Prevent modal from opening if the parent is a button
+      e.stopPropagation();
       onClick();
     }}
     aria-label="clear filter"
     sx={{
-      ml: 1, // margin-left
-      padding: "3px", // Adjust padding to be compact
-      color: PRIMARY_COLOR, // Icon color matches active filter text
+      ml: 1,
+      padding: "3px",
+      color: PRIMARY_COLOR,
       "&:hover": {
-        backgroundColor: `rgba(23, 37, 84, 0.08)`, // Subtle hover background, primary color based
-        color: PRIMARY_COLOR_DARKER, // Darken icon on hover
+        backgroundColor: `rgba(23, 37, 84, 0.08)`,
+        color: PRIMARY_COLOR_DARKER,
       },
     }}
   >
@@ -78,19 +72,16 @@ const Search = () => {
     "Hawassa",
   ];
 
-  // Filter States
   const [make, setMake] = useState("any");
   const [modelList, setModelList] = useState([]);
   const [selectedModel, setSelectedModel] = useState("any");
   const [transmission, setTransmission] = useState("any");
   const [category, setCategory] = useState("any");
-  // *** CHANGE: Replaced min/max price with a range state ***
   const [priceRange, setPriceRange] = useState([0, MAX_PRICE]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
 
-  // Modal States
   const [openDateModal, setOpenDateModal] = useState(false);
   const [openPriceModal, setOpenPriceModal] = useState(false);
   const [openMakeModelModal, setOpenMakeModelModal] = useState(false);
@@ -98,10 +89,8 @@ const Search = () => {
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [openAllFiltersModal, setOpenAllFiltersModal] = useState(false);
 
-  // Temporary states for modal inputs
   const [tempStartDate, setTempStartDate] = useState("");
   const [tempEndDate, setTempEndDate] = useState("");
-  // *** CHANGE: Replaced temp min/max price with a temp range state ***
   const [tempPriceRange, setTempPriceRange] = useState([0, MAX_PRICE]);
   const [tempMake, setTempMake] = useState("any");
   const [tempModel, setTempModel] = useState("any");
@@ -132,12 +121,8 @@ const Search = () => {
     if (pickupLocation && ethiopianCities.includes(pickupLocation)) {
       setSelectedCity(pickupLocation);
     }
-    if (pickupDateQuery) {
-      setStartDate(pickupDateQuery);
-    }
-    if (dropOffDateQuery) {
-      setEndDate(dropOffDateQuery);
-    }
+    if (pickupDateQuery) setStartDate(pickupDateQuery);
+    if (dropOffDateQuery) setEndDate(dropOffDateQuery);
   }, [ethiopianCities]);
 
   const handleOpenDateModal = () => {
@@ -155,19 +140,18 @@ const Search = () => {
     if (currentTempEndDate) currentTempEndDate.setHours(0, 0, 0, 0);
 
     let dateError = "";
-    if (tempStartDate && !tempEndDate) {
+    if (tempStartDate && !tempEndDate)
       dateError = "Please select a drop-off date.";
-    } else if (!tempStartDate && tempEndDate) {
+    else if (!tempStartDate && tempEndDate)
       dateError = "Please select a pick-up date.";
-    } else if (currentTempStartDate && currentTempStartDate < today) {
+    else if (currentTempStartDate && currentTempStartDate < today)
       dateError = "Pickup date cannot be before today.";
-    } else if (
+    else if (
       currentTempStartDate &&
       currentTempEndDate &&
       currentTempEndDate <= currentTempStartDate
-    ) {
+    )
       dateError = "End date must be after pickup date.";
-    }
 
     if (dateError) {
       alert(dateError);
@@ -180,7 +164,6 @@ const Search = () => {
     setError("");
   };
 
-  // *** CHANGE: Updated price modal handlers for the slider ***
   const handleOpenPriceModal = () => {
     setTempPriceRange(priceRange);
     setOpenPriceModal(true);
@@ -255,14 +238,12 @@ const Search = () => {
     setOpenCategoryModal(false);
   };
 
-  // *** ADDED: Handler to populate all temp states before opening the All Filters modal ***
   const handleOpenAllFiltersModal = () => {
     setTempPriceRange(priceRange);
     setTempMake(make);
     setTempModel(selectedModel);
     setTempTransmission(transmission);
     setTempCategory(category);
-
     if (make !== "any") {
       const makeModelsData = modelData.find(
         (m) => Object.keys(m)[0].toLowerCase() === make.toLowerCase()
@@ -311,7 +292,15 @@ const Search = () => {
         const data = await response.json();
         const fetchedVehicles =
           data.body && Array.isArray(data.body) ? data.body : [];
-        setVehicles(fetchedVehicles);
+
+        // --- MODIFICATION: Sort vehicles by createdAt date in descending order (newest first) ---
+        const sortedVehicles = fetchedVehicles.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0);
+          const dateB = new Date(b.createdAt || 0);
+          return dateB - dateA;
+        });
+
+        setVehicles(sortedVehicles);
       } catch (error) {
         if (error.name !== "AbortError") {
           console.error("Fetch error:", error);
@@ -342,16 +331,15 @@ const Search = () => {
     retryTrigger,
   ]);
 
-  // *** CHANGE: Updated filtering logic to use priceRange state ***
   const getFilteredVehicles = useCallback(() => {
     const [min, max] = priceRange;
     let filtered = vehicles.filter((vehicle) => {
       const priceVal = parseFloat(vehicle.price) || 0;
       return priceVal >= min && priceVal <= max;
     });
-    return filtered.sort(
-      (a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0)
-    );
+    // The main sorting is now by date. This price sort is now secondary if needed, but not required.
+    // We'll keep it for price-based filtering, but the primary display is by date from the fetch.
+    return filtered;
   }, [vehicles, priceRange]);
 
   const transmissionType = ["Automatic", "Manual"];
@@ -369,7 +357,6 @@ const Search = () => {
   const countActiveFilters = () => {
     let count = 0;
     if (startDate && endDate) count++;
-    // *** CHANGE: Check if price filter is active ***
     if (isPriceFilterActive) count++;
     if (make !== "any") count++;
     if (transmission !== "any") count++;
@@ -384,15 +371,12 @@ const Search = () => {
     setModelList([]);
     setTransmission("any");
     setCategory("any");
-    // *** CHANGE: Reset price range state ***
     setPriceRange([0, MAX_PRICE]);
     setTempMake("any");
     setTempModel("any");
     setTempPriceRange([0, MAX_PRICE]);
     setTempTransmission("any");
     setTempCategory("any");
-    // setTempStartDate(""); // If dates are cleared, temp dates should also be cleared
-    // setTempEndDate("");
     setOpenAllFiltersModal(false);
   };
 
@@ -427,8 +411,6 @@ const Search = () => {
                   />
                 )}
               </button>
-
-              {/* *** CHANGE: Updated price filter button *** */}
               <button
                 onClick={handleOpenPriceModal}
                 className={
@@ -447,7 +429,6 @@ const Search = () => {
                   />
                 )}
               </button>
-
               <button
                 onClick={handleOpenMakeModelModal}
                 className={
@@ -470,7 +451,6 @@ const Search = () => {
                   />
                 )}
               </button>
-
               <button
                 onClick={handleOpenTransmissionModal}
                 className={
@@ -485,7 +465,6 @@ const Search = () => {
                   <ClearFilterButton onClick={() => setTransmission("any")} />
                 )}
               </button>
-
               <button
                 onClick={handleOpenCategoryModal}
                 className={
@@ -500,9 +479,8 @@ const Search = () => {
                   <ClearFilterButton onClick={() => setCategory("any")} />
                 )}
               </button>
-
               <button
-                onClick={handleOpenAllFiltersModal} // Use new handler
+                onClick={handleOpenAllFiltersModal}
                 className={
                   activeFilterCount > 0
                     ? activeFilterButtonStyle
@@ -514,7 +492,6 @@ const Search = () => {
               </button>
             </div>
           </div>
-
           <div className="flex lg:flex-row flex-col items-start w-full container mx-auto px-4">
             <div className="flex flex-col w-full lg:w-3/5 xl:w-2/3 lg:pr-6">
               <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
@@ -540,7 +517,6 @@ const Search = () => {
                       {filteredVehicles.length === 1 ? "" : "s"} available
                     </div>
                     <ResultsGrid
-                      // *** CHANGE: Updated key to use priceRange ***
                       key={`${make}-${selectedModel}-${transmission}-${category}-${priceRange[0]}-${priceRange[1]}-${startDate}-${endDate}`}
                       vehicles={filteredVehicles}
                       pickUpTime={startDate}
@@ -562,8 +538,6 @@ const Search = () => {
             </div>
           </div>
         </div>
-
-        {/* Date Modal */}
         <Dialog
           open={openDateModal}
           onClose={() => setOpenDateModal(false)}
@@ -601,18 +575,15 @@ const Search = () => {
             />
           </DialogContent>
           <DialogActions>
-            {" "}
             <Button
               onClick={handleApplyDates}
               variant="contained"
               sx={primaryButtonStyle}
             >
               Apply Dates
-            </Button>{" "}
+            </Button>
           </DialogActions>
         </Dialog>
-
-        {/* *** CHANGE: Price Modal now uses a Slider *** */}
         <Dialog
           open={openPriceModal}
           onClose={() => setOpenPriceModal(false)}
@@ -664,8 +635,6 @@ const Search = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
-        {/* Make/Model Modal */}
         <Dialog
           open={openMakeModelModal}
           onClose={() => setOpenMakeModelModal(false)}
@@ -727,8 +696,6 @@ const Search = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
-        {/* Transmission Modal */}
         <Dialog
           open={openTransmissionModal}
           onClose={() => setOpenTransmissionModal(false)}
@@ -773,9 +740,6 @@ const Search = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
-        {/* Category Modal */}
-
         <Dialog
           open={openCategoryModal}
           onClose={() => setOpenCategoryModal(false)}
@@ -820,8 +784,6 @@ const Search = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
-        {/* All Filters Modal */}
         <Dialog
           open={openAllFiltersModal}
           onClose={() => setOpenAllFiltersModal(false)}
@@ -839,7 +801,6 @@ const Search = () => {
             </IconButton>
           </DialogTitle>
           <DialogContent dividers>
-            {/* *** CHANGE: Price inputs replaced with slider in All Filters Modal *** */}
             <div className="mb-4 p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Price Range (ETB)</h3>
               <Box sx={{ width: "95%", mx: "auto", mt: 2 }}>
@@ -864,7 +825,6 @@ const Search = () => {
                 />
               </Box>
             </div>
-            {/* Vehicle Make/Model in All Filters */}
             <div className="mb-4 p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Vehicle</h3>
               <TextField
@@ -903,7 +863,6 @@ const Search = () => {
                 ))}
               </TextField>
             </div>
-            {/* Transmission in All Filters */}
             <div className="mb-4 p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Transmission</h3>
               <TextField
@@ -924,7 +883,6 @@ const Search = () => {
                 ))}
               </TextField>
             </div>
-            {/* Category in All Filters */}
             <div className="p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Category</h3>
               <TextField
@@ -970,7 +928,6 @@ const Search = () => {
                 Cancel
               </Button>
               <Button
-                // *** CHANGE: Simplified apply logic for All Filters modal ***
                 onClick={() => {
                   setPriceRange(tempPriceRange);
                   setMake(tempMake);
