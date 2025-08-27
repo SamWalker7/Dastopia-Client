@@ -15,6 +15,7 @@ const Login = () => {
   const [phone_number, setphone_number] = useState(prefix); // Initialize with prefix
   const [email, setEmail] = useState("");
   const [password, setpassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState(""); // State for confirm password
   const [errors, setErrors] = useState({});
 
   // Phone number validation useEffect
@@ -24,7 +25,6 @@ const Login = () => {
       const phoneRegex = /^\+251(9|7)\d{8}$/;
 
       if (phone_number === prefix) {
-        // Use component-scoped prefix for comparison
         phoneError = "Phone number is required (e.g., +251912345678)";
       } else if (!phoneRegex.test(phone_number)) {
         phoneError =
@@ -32,27 +32,21 @@ const Login = () => {
       }
 
       setErrors((prevErrors) => {
-        if (prevErrors.phone_number === phoneError) {
-          return prevErrors;
-        }
         const updatedErrors = { ...prevErrors };
         if (phoneError) {
           updatedErrors.phone_number = phoneError;
-        } else {
-          if (updatedErrors.hasOwnProperty("phone_number")) {
-            delete updatedErrors.phone_number;
-          }
+        } else if (updatedErrors.hasOwnProperty("phone_number")) {
+          delete updatedErrors.phone_number;
         }
         return updatedErrors;
       });
     };
 
     validatePhoneNumber();
-  }, [phone_number, prefix]); // Added prefix to dependency array as it's used in condition
+  }, [phone_number]);
 
   // Handle change for phone number input
   const handlePhoneNumberChange = (e) => {
-    // prefix is now available from component scope
     const maxSuffixLength = 9;
     let inputValue = e.target.value;
     let newPhoneNumber;
@@ -80,7 +74,7 @@ const Login = () => {
     setphone_number(newPhoneNumber);
   };
 
-  // Email validation (can be expanded or used in a similar useEffect)
+  // Email validation (optional)
   useEffect(() => {
     const validateEmail = () => {
       let emailError = undefined;
@@ -88,7 +82,6 @@ const Login = () => {
       if (email && !emailRegex.test(email)) {
         emailError = "Invalid email format.";
       }
-      // To clear error if email becomes valid or empty after being invalid
       setErrors((prevErrors) => {
         const updatedErrors = { ...prevErrors };
         if (emailError) {
@@ -99,30 +92,39 @@ const Login = () => {
         return updatedErrors;
       });
     };
-    if (email) validateEmail(); // Validate only if email is not empty
-    else {
-      // Clear error if email is cleared
+    validateEmail();
+  }, [email]);
+
+  // Password confirmation validation
+  useEffect(() => {
+    const validatePasswords = () => {
+      let passwordError = undefined;
+      if (password && confirmPassword && password !== confirmPassword) {
+        passwordError = "Passwords do not match.";
+      }
       setErrors((prevErrors) => {
         const updatedErrors = { ...prevErrors };
-        if (updatedErrors.hasOwnProperty("email")) {
-          delete updatedErrors.email;
+        if (passwordError) {
+          updatedErrors.confirmPassword = passwordError;
+        } else if (updatedErrors.hasOwnProperty("confirmPassword")) {
+          delete updatedErrors.confirmPassword;
         }
         return updatedErrors;
       });
-    }
-  }, [email]);
+    };
+    validatePasswords();
+  }, [password, confirmPassword]);
 
   // Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Final check, though isSubmitDisabled should prevent this
     if (isSubmitDisabled) {
       console.log("Form submission blocked by client-side validation.");
-      // Optionally update errors state if some fields are just empty without specific format errors
       let currentErrors = { ...errors };
-      if (!email) currentErrors.email = "Email is required.";
       if (!password) currentErrors.password = "Password is required.";
+      if (!confirmPassword)
+        currentErrors.confirmPassword = "Please confirm your password.";
       if (phone_number === prefix)
         currentErrors.phone_number = "Phone number is required.";
       setErrors(currentErrors);
@@ -130,18 +132,23 @@ const Login = () => {
     }
 
     try {
+      const requestBody = {
+        first_name: firstName,
+        last_name: lastName,
+        phone_number,
+        password,
+      };
+
+      if (email) {
+        requestBody.email = email;
+      }
+
       const response = await fetch(
         `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/signup`,
         {
           headers: { "Content-Type": "application/json" },
           method: "POST",
-          body: JSON.stringify({
-            first_name: firstName,
-            last_name: lastName,
-            phone_number,
-            password,
-            email,
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
@@ -182,9 +189,10 @@ const Login = () => {
   // Determine if the submit button should be disabled
   const isSubmitDisabled =
     !!errors.phone_number ||
-    !!errors.email || // Consider email validation errors
-    !email || // Email is empty
+    !!errors.email ||
+    !!errors.confirmPassword || // Check for password mismatch error
     !password || // Password is empty
+    !confirmPassword || // Confirm password is empty
     phone_number === prefix; // Phone number is just the prefix
 
   return (
@@ -198,8 +206,8 @@ const Login = () => {
               aria-label="close login modal"
               sx={{
                 position: "absolute",
-                top: "12px", // Adjust as needed
-                right: "0px", // Adjust as needed
+                top: "12px",
+                right: "0px",
                 color: "text.secondary",
               }}
             >
@@ -261,7 +269,7 @@ const Login = () => {
             </div>
             <div className="relative inline-block my-3 text-lg w-full">
               <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
-                Email
+                Email (Optional)
               </label>
               <input
                 type="email"
@@ -287,9 +295,27 @@ const Login = () => {
                 placeholder="Enter Your Password"
                 className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
               />
-              {errors.password && ( // Display password error if any (e.g., from server)
+              {errors.password && (
                 <p className="text-red-500 text-xs mt-1 ml-1">
                   {errors.password}
+                </p>
+              )}
+            </div>
+            <div className="relative inline-block my-3 text-lg w-full">
+              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm Your Password"
+                className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
+              />
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1 ml-1">
+                  {errors.confirmPassword}
                 </p>
               )}
             </div>
@@ -304,11 +330,11 @@ const Login = () => {
           <button
             type="submit"
             className={`w-full text-white text-lg rounded-full py-3 transition ${
-              isSubmitDisabled // Use the comprehensive disable check for styling
+              isSubmitDisabled
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-[#00113D] hover:bg-blue-900"
             }`}
-            disabled={isSubmitDisabled} // Use the comprehensive disable check
+            disabled={isSubmitDisabled}
           >
             Send Verification Code
           </button>
