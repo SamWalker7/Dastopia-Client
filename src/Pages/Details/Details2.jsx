@@ -7,6 +7,7 @@ import Skeleton from "@mui/material/Skeleton";
 import { getDownloadUrl } from "../../api"; // ADJUST PATH
 import {
   FaArrowLeft,
+  FaCar,
   FaCogs,
   FaGasPump,
   FaRegCircle,
@@ -17,6 +18,8 @@ import {
   FaChevronRight,
   FaCalendarAlt,
   FaMapMarkerAlt,
+  FaUserTie, // New Icon
+  FaSyncAlt, // New Icon
 } from "react-icons/fa";
 import PriceBreakdown from "./PriceBreakdown"; // ADJUST PATH
 import Dropdown from "../../components/Search/Dropdown"; // ADJUST PATH
@@ -28,6 +31,56 @@ const PLACEHOLDER_IMAGE_URL =
   "https://via.placeholder.com/600x400.png?text=No+Image+Available";
 
 // --- HELPER COMPONENTS & FUNCTIONS ---
+
+// NEW: Service Type Badge Component
+const ServiceTypeBadge = ({ serviceType }) => {
+  const getBadgeConfig = (type) => {
+    switch (type) {
+      case "self-drive":
+        return { text: "Self-Drive", color: "blue", icon: <FaCar /> };
+      case "with-driver":
+        return { text: "With Driver", color: "green", icon: <FaUserTie /> };
+      case "both":
+        return { text: "Both Options", color: "purple", icon: <FaSyncAlt /> };
+      default:
+        return { text: "Self-Drive", color: "blue", icon: <FaCar /> };
+    }
+  };
+
+  const config = getBadgeConfig(serviceType);
+  const colorClasses = {
+    blue: "bg-blue-100 text-blue-800",
+    green: "bg-green-100 text-green-800",
+    purple: "bg-purple-100 text-purple-800",
+  };
+
+  return (
+    <span
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${
+        colorClasses[config.color]
+      }`}
+    >
+      {config.icon}
+      {config.text}
+    </span>
+  );
+};
+
+// NEW: Helper to format working days
+const formatWorkingDays = (days) => {
+  if (!days || days.length === 0) return "Not specified";
+  const dayMap = {
+    monday: "Mon",
+    tuesday: "Tue",
+    wednesday: "Wed",
+    thursday: "Thu",
+    friday: "Fri",
+    saturday: "Sat",
+    sunday: "Sun",
+  };
+  return days.map((day) => dayMap[day.toLowerCase()] || "").join(", ");
+};
+
 const PopupNotification = ({ message, type, visible, onClose }) => {
   useEffect(() => {
     let timer;
@@ -59,7 +112,7 @@ const PopupNotification = ({ message, type, visible, onClose }) => {
     </div>
   );
 };
-
+// --- Other helper functions (fetchPlaceName, formatDateInternal, etc.) remain unchanged ---
 const fetchPlaceName = async (lat, lng) => {
   const isValidLat = typeof lat === "number" && !isNaN(lat);
   const isValidLng = typeof lng === "number" && !isNaN(lng);
@@ -158,13 +211,13 @@ const formatDateForDisplayInternal = (date) => {
     return "Invalid Date";
   }
 };
-
 // --- MAIN COMPONENT ---
 export default function Details2() {
   const locationHook = useLocation();
   const navigate = useNavigate();
   const { id: selectedVehicleId } = useParams();
 
+  // --- EXISTING STATE --- (largely unchanged)
   const [customer, setCustomer] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [popup, setPopup] = useState({ visible: false, message: "", type: "" });
@@ -201,7 +254,6 @@ export default function Details2() {
   const [actualSelectedDropOff, setActualSelectedDropOff] = useState(
     locationHook.state?.dropoffLocationData || null
   );
-
   const [ratings, setRatings] = useState([]);
   const [averageRating, setAverageRating] = useState(0);
   const [showMapPopup, setShowMapPopup] = useState(false);
@@ -209,6 +261,23 @@ export default function Details2() {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // --- NEW STATE for Service Type Selection ---
+  const [selectedServiceOption, setSelectedServiceOption] =
+    useState("self-drive");
+
+  // This effect sets the initial service option based on the vehicle's availability
+  useEffect(() => {
+    if (vehicleDetails) {
+      if (vehicleDetails.serviceType === "with-driver") {
+        setSelectedServiceOption("with-driver");
+      } else {
+        // Defaults to self-drive for "self-drive" and "both" types
+        setSelectedServiceOption("self-drive");
+      }
+    }
+  }, [vehicleDetails]);
+
+  // --- All existing useEffect hooks and functions are unchanged ---
   const showStatusPopup = (message, type) => {
     setPopup({ visible: true, message, type });
   };
@@ -461,7 +530,6 @@ export default function Details2() {
     locationHook.state, // This is fine as it captures initial state
     // Removed selectedPickUpLocationName and selectedDropOffLocationName to prevent re-running when user selects from dropdown
   ]);
-
   const isDaySelectable = useCallback(
     (dateToTest) => {
       const currentDay = new Date(dateToTest);
@@ -509,7 +577,6 @@ export default function Details2() {
     },
     [isDaySelectable]
   );
-
   const handlePickUpDateChange = (date) => {
     setCurrentPickUpDate(date);
     setDateError("");
@@ -596,7 +663,6 @@ export default function Details2() {
     // currentPickUpDate, // Removed to allow re-evaluation if locationHook.state changes
     // currentDropOffDate,
   ]);
-
   useEffect(() => {
     if (!authChecked || !customer || !selectedVehicleId) return;
     const fetchVehicleRatings = async (carID) => {
@@ -643,6 +709,7 @@ export default function Details2() {
         (prev) => (prev - 1 + vehicleImages.length) % vehicleImages.length
       );
   };
+  // --- MODIFIED: Dynamic Price Calculation ---
   let days = 0;
   if (
     currentPickUpDate &&
@@ -652,11 +719,22 @@ export default function Details2() {
     const timeDiff = currentDropOffDate.getTime() - currentPickUpDate.getTime();
     days = Math.ceil(timeDiff / (1000 * 3600 * 24));
   }
-  const dailyPrice = vehicleDetails?.price
+
+  const selfDrivePrice = vehicleDetails?.price
     ? parseFloat(vehicleDetails.price)
     : 0;
-  const totalPrice = days * dailyPrice;
+  const driverPrice = vehicleDetails?.driverPrice
+    ? parseFloat(vehicleDetails.driverPrice)
+    : 0;
 
+  const effectiveDailyPrice =
+    selectedServiceOption === "with-driver"
+      ? selfDrivePrice + driverPrice // Assuming driverPrice is an add-on
+      : selfDrivePrice;
+
+  const totalPrice = days * effectiveDailyPrice;
+
+  // --- All other handlers (handleViewMap, etc.) remain unchanged ---
   const handleViewMap = (type, specificLocationData = null) => {
     if (!vehicleDetails) {
       showStatusPopup("Vehicle details not loaded yet.", "warning");
@@ -771,7 +849,6 @@ export default function Details2() {
       setActualSelectedDropOff(null);
     }
   };
-
   if (!authChecked)
     return (
       <div className="flex justify-center items-center h-screen text-xl">
@@ -894,14 +971,19 @@ export default function Details2() {
                 Car Details
               </button>
             </div>
-            <h1 className="text-lg font-semibold px-2 mb-4 mt-2">
-              {vehicleDetails.make} {vehicleDetails.model}
-            </h1>
+            {/* MODIFIED: Title and Badge */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-2 mb-4 mt-2">
+              <h1 className="text-lg font-semibold">
+                {vehicleDetails.make} {vehicleDetails.model}
+              </h1>
+              <div className="mt-2 sm:mt-0">
+                <ServiceTypeBadge serviceType={vehicleDetails.serviceType} />
+              </div>
+            </div>
             {imageLoading ? (
               <Skeleton
                 variant="rectangular"
                 width="100%"
-                // Increased height for skeleton
                 height={400}
                 className="rounded-lg mb-4"
               />
@@ -909,12 +991,10 @@ export default function Details2() {
               <img
                 src={selectedImageForDisplay}
                 alt={`${vehicleDetails.make} ${vehicleDetails.model}`}
-                // ADJUSTED: Increased max-h for a larger main image.
-                // You can use vh units for responsive height or a larger pixel value.
                 className="w-full h-auto max-h-[400px] md:max-h-[55vh] object-contain rounded-lg mb-4 cursor-pointer"
                 onClick={() =>
                   vehicleImages.length > 0 &&
-                  vehicleImages[0] !== PLACEHOLDER_IMAGE_URL && // Only open if not placeholder
+                  vehicleImages[0] !== PLACEHOLDER_IMAGE_URL &&
                   openFullScreen(
                     vehicleImages.indexOf(selectedImageForDisplay) !== -1
                       ? vehicleImages.indexOf(selectedImageForDisplay)
@@ -964,17 +1044,42 @@ export default function Details2() {
           </div>
           {/* Center Content - Specs, Locations, Reviews */}
           <div className="bg-white w-full h-fit flex flex-col shadow-lg rounded-lg">
-            <div className="bg-blue-100 w-11/12 mx-auto text-blue-700 py-3 px-4 rounded-lg text-center mt-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-base font-semibold">Price Per Day</h3>
-                <span className="text-base font-bold">
-                  {dailyPrice > 0 ? `${dailyPrice} Birr` : "N/A"}
-                </span>
+            {/* --- MODIFIED: Dynamic Pricing Display --- */}
+            <div className="bg-blue-50 w-11/12 mx-auto border border-blue-200 py-3 px-4 rounded-lg mt-6">
+              <h3 className="text-lg font-semibold text-center mb-3 text-blue-900">
+                Daily Pricing
+              </h3>
+              <div className="flex justify-around items-center">
+                {/* Self-Drive Price */}
+                {vehicleDetails.serviceType !== "with-driver" && (
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600">Self-Drive</p>
+                    <span className="text-base font-bold text-gray-800">
+                      {selfDrivePrice > 0 ? `${selfDrivePrice} Birr` : "N/A"}
+                    </span>
+                  </div>
+                )}
+                {/* Divider */}
+                {vehicleDetails.serviceType === "both" && (
+                  <div className="h-10 w-px bg-blue-200"></div>
+                )}
+                {/* With Driver Price */}
+                {vehicleDetails.serviceType !== "self-drive" && (
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600">With Driver</p>
+                    <span className="text-base font-bold text-gray-800">
+                      {selfDrivePrice + driverPrice > 0
+                        ? `${selfDrivePrice + driverPrice} Birr`
+                        : "N/A"}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="p-6 md:p-10 pt-6 w-full">
               <h4 className="mt-6 text-lg font-semibold">Car Specification</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 text-base gap-4 mt-4">
+                {/* ... existing specs ... */}
                 <div>
                   <span className="font-medium">Make</span>
                   <p className="text-gray-500">
@@ -1023,6 +1128,44 @@ export default function Details2() {
                   )}
                 </div>
               </section>
+
+              {/* --- NEW: Driver Information Section --- */}
+              {vehicleDetails.serviceType !== "self-drive" && (
+                <section className="my-8">
+                  <h2 className="font-semibold text-lg mb-4">
+                    Driver Information
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border rounded-lg bg-gray-50">
+                    <div>
+                      <span className="font-medium">Working Days</span>
+                      <p className="text-gray-600">
+                        {formatWorkingDays(vehicleDetails.driverWorkingDays) ||
+                          formatWorkingDays(
+                            vehicleDetails.driverInfo?.workingDays
+                          )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Working Hours</span>
+                      <p className="text-gray-600">
+                        {vehicleDetails.driverHours ||
+                          vehicleDetails.driverInfo?.workingHours ||
+                          "Not specified"}
+                      </p>
+                    </div>
+                    <div className="col-span-1 sm:col-span-2">
+                      <span className="font-medium">Max Daily Hours</span>
+                      <p className="text-gray-600">
+                        {vehicleDetails.driverMaxHours ||
+                          vehicleDetails.driverInfo?.maxHoursPerDay ||
+                          "Not specified"}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* ... existing sections (locations, availability, reviews) ... */}
               <section className="my-8">
                 <h2 className="font-semibold text-lg mb-4">
                   Pick-up Locations
@@ -1162,9 +1305,65 @@ export default function Details2() {
       {/* Right Column - Booking Panel */}
       <div className="flex flex-col lg:w-1/4">
         <section className="bg-white p-6 md:mt-24 mb-8 rounded-xl shadow-md">
+          {/* --- NEW: Service Type Selector --- */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-[#00113D] mb-4">
+              Choose Your Service
+            </h2>
+            {vehicleDetails.serviceType === "self-drive" && (
+              <div className="p-3 bg-blue-50 text-blue-800 text-sm rounded-md">
+                This vehicle is available for self-drive only.
+              </div>
+            )}
+            {vehicleDetails.serviceType === "with-driver" && (
+              <div className="p-3 bg-green-50 text-green-800 text-sm rounded-md">
+                This vehicle is available with a driver only.
+              </div>
+            )}
+            {vehicleDetails.serviceType === "both" && (
+              <div className="space-y-3">
+                <label
+                  className={`flex items-center p-3 border rounded-lg cursor-pointer ${
+                    selectedServiceOption === "self-drive"
+                      ? "bg-blue-50 border-blue-500"
+                      : "border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="serviceType"
+                    value="self-drive"
+                    checked={selectedServiceOption === "self-drive"}
+                    onChange={(e) => setSelectedServiceOption(e.target.value)}
+                    className="form-radio h-4 w-4 text-blue-600"
+                  />
+                  <span className="ml-3 text-sm font-medium">Self-Drive</span>
+                </label>
+                <label
+                  className={`flex items-center p-3 border rounded-lg cursor-pointer ${
+                    selectedServiceOption === "with-driver"
+                      ? "bg-green-50 border-green-500"
+                      : "border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="serviceType"
+                    value="with-driver"
+                    checked={selectedServiceOption === "with-driver"}
+                    onChange={(e) => setSelectedServiceOption(e.target.value)}
+                    className="form-radio h-4 w-4 text-green-600"
+                  />
+                  <span className="ml-3 text-sm font-medium">With Driver</span>
+                </label>
+              </div>
+            )}
+          </div>
+
           <h2 className="text-lg font-semibold text-[#00113D] mb-6">
             Pick Up and Drop Off
           </h2>
+          {/* ... existing date and location pickers ... */}
           <div className="mb-4">
             <label
               htmlFor="pickup-date-input"
@@ -1317,15 +1516,15 @@ export default function Details2() {
               placeholder="Choose a drop-off point"
             />
           </div>
-          <div className="p-3 bg-blue-50 text-xs text-blue-700 mt-6 rounded-md">
-            Note: Driver selection and other preferences can be set during the
-            final booking step if applicable.
-          </div>
         </section>
+        {/* MODIFIED: Pass dynamic pricing and service option to PriceBreakdown */}
         <PriceBreakdown
           days={days}
-          dailyPrice={dailyPrice}
+          dailyPrice={effectiveDailyPrice} // Pass the dynamically calculated price
           totalPrice={totalPrice}
+          serviceOption={selectedServiceOption} // Pass the selected option
+          selfDriveDailyPrice={selfDrivePrice} // Pass base price for breakdown clarity
+          driverDailyPrice={driverPrice} // Pass driver add-on price
           id={vehicleDetails?.id}
           ownerId={vehicleDetails?.ownerId}
           owenerId={vehicleDetails?.owenerId}
@@ -1333,12 +1532,13 @@ export default function Details2() {
             currentDropOffDate ? currentDropOffDate.toISOString() : ""
           }
           pickUpTime={currentPickUpDate ? currentPickUpDate.toISOString() : ""}
-          pickUpLocation={actualSelectedPickUp?.originalCoords} // Pass full object
-          pickUpLocationName={selectedPickUpLocationName} // Pass name
-          dropOffLocation={actualSelectedDropOff?.originalCoords} // Pass full object
-          dropOffLocationName={selectedDropOffLocationName} // Pass name
+          pickUpLocation={actualSelectedPickUp?.originalCoords}
+          pickUpLocationName={selectedPickUpLocationName}
+          dropOffLocation={actualSelectedDropOff?.originalCoords}
+          dropOffLocationName={selectedDropOffLocationName}
         />
       </div>
+      {/* ... existing map and fullscreen image popups (unchanged) ... */}
       {showMapPopup && mapPopupData && (
         <div className="fixed inset-0 flex items-center justify-center z-[100] bg-black bg-opacity-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 flex flex-col max-h-[80vh]">

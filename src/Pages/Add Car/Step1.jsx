@@ -61,12 +61,13 @@ const Step1 = ({ nextStep }) => {
 
   useEffect(() => {
     const makeOptions = makesData.Makes.map((make) => make.make_display);
+    makeOptions.push("Other"); // Add "Other" to the list
     setMakeDisplayArray(makeOptions);
   }, []);
 
   useEffect(() => {
     const selectedMake = vehicleData.make;
-    if (selectedMake) {
+    if (selectedMake && selectedMake !== "Other") {
       const selectedMakeModels = modelsData.find(
         (model) => Object.keys(model)[0] === selectedMake
       );
@@ -83,38 +84,39 @@ const Step1 = ({ nextStep }) => {
     updateVehicleData({ [name]: value });
   };
 
-  // Updated validation logic for new Select fields
+  // --- MODIFIED: Updated validation logic ---
+  const isMakeModelValid =
+    vehicleData.make === "Other"
+      ? !!vehicleData.otherMake && !!vehicleData.model
+      : !!vehicleData.make && !!vehicleData.model;
+
   const isFormValid =
-    vehicleData.fuelType !== "" &&
-    vehicleData.seats !== "" && // Changed from number check to string check
-    vehicleData.vehicleNumber !== "" &&
-    vehicleData.mileage !== "" && // Changed from number check to string check
-    vehicleData.year !== "" && // Changed from number check to string check
-    vehicleData.plateRegion !== "" && // Was okay, but now it's definitely a select
-    vehicleData.category !== "" &&
-    vehicleData.make !== "" &&
-    vehicleData.model !== "" &&
-    vehicleData.transmission !== "";
+    !!vehicleData.fuelType &&
+    !!vehicleData.seats &&
+    !!vehicleData.vehicleNumber &&
+    !!vehicleData.mileage &&
+    !!vehicleData.year &&
+    !!vehicleData.plateRegion &&
+    !!vehicleData.category &&
+    !!vehicleData.transmission &&
+    isMakeModelValid; // Use the new combined validation
 
   const handleContinueClick = () => {
     if (isFormValid) {
       nextStep();
     } else {
       console.log("Form is invalid. Please fill all required fields.");
-      // You might want to show a user-friendly message or highlight errors
     }
   };
 
   return (
     <div className="flex gap-10">
       <div className="bg-white rounded-2xl shadow-sm p-10 w-full md:w-2/3">
-        {/* Progress Bar */}
+        {/* Progress Bar and Heading (unchanged) */}
         <div className="flex items-center justify-center">
           <div className="w-1/5 border-b-4 border-[#00113D] mr-2"></div>
           <div className="w-4/5 border-b-4 border-blue-200"></div>
         </div>
-
-        {/* Heading */}
         <div className="flex justify-between w-full">
           <div className="flex flex-col w-1/2 items-start">
             <p className="text-xl text-gray-800 my-4 font-medium text-center mb-4">
@@ -126,10 +128,11 @@ const Step1 = ({ nextStep }) => {
 
         {/* Form Fields */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {/* All other form controls remain the same */}
           <FormControl fullWidth required size="small">
             <InputLabel>Fuel Type</InputLabel>
             <Select
-              label="Fuel Type" // Note: MUI recommends label prop match InputLabel
+              label="Fuel Type"
               name="fuelType"
               value={vehicleData.fuelType || ""}
               onChange={handleChange}
@@ -144,7 +147,6 @@ const Step1 = ({ nextStep }) => {
             </Select>
           </FormControl>
 
-          {/* Number of Seats - Changed to Select */}
           <FormControl fullWidth required size="small">
             <InputLabel>Number of Seats</InputLabel>
             <Select
@@ -175,7 +177,6 @@ const Step1 = ({ nextStep }) => {
             required
           />
 
-          {/* Mileage - Changed to Select */}
           <FormControl fullWidth required size="small">
             <InputLabel>Mileage</InputLabel>
             <Select
@@ -195,7 +196,6 @@ const Step1 = ({ nextStep }) => {
             </Select>
           </FormControl>
 
-          {/* Manufactured Year - Changed to Select */}
           <FormControl fullWidth required size="small">
             <InputLabel>Manufactured Year</InputLabel>
             <Select
@@ -215,7 +215,6 @@ const Step1 = ({ nextStep }) => {
             </Select>
           </FormControl>
 
-          {/* Plate Region - Changed to Select */}
           <FormControl fullWidth required size="small">
             <InputLabel>Plate Region</InputLabel>
             <Select
@@ -248,8 +247,7 @@ const Step1 = ({ nextStep }) => {
               </MenuItem>
               <MenuItem value="Hatchback">Hatchback</MenuItem>
               <MenuItem value="Sedan">Sedan</MenuItem>
-              <MenuItem value="MUV">MUV/SUV</MenuItem>{" "}
-              {/* Combined for simplicity or keep separate */}
+              <MenuItem value="MUV">MUV/SUV</MenuItem>
               <MenuItem value="SUV">SUV</MenuItem>
               <MenuItem value="Coupe">Coupe</MenuItem>
               <MenuItem value="Convertible">Convertible</MenuItem>
@@ -259,16 +257,22 @@ const Step1 = ({ nextStep }) => {
             </Select>
           </FormControl>
 
-          <div className="flex gap-6">
+          {/* --- MODIFIED: Make/Model Section --- */}
+          {/* This container spans two columns to hold the make/model logic */}
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormControl variant="outlined" fullWidth size="small" required>
-              <InputLabel id="car-make-label">Car Make</InputLabel>
+              <InputLabel>Car Make</InputLabel>
               <Select
-                labelId="car-make-label"
                 label="Car Make"
                 name="make"
                 value={vehicleData.make || ""}
                 onChange={(event) => {
-                  updateVehicleData({ make: event.target.value, model: "" });
+                  // When make changes, clear model and otherMake
+                  updateVehicleData({
+                    make: event.target.value,
+                    model: "",
+                    otherMake: "",
+                  });
                 }}
               >
                 <MenuItem value="">
@@ -282,32 +286,58 @@ const Step1 = ({ nextStep }) => {
               </Select>
             </FormControl>
 
-            <FormControl
-              variant="outlined"
-              fullWidth
-              size="small"
-              required
-              disabled={!vehicleData.make || modelOptions.length === 0}
-            >
-              <InputLabel id="car-model-label">Car Model</InputLabel>
-              <Select
-                labelId="car-model-label"
-                label="Car Model"
-                name="model"
-                value={vehicleData.model || ""}
-                onChange={handleChange}
+            {vehicleData.make === "Other" ? (
+              // If "Other" is selected, show two text fields
+              <>
+                <TextField
+                  label="Specify Make"
+                  variant="outlined"
+                  name="otherMake"
+                  value={vehicleData.otherMake || ""}
+                  onChange={handleChange}
+                  size="small"
+                  fullWidth
+                  required
+                />
+                <TextField
+                  label="Specify Model"
+                  variant="outlined"
+                  name="model" // Re-using the 'model' field for the custom model
+                  value={vehicleData.model || ""}
+                  onChange={handleChange}
+                  size="small"
+                  fullWidth
+                  required
+                />
+              </>
+            ) : (
+              // Otherwise, show the standard model dropdown
+              <FormControl
+                variant="outlined"
+                fullWidth
+                size="small"
+                required
+                disabled={!vehicleData.make || modelOptions.length === 0}
               >
-                <MenuItem value="">
-                  <em>None</em>
-                </MenuItem>
-                {vehicleData.make &&
-                  modelOptions.map((model) => (
-                    <MenuItem key={model} value={model}>
-                      {model}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
+                <InputLabel>Car Model</InputLabel>
+                <Select
+                  label="Car Model"
+                  name="model"
+                  value={vehicleData.model || ""}
+                  onChange={handleChange}
+                >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {vehicleData.make &&
+                    modelOptions.map((model) => (
+                      <MenuItem key={model} value={model}>
+                        {model}
+                      </MenuItem>
+                    ))}
+                </Select>
+              </FormControl>
+            )}
           </div>
 
           <FormControl fullWidth required size="small">

@@ -6,14 +6,18 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import CloseIcon from "@mui/icons-material/Close"; // For the close button
 
 const ForgotPassword = () => {
-  const [phone_number, setPhoneNumber] = useState("");
+  // This state will now only hold the 9 digits of the phone number
+  const [mobileNumber, setMobileNumber] = useState("");
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!phone_number || errors.phone_number) return;
+    if (!mobileNumber || errors.phone_number) return;
+
+    // Construct the full phone number with the prefix before sending
+    const fullPhoneNumber = `+251${mobileNumber}`;
 
     try {
       const response = await fetch(
@@ -21,39 +25,51 @@ const ForgotPassword = () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone_number: phone_number }),
+          body: JSON.stringify({ phone_number: fullPhoneNumber }),
         }
       );
 
       if (!response.ok) {
         console.error("Failed to send OTP", response);
+        // You might want to set an error state here to show the user
         return;
       }
       console.log(response);
 
-      navigate("/resetpassword", { state: { phone_number } });
+      // Pass the full phone number to the reset password page
+      navigate("/resetpassword", { state: { phone_number: fullPhoneNumber } });
     } catch (error) {
       console.error("Error sending OTP:", error);
+    }
+  };
+
+  // New handler to control the input for the 9-digit number
+  const handlePhoneInputChange = (e) => {
+    const value = e.target.value;
+    // Allow only numeric input and limit to 9 characters
+    if (/^\d*$/.test(value) && value.length <= 9) {
+      setMobileNumber(value);
     }
   };
 
   useEffect(() => {
     const validatePhoneNumber = () => {
       let validationErrors = {};
-      const phoneRegex = /^\+251(9|7)\d{8}$/;
+      // Updated regex to validate the 9-digit part of the number
+      const phoneRegex = /^(9|7)\d{8}$/;
 
-      if (!phone_number) {
+      if (!mobileNumber) {
         validationErrors.phone_number = "Phone number is required";
-      } else if (!phoneRegex.test(phone_number)) {
+      } else if (!phoneRegex.test(mobileNumber)) {
         validationErrors.phone_number =
-          "Invalid phone number. It should start with +2519 or +2517 and be 12 digits long.";
+          "Number must be 9 digits and start with 9 or 7.";
       }
 
       setErrors(validationErrors);
     };
 
     validatePhoneNumber();
-  }, [phone_number]);
+  }, [mobileNumber]);
 
   return (
     <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 z-50">
@@ -61,13 +77,12 @@ const ForgotPassword = () => {
         <div className="flex w-full justify-between items-center ">
           <h1 className="text-3xl font-bold my-8">Forgot Password</h1>
           <Link to="/" className="relative -mt-40">
-            {" "}
             <IconButton
               aria-label="close login modal"
               sx={{
                 position: "absolute",
-                top: "12px", // Adjust as needed
-                right: "0px", // Adjust as needed
+                top: "12px",
+                right: "0px",
                 color: "text.secondary",
               }}
             >
@@ -84,24 +99,28 @@ const ForgotPassword = () => {
               >
                 Phone Number
               </label>
-              <div className="border border-gray-400 items-center rounded-md flex bg-white">
+              <div className="border border-gray-400 items-center rounded-md flex bg-white focus-within:outline focus-within:outline-1 focus-within:outline-blue-400">
                 <img
                   src={flag}
                   className="w-12 h-8 rounded-xl ml-4"
                   alt="Flag"
                 />
+                <span className="px-2 text-gray-500">+251</span>
                 <input
-                  type="text"
+                  type="tel"
                   id="phone_number"
                   name="phone_number"
-                  value={phone_number}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="flex justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
-                  placeholder="Enter your phone number"
+                  value={mobileNumber}
+                  onChange={handlePhoneInputChange}
+                  className="flex-grow w-full p-3 py-4 bg-transparent text-gray-500 rounded-r-md focus:outline-none"
+                  placeholder="912 345 678"
+                  maxLength="9"
                 />
               </div>
               {errors.phone_number && (
-                <p className="text-red-500 mb-4">{errors.phone_number}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.phone_number}
+                </p>
               )}
             </div>
           </div>
@@ -109,9 +128,9 @@ const ForgotPassword = () => {
             type="submit"
             disabled={Object.keys(errors).length > 0}
             className={`w-full text-white text-lg rounded-full py-3 transition ${
-              !errors.phone_number
+              !errors.phone_number && mobileNumber
                 ? "bg-[#00113D] hover:bg-blue-900"
-                : "bg-gray-300 cursor-not-allowed"
+                : "bg-gray-400 cursor-not-allowed"
             }`}
           >
             Send OTP
@@ -123,6 +142,8 @@ const ForgotPassword = () => {
 };
 
 export { ForgotPassword };
+
+// No changes are needed for the Resetpassword component. It remains the same.
 const Resetpassword = () => {
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
@@ -182,8 +203,8 @@ const Resetpassword = () => {
               aria-label="close login modal"
               sx={{
                 position: "absolute",
-                top: "12px", // Adjust as needed
-                right: "0px", // Adjust as needed
+                top: "12px",
+                right: "0px",
                 color: "text.secondary",
               }}
             >
@@ -193,7 +214,6 @@ const Resetpassword = () => {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-4 mb-6">
-            {/* OTP Input */}
             <div className="relative inline-block text-lg w-full">
               <label
                 className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
@@ -211,8 +231,6 @@ const Resetpassword = () => {
                 placeholder="Enter OTP"
               />
             </div>
-
-            {/* New Password Input */}
             <TextField
               label="New Password"
               variant="outlined"
@@ -237,7 +255,6 @@ const Resetpassword = () => {
               className="w-full"
             />
           </div>
-
           <button
             type="submit"
             className="w-full text-white text-lg rounded-full py-3 transition bg-[#00113D] hover:bg-blue-900"

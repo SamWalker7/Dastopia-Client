@@ -21,6 +21,21 @@ const formatDate = (dateString) => {
   return moment(dateString).format("MMM DD, YYYY");
 };
 
+// NEW: Helper function to format the service type for display
+const formatServiceType = (serviceType) => {
+  if (!serviceType) return "N/A";
+  switch (serviceType) {
+    case "self-drive":
+      return "Self-Drive Only";
+    case "with-driver":
+      return "With Driver Only";
+    case "both":
+      return "Both Options Available";
+    default:
+      return serviceType;
+  }
+};
+
 const RequestDetails = ({
   selectedRequest,
   selectedCarDetails,
@@ -28,7 +43,7 @@ const RequestDetails = ({
   rentalRequests,
   loading,
   handlePayNow,
-  handlePayForExtension, // Added new prop
+  handlePayForExtension,
   isInitiatingPayment,
   paymentError,
   isSubmitting,
@@ -86,6 +101,7 @@ const RequestDetails = ({
 
   const handleCloseExtensionModal = () => setIsExtensionModalOpen(false);
 
+  // renderActionButtons function remains unchanged
   const renderActionButtons = () => {
     if (!selectedRequest || !selectedRequestStatusInfo) return null;
     const { key: statusKey, isPastStartDatePaymentDue } =
@@ -297,6 +313,25 @@ const RequestDetails = ({
                         </span>
                         <p>{selectedCarDetails.vehicleNumber || "N/A"}</p>
                       </div>
+                      {/* --- NEW: Display Available Services --- */}
+                      <div className="pt-2 border-t mt-2">
+                        <span className="font-medium text-black block">
+                          Available Services
+                        </span>
+                        <p className="font-semibold text-blue-700">
+                          {formatServiceType(selectedCarDetails.serviceType)}
+                        </p>
+                      </div>
+                      {selectedCarDetails.serviceType !== "self-drive" && (
+                        <div>
+                          <span className="font-medium text-black block">
+                            Driver's Daily Price
+                          </span>
+                          <p className="text-green-700 font-semibold">
+                            + {selectedCarDetails.driverPrice || "0"} ETB
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -338,6 +373,17 @@ const RequestDetails = ({
                 <div className="mt-6 text-sm">
                   <span className="font-medium text-black block">Duration</span>
                   <p className="text-gray-600">{rentalDurationText}</p>
+                </div>
+                {/* --- NEW: Display Requested Service Type --- */}
+                <div className="mt-4 text-sm">
+                  <span className="font-medium text-black block">
+                    Service Type
+                  </span>
+                  <p className="font-semibold text-gray-800">
+                    {selectedRequest.driverProvided
+                      ? "With Driver"
+                      : "Self-Drive"}
+                  </p>
                 </div>
                 <div className="mt-4 text-sm">
                   <span className="font-medium text-black block">

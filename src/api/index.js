@@ -61,12 +61,16 @@ export const paginatedSearch = async (limit, lastEvaluatedKey) => {
     const response = await axios.post(url("add_vehicle"), {
       operation: "allVehicle",
       limit: limit ? limit : null,
-      lastEValuatedKey: lastEvaluatedKey ? lastEvaluatedKey : null,
+      // CORRECTED: Typo fixed from lastEValuatedKey to lastEvaluatedKey
+      lastEvaluatedKey: lastEvaluatedKey ? lastEvaluatedKey : null,
     });
 
     return response.data;
   } catch (err) {
     console.log(err);
+    // It's good practice to throw the error or return a specific error shape
+    // so the calling component knows the request failed.
+    throw err;
   }
 };
 export const fetchVehicles1 = async () => {
