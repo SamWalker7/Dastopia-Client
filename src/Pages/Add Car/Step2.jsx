@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react"; // IMPORT useCallback
+import React, { useState, useEffect, useCallback } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { IoFileTray } from "react-icons/io5";
 import LibraryAddOutlined from "@mui/icons-material/LibraryAddOutlined";
@@ -43,7 +43,8 @@ const Step2 = ({ nextStep, prevStep }) => {
     "Front Interior",
     "Back Interior",
   ];
-  const requiredDocumentKeys = ["libre", "license", "insurance"];
+  // --- MODIFIED: "insurance" is no longer required ---
+  const requiredDocumentKeys = ["libre", "license"];
 
   const isFormValid = React.useMemo(() => {
     const allRequiredPhotosUploaded = requiredPhotoKeys.every(
@@ -78,8 +79,7 @@ const Step2 = ({ nextStep, prevStep }) => {
     requiredDocumentKeys,
   ]);
 
-  // --- FIX: Wrap handlers in useCallback with dependencies ---
-
+  // --- All handler functions remain unchanged ---
   const handlePhotoUpload = useCallback(
     async (e, key) => {
       const files = Array.from(e.target.files);
@@ -176,7 +176,6 @@ const Step2 = ({ nextStep, prevStep }) => {
   const handleDeletePoa = useCallback(() => {
     deletePowerOfAttorney();
   }, [deletePowerOfAttorney]);
-
   const renderImagePreview = (base64, alt) => {
     return (
       <img
@@ -198,6 +197,7 @@ const Step2 = ({ nextStep, prevStep }) => {
   return (
     <div className="flex gap-10 bg-[#F8F8FF]">
       <div className="mx-auto p-8 md:w-2/3 w-full bg-white rounded-2xl shadow-sm">
+        {/* Progress Bar and Heading (unchanged) */}
         <div className="flex items-center justify-center">
           <div className="w-2/5 border-b-4 border-[#00113D] mr-2"></div>
           <div className="w-3/5 border-b-4 border-blue-200"></div>
@@ -347,6 +347,7 @@ const Step2 = ({ nextStep, prevStep }) => {
             )}
           </div>
         </div>
+        {/* Upload Photos Section (unchanged) */}
         <div className="mb-10">
           <h2 className="text-3xl font-semibold my-8">Upload Photos</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -462,28 +463,23 @@ const Step2 = ({ nextStep, prevStep }) => {
               ))}
           </div>
         </div>
+        {/* --- MODIFIED: Upload Documents Section --- */}
         <div className="md:mb-0 mb-8">
           <h2 className="text-3xl font-semibold mb-8 mt-16">
             Upload Documents
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {requiredDocumentKeys.map((key) => (
-              <div
-                key={key}
-                className="flex md:flex-row flex-col justify-center items-center w-full"
-              >
-                <div
-                  className={`text-gray-700 w-full md:w-72 mb-4 md:mb-0 mx-4 md:text-base text-lg font-medium capitalize ${
-                    localUploadedDocuments[key]?.name ? "" : ""
-                  }`}
-                >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+            {/* Required Documents */}
+            {["libre", "license"].map((key) => (
+              <div key={key} className="flex flex-col">
+                <div className="text-gray-700 w-full mb-2 font-medium capitalize">
                   {key} Document <span className="text-red-500">*</span>
                 </div>
                 <div
                   className={`relative border-2 border-dashed p-4 rounded-lg flex items-center justify-center cursor-pointer group w-full ${
                     localUploadedDocuments[key]?.name
                       ? "border-gray-300 bg-white"
-                      : " bg-gray-50"
+                      : "bg-gray-50"
                   }`}
                   onClick={() =>
                     !localUploadedDocuments[key]?.name &&
@@ -542,8 +538,94 @@ const Step2 = ({ nextStep, prevStep }) => {
                 </div>
               </div>
             ))}
+
+            {/* --- MODIFIED: Optional Bolo (Insurance) Section --- */}
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-8 mt-4">
+              <div className="flex flex-col">
+                <div className="text-gray-700 w-full mb-2 font-medium">
+                  Bolo Document (Optional)
+                </div>
+                <div
+                  className={`relative border-2 border-dashed p-4 rounded-lg flex items-center justify-center cursor-pointer group w-full ${
+                    localUploadedDocuments["insurance"]?.name
+                      ? "border-gray-300 bg-white"
+                      : "bg-gray-50"
+                  }`}
+                  onClick={() =>
+                    !localUploadedDocuments["insurance"]?.name &&
+                    document.getElementById("upload-insurance-doc").click()
+                  }
+                >
+                  <input
+                    id="upload-insurance-doc"
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => handleDocumentUpload(e, "insurance")}
+                  />
+                  {localUploadedDocuments["insurance"]?.name ? (
+                    <>
+                      <div className="text-blue-500 underline truncate">
+                        {localUploadedDocuments["insurance"].name}
+                      </div>
+                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center">
+                        <label className="cursor-pointer mx-2">
+                          <input
+                            type="file"
+                            className="hidden"
+                            onChange={(e) =>
+                              handleEditDocument(
+                                e,
+                                "insurance",
+                                localUploadedDocuments["insurance"].key
+                              )
+                            }
+                          />
+                          <FaEdit className="text-white text-xl hover:text-blue-300" />
+                        </label>
+                        <FaTrash
+                          className="text-white text-xl cursor-pointer mx-2 hover:text-red-500"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteDocument(
+                              "insurance",
+                              localUploadedDocuments["insurance"].key
+                            );
+                          }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-gray-500 flex items-center justify-center text-sm">
+                      <div className="bg-gray-200 py-2 mx-2 rounded-lg px-4">
+                        <IoFileTray size={14} />
+                      </div>
+                      <span className="text-blue-500 underline mr-2">
+                        Click here
+                      </span>
+                      to upload
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <div className="text-gray-700 w-full mb-2 font-medium">
+                  Insurance Reference Number (Optional)
+                </div>
+                <input
+                  type="text"
+                  name="insuranceReference"
+                  placeholder="Enter reference number"
+                  value={vehicleData.insuranceReference || ""}
+                  onChange={(e) =>
+                    updateVehicleData({ insuranceReference: e.target.value })
+                  }
+                  className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
           </div>
         </div>
+        {/* Navigation Buttons (unchanged) */}
         <div className="w-full justify-between items-end gap-4 flex-col md:flex-row flex">
           <button
             onClick={prevStep}

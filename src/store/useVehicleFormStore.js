@@ -64,6 +64,7 @@ const initialVehicleData = {
   pickUp: [],
   dropOff: [],
   plateRegion: "",
+  insuranceReference: "", // --- NEW: Added for Bolo reference number ---
 };
 
 // Define the initial state for uploaded photos (temporary previews)
@@ -668,8 +669,9 @@ const useVehicleFormStore = create(
               ? vehicleData.location
               : [0, 0],
           plateRegion: vehicleData.plateRegion || "",
+          insuranceReference: vehicleData.insuranceReference || "", // --- NEW: Added field ---
 
-          // --- NEW: Add service type and driver fields to the payload ---
+          // --- Service type and driver fields ---
           serviceType: vehicleData.serviceType,
           driverPrice: vehicleData.driverPrice
             ? parseInt(vehicleData.driverPrice, 10)
@@ -690,7 +692,7 @@ const useVehicleFormStore = create(
           incomingData.powerOfAttorney = null;
         }
 
-        // --- NEW: Conditionally clear driver fields if service type is self-drive ---
+        // Conditionally clear driver fields if service type is self-drive (UNCHANGED)
         if (incomingData.serviceType === "self-drive") {
           incomingData.driverPrice = null;
           incomingData.driverMaxHours = null;
