@@ -304,6 +304,8 @@ export default function PriceBreakdown({
   dropOffLocation,
 }) {
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
+  // --- NEW STATE for the driver toggle ---
+  const [driverProvided, setDriverProvided] = useState(false);
 
   // --- MODIFIED: Calculations are now based on props ---
   const {
@@ -335,7 +337,6 @@ export default function PriceBreakdown({
       finalTotalPrice: finalTotal,
     };
   }, [days, selfDriveDailyPrice, driverDailyPrice, serviceOption]);
-
   const handleRequestBooking = () => {
     if (!pickUpLocation || !dropOffLocation) {
       alert(
@@ -400,11 +401,10 @@ export default function PriceBreakdown({
         </div>
 
         {/* --- REMOVED: Driver toggle switch is no longer needed here --- */}
-
         <button
           onClick={handleRequestBooking}
           disabled={!canRequestBooking}
-          className={`w-full text-[#0d1b3e] font-medium py-2 text-xs md:text-sm rounded-full mt-6 transition-colors duration-150 ${
+          className={`w-full text-[#0d1b3e] font-medium py-2 text-xs md:text-sm rounded-full mt-4 transition-colors duration-150 ${
             canRequestBooking
               ? "bg-white hover:bg-gray-200"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"

@@ -311,6 +311,7 @@ const RentalRequests = () => {
     },
     [navigate]
   );
+
   useEffect(() => {
     setLoading(true);
     Promise.all([fetchRentalRequests(), fetchExtensionRequests()]).finally(
@@ -333,6 +334,7 @@ const RentalRequests = () => {
       }
     }
   }, [loading, rentalRequests, extensionRequests, selectedRequest]);
+
   const pendingExtension = useMemo(() => {
     if (selectedRequest?.extensionStatus?.toLowerCase() !== "pending")
       return null;
@@ -615,10 +617,12 @@ const RentalRequests = () => {
                   <span className="font-medium text-black block">
                     Service Type
                   </span>
+
                   <p className="text-gray-600 font-semibold">
                     {selectedRequest.driverProvided
                       ? "With Driver"
                       : "Self-Drive"}
+
                   </p>
                 </div>
                 <div className="mt-4 text-sm">

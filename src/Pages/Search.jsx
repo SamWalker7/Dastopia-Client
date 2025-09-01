@@ -17,7 +17,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
-import SettingsIcon from "@mui/icons-material/Settings"; // For Transmission
+import SettingsIcon from "@mui/icons-material/Settings";
 import CategoryIcon from "@mui/icons-material/Category";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline"; // NEW: For Service Type
 
@@ -27,25 +27,19 @@ import modelData from "../api/models.json";
 import MapComponent from "../components/GoogleMaps";
 import Footer from "../components/Footer";
 
-// Primary color defined
 const PRIMARY_COLOR = "#172554";
-const PRIMARY_COLOR_DARKER = "#0d1732"; // For hover states
-
-// Price constant
+const PRIMARY_COLOR_DARKER = "#0d1732";
 const MAX_PRICE = 50000;
 
-// Helper to create filter button style
 const filterButtonStyle =
   "bg-white border border-gray-300 hover:border-gray-500 text-gray-700 px-4 py-2 rounded-md text-sm flex items-center justify-center shadow-sm transition-colors duration-150 ease-in-out";
-// Active filter buttons will use the primary color for border and text
 const activeFilterButtonStyle = `bg-gray-50 border-[${PRIMARY_COLOR}] text-[${PRIMARY_COLOR}] hover:bg-gray-100 px-4 py-2 rounded-md text-sm flex items-center justify-center shadow-sm transition-colors duration-150 ease-in-out`;
 
-// Helper component for the clear icon button
 const ClearFilterButton = ({ onClick }) => (
   <IconButton
     size="small"
     onClick={(e) => {
-      e.stopPropagation(); // Prevent modal from opening if the parent is a button
+      e.stopPropagation();
       onClick();
     }}
     aria-label="clear filter"
@@ -79,7 +73,6 @@ const Search = () => {
     "Hawassa",
   ];
 
-  // Filter States
   const [make, setMake] = useState("any");
   const [modelList, setModelList] = useState([]);
   const [selectedModel, setSelectedModel] = useState("any");
@@ -91,7 +84,6 @@ const Search = () => {
   const [selectedCity, setSelectedCity] = useState("");
   const [serviceType, setServiceType] = useState("any"); // NEW: Service Type filter state
 
-  // Modal States
   const [openDateModal, setOpenDateModal] = useState(false);
   const [openPriceModal, setOpenPriceModal] = useState(false);
   const [openMakeModelModal, setOpenMakeModelModal] = useState(false);
@@ -100,7 +92,6 @@ const Search = () => {
   const [openServiceTypeModal, setOpenServiceTypeModal] = useState(false); // NEW
   const [openAllFiltersModal, setOpenAllFiltersModal] = useState(false);
 
-  // Temporary states for modal inputs
   const [tempStartDate, setTempStartDate] = useState("");
   const [tempEndDate, setTempEndDate] = useState("");
   const [tempPriceRange, setTempPriceRange] = useState([0, MAX_PRICE]);
@@ -134,12 +125,8 @@ const Search = () => {
     if (pickupLocation && ethiopianCities.includes(pickupLocation)) {
       setSelectedCity(pickupLocation);
     }
-    if (pickupDateQuery) {
-      setStartDate(pickupDateQuery);
-    }
-    if (dropOffDateQuery) {
-      setEndDate(dropOffDateQuery);
-    }
+    if (pickupDateQuery) setStartDate(pickupDateQuery);
+    if (dropOffDateQuery) setEndDate(dropOffDateQuery);
   }, [ethiopianCities]);
 
   // --- All existing handlers (handleOpenDateModal, etc.) are unchanged ---
@@ -191,19 +178,18 @@ const Search = () => {
     if (currentTempEndDate) currentTempEndDate.setHours(0, 0, 0, 0);
 
     let dateError = "";
-    if (tempStartDate && !tempEndDate) {
+    if (tempStartDate && !tempEndDate)
       dateError = "Please select a drop-off date.";
-    } else if (!tempStartDate && tempEndDate) {
+    else if (!tempStartDate && tempEndDate)
       dateError = "Please select a pick-up date.";
-    } else if (currentTempStartDate && currentTempStartDate < today) {
+    else if (currentTempStartDate && currentTempStartDate < today)
       dateError = "Pickup date cannot be before today.";
-    } else if (
+    else if (
       currentTempStartDate &&
       currentTempEndDate &&
       currentTempEndDate <= currentTempStartDate
-    ) {
+    )
       dateError = "End date must be after pickup date.";
-    }
 
     if (dateError) {
       alert(dateError);
@@ -346,6 +332,7 @@ const Search = () => {
           lastEvaluatedKey = data.lastEvaluatedKey || null;
         }
         setVehicles(accumulatedVehicles);
+
       } catch (error) {
         if (error.name !== "AbortError") {
           console.error("Fetch error:", error);
@@ -387,9 +374,9 @@ const Search = () => {
       const priceVal = parseFloat(vehicle.price) || 0;
       return priceVal >= min && priceVal <= max;
     });
-    return filtered.sort(
-      (a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0)
-    );
+    // The main sorting is now by date. This price sort is now secondary if needed, but not required.
+    // We'll keep it for price-based filtering, but the primary display is by date from the fetch.
+    return filtered;
   }, [vehicles, priceRange]);
 
   const transmissionType = ["Automatic", "Manual"];
@@ -472,7 +459,6 @@ const Search = () => {
                   />
                 )}
               </button>
-
               <button
                 onClick={handleOpenPriceModal}
                 className={
@@ -491,7 +477,6 @@ const Search = () => {
                   />
                 )}
               </button>
-
               <button
                 onClick={handleOpenMakeModelModal}
                 className={
@@ -549,7 +534,6 @@ const Search = () => {
                   <ClearFilterButton onClick={() => setTransmission("any")} />
                 )}
               </button>
-
               <button
                 onClick={handleOpenCategoryModal}
                 className={
@@ -564,7 +548,6 @@ const Search = () => {
                   <ClearFilterButton onClick={() => setCategory("any")} />
                 )}
               </button>
-
               <button
                 onClick={handleOpenAllFiltersModal}
                 className={
@@ -578,7 +561,6 @@ const Search = () => {
               </button>
             </div>
           </div>
-
           <div className="flex lg:flex-row flex-col items-start w-full container mx-auto px-4">
             <div className="flex flex-col w-full lg:w-3/5 xl:w-2/3 lg:pr-6">
               <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
@@ -665,14 +647,13 @@ const Search = () => {
             />
           </DialogContent>
           <DialogActions>
-            {" "}
             <Button
               onClick={handleApplyDates}
               variant="contained"
               sx={primaryButtonStyle}
             >
               Apply Dates
-            </Button>{" "}
+            </Button>
           </DialogActions>
         </Dialog>
 
@@ -728,8 +709,6 @@ const Search = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
-        {/* Make/Model Modal */}
         <Dialog
           open={openMakeModelModal}
           onClose={() => setOpenMakeModelModal(false)}
