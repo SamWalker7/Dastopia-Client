@@ -24,6 +24,14 @@ const fileToBase64 = (file) => {
 
 // Define the initial state of the vehicle data form
 const initialVehicleData = {
+  // --- NEW: Service Type & Driver Pricing Fields ---
+  serviceType: "self-drive", // Defaults to "self-drive" for existing vehicles
+  driverPrice: "", // Daily price for driver, string to support empty input
+  driverMaxHours: 8, // Default max hours for driver
+  driverHours: "8:00 AM - 6:00 PM", // Default working hours string
+  driverWorkingDays: ["monday", "tuesday", "wednesday", "thursday", "friday"], // Default working days
+
+  // --- Existing Fields ---
   advanceNoticePeriod: "",
   unavailableDates: [], // Store array of ISO date strings for unavailable dates
   carFeatures: [],
@@ -88,7 +96,7 @@ const useVehicleFormStore = create(
       uploadedDocuments: { ...initialUploadedDocuments },
       uploadedPowerOfAttorney: null, // NEW: State for Power of Attorney UI preview
 
-      // --- Token Refresh Logic --- (EXACTLY AS PROVIDED ORIGINALLY)
+      // --- Token Refresh Logic --- (UNCHANGED)
       refreshAccessToken: async () => {
         const storedUser = localStorage.getItem("customer");
         const user = storedUser ? JSON.parse(storedUser) : null;
@@ -130,6 +138,7 @@ const useVehicleFormStore = create(
           throw error;
         }
       },
+      // --- Other functions (uploadImageForEditing, apiCallWithRetry, etc.) are unchanged ---
       uploadImageForEditing: async (vehicleId, file) => {
         try {
           if (!vehicleId) {
@@ -172,7 +181,7 @@ const useVehicleFormStore = create(
           throw error;
         }
       },
-      // Function to make API calls with automatic token refresh (EXACTLY AS PROVIDED ORIGINALLY)
+      // Function to make API calls with automatic token refresh (UNCHANGED)
       apiCallWithRetry: async (url, options, retryCount = 0) => {
         const storedUser = localStorage.getItem("customer");
         const user = storedUser ? JSON.parse(storedUser) : null;
@@ -229,16 +238,14 @@ const useVehicleFormStore = create(
         }
       },
 
-      // --- Actions using apiCallWithRetry ---
-
-      // Action to update vehicle data (EXACTLY AS PROVIDED ORIGINALLY)
+      // Action to update vehicle data (UNCHANGED)
       updateVehicleData: (newData) => {
         set((state) => ({
           vehicleData: { ...state.vehicleData, ...newData },
         }));
       },
 
-      // Action to get a pre-signed URL for file upload (images or documents) (EXACTLY AS PROVIDED ORIGINALLY)
+      // --- All file upload/delete/update actions remain unchanged ---
       getPresignedUrl: async (vehicleId, filename, contentType, operation) => {
         const url =
           "https://xo55y7ogyj.execute-api.us-east-1.amazonaws.com/prod/add_vehicle";
@@ -267,7 +274,6 @@ const useVehicleFormStore = create(
         }
       },
 
-      // (EXACTLY AS PROVIDED ORIGINALLY)
       uploadToPreSignedUrl: async (preSignedUrl, file, contentType) => {
         try {
           const response = await fetch(preSignedUrl, {
@@ -294,7 +300,6 @@ const useVehicleFormStore = create(
         }
       },
 
-      // Action to upload a vehicle image (EXACTLY AS PROVIDED ORIGINALLY)
       uploadVehicleImage: async (file, key) => {
         try {
           const vehicleId = get().vehicleData.id;
@@ -349,7 +354,6 @@ const useVehicleFormStore = create(
         }
       },
 
-      // Action to upload an admin document (EXACTLY AS PROVIDED ORIGINALLY)
       uploadAdminDocument: async (file, key) => {
         try {
           const vehicleId = get().vehicleData.id;
@@ -390,7 +394,6 @@ const useVehicleFormStore = create(
         }
       },
 
-      // Action to delete a vehicle image (EXACTLY AS PROVIDED ORIGINALLY)
       deleteVehicleImage: (key, imageS3Key) => {
         set((state) => {
           const updatedPhotos = { ...state.uploadedPhotos };
@@ -419,7 +422,6 @@ const useVehicleFormStore = create(
         });
       },
 
-      // Action to delete an admin document (EXACTLY AS PROVIDED ORIGINALLY)
       deleteAdminDocument: (key, documentS3Key) => {
         set((state) => {
           const updatedDocuments = { ...state.uploadedDocuments };
@@ -442,7 +444,6 @@ const useVehicleFormStore = create(
         });
       },
 
-      // Action to update a vehicle image (EXACTLY AS PROVIDED ORIGINALLY)
       updateVehicleImage: async (file, key, oldImageS3Key) => {
         try {
           const vehicleId = get().vehicleData.id;
@@ -505,7 +506,6 @@ const useVehicleFormStore = create(
         }
       },
 
-      // Action to update an admin document (EXACTLY AS PROVIDED ORIGINALLY)
       updateAdminDocument: async (file, key, oldDocumentS3Key) => {
         try {
           const vehicleId = get().vehicleData.id;
@@ -556,7 +556,6 @@ const useVehicleFormStore = create(
         }
       },
 
-      // --- NEW ACTIONS FOR POWER OF ATTORNEY ---
       uploadPowerOfAttorney: async (file) => {
         try {
           const vehicleId = get().vehicleData.id;
@@ -609,11 +608,11 @@ const useVehicleFormStore = create(
         await get().uploadPowerOfAttorney(file);
       },
 
-      // Action to submit the vehicle listing to the API
+      // --- MODIFIED: Action to submit the vehicle listing to the API ---
       submitVehicleListing: async () => {
         const vehicleData = get().vehicleData;
 
-        // Location transformation (EXACTLY AS PROVIDED ORIGINALLY)
+        // Location transformation (UNCHANGED)
         const transformedPickUp = Array.isArray(vehicleData.pickUp)
           ? vehicleData.pickUp.map((loc) => [
               loc.position.lat,
@@ -629,6 +628,7 @@ const useVehicleFormStore = create(
 
         // Prepare incoming data for the API request
         const incomingData = {
+          // Existing data fields
           city: vehicleData.city || "string",
           category: vehicleData.category || "string",
           make: vehicleData.make || "string",
@@ -659,7 +659,7 @@ const useVehicleFormStore = create(
           representativeLastName: vehicleData.representativeLastName,
           representativePhone: vehicleData.representativePhone,
           representativeEmail: vehicleData.representativeEmail,
-          powerOfAttorney: vehicleData.powerOfAttorney, // NEW
+          powerOfAttorney: vehicleData.powerOfAttorney,
           vehicleImageKeys: vehicleData.vehicleImageKeys || [],
           adminDocumentKeys: vehicleData.adminDocumentKeys || [],
           location:
@@ -668,15 +668,34 @@ const useVehicleFormStore = create(
               ? vehicleData.location
               : [0, 0],
           plateRegion: vehicleData.plateRegion || "",
+
+          // --- NEW: Add service type and driver fields to the payload ---
+          serviceType: vehicleData.serviceType,
+          driverPrice: vehicleData.driverPrice
+            ? parseInt(vehicleData.driverPrice, 10)
+            : null,
+          driverMaxHours: vehicleData.driverMaxHours
+            ? parseInt(vehicleData.driverMaxHours, 10)
+            : null,
+          driverHours: vehicleData.driverHours,
+          driverWorkingDays: vehicleData.driverWorkingDays,
         };
 
-        // NEW: Conditionally clear representative data if owner is posting
+        // Conditionally clear representative data if owner is posting (UNCHANGED)
         if (incomingData.isPostedByOwner === "true") {
           incomingData.representativeFirstName = "";
           incomingData.representativeLastName = "";
           incomingData.representativePhone = "";
           incomingData.representativeEmail = "";
           incomingData.powerOfAttorney = null;
+        }
+
+        // --- NEW: Conditionally clear driver fields if service type is self-drive ---
+        if (incomingData.serviceType === "self-drive") {
+          incomingData.driverPrice = null;
+          incomingData.driverMaxHours = null;
+          incomingData.driverHours = "";
+          incomingData.driverWorkingDays = [];
         }
 
         console.log("Submitting vehicle data:", incomingData);
@@ -704,7 +723,7 @@ const useVehicleFormStore = create(
           vehicleData: { ...initialVehicleData, id: generateUniqueId() },
           uploadedPhotos: { ...initialUploadedPhotos },
           uploadedDocuments: { ...initialUploadedDocuments },
-          uploadedPowerOfAttorney: null, // NEW
+          uploadedPowerOfAttorney: null,
         });
       },
     }),
@@ -715,7 +734,7 @@ const useVehicleFormStore = create(
         vehicleData: state.vehicleData,
         uploadedPhotos: state.uploadedPhotos,
         uploadedDocuments: state.uploadedDocuments,
-        uploadedPowerOfAttorney: state.uploadedPowerOfAttorney, // NEW
+        uploadedPowerOfAttorney: state.uploadedPowerOfAttorney,
       }),
     }
   )

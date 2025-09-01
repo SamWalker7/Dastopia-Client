@@ -39,7 +39,7 @@ const PaymentDetailsModal = ({
   pickUpTime,
   pickUpLocation,
   dropOffLocation,
-  driverProvided, // --- NEW PROP ---
+  driverProvided, // This prop is now correctly determined by the service selection
   onClose,
 }) => {
   const [isChecked, setIsChecked] = useState(false);
@@ -106,7 +106,7 @@ const PaymentDetailsModal = ({
             price: totalPrice.toString(),
             pickUp: pickUpArray,
             dropOff: dropOffArray,
-            driverProvided: driverProvided, // --- USE THE NEW PROP HERE ---
+            driverProvided: driverProvided, // Use the prop passed from PriceBreakdown
           }),
         }
       );
@@ -289,10 +289,12 @@ const PaymentDetailsModal = ({
   );
 };
 
-// PriceBreakdown is updated with the driver toggle switch
+// --- MODIFIED PriceBreakdown Component ---
 export default function PriceBreakdown({
   days,
-  dailyPrice,
+  selfDriveDailyPrice,
+  driverDailyPrice,
+  serviceOption,
   id,
   ownerId,
   owenerId,
@@ -302,24 +304,37 @@ export default function PriceBreakdown({
   dropOffLocation,
 }) {
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
-  // --- NEW STATE for the driver toggle ---
-  const [driverProvided, setDriverProvided] = useState(false);
 
-  const { subtotal, price, serviceFee, turnoverTax, finalTotalPrice } =
-    useMemo(() => {
-      const pricing = (days || 0) * (dailyPrice || 0);
-      const service = pricing * 0.1;
-      const sub = pricing + service;
-      const tax = sub * 0.1;
-      const finalTotal = sub + tax;
-      return {
-        subtotal: sub,
-        price: pricing,
-        serviceFee: service,
-        turnoverTax: tax,
-        finalTotalPrice: finalTotal,
-      };
-    }, [days, dailyPrice]);
+  // --- MODIFIED: Calculations are now based on props ---
+  const {
+    carRentalPrice,
+    driverServicePrice,
+    subtotal,
+    serviceFee,
+    turnoverTax,
+    finalTotalPrice,
+  } = useMemo(() => {
+    const carPrice = (days || 0) * (selfDriveDailyPrice || 0);
+    const driverPrice =
+      serviceOption === "with-driver"
+        ? (days || 0) * (driverDailyPrice || 0)
+        : 0;
+
+    const totalRental = carPrice + driverPrice;
+    const service = totalRental * 0.1;
+    const sub = totalRental + service;
+    const tax = sub * 0.1;
+    const finalTotal = sub + tax;
+
+    return {
+      carRentalPrice: carPrice,
+      driverServicePrice: driverPrice,
+      subtotal: sub,
+      serviceFee: service,
+      turnoverTax: tax,
+      finalTotalPrice: finalTotal,
+    };
+  }, [days, selfDriveDailyPrice, driverDailyPrice, serviceOption]);
 
   const handleRequestBooking = () => {
     if (!pickUpLocation || !dropOffLocation) {
@@ -337,22 +352,44 @@ export default function PriceBreakdown({
   return (
     <div className="flex items-center justify-center">
       <div className="bg-[#0d1b3e] text-gray-300 shadow-lg p-6 rounded-2xl w-full max-w-md">
-        <h1 className="text-xl md:text-2xl text-white mb-4">Price Breakdown</h1>
+        <h1 className="text-xl md:text-2xl text-white mb-2">Price Breakdown</h1>
+
+        {/* --- NEW: Display selected service option --- */}
+        <div
+          className={`text-center py-1 px-3 text-xs font-semibold rounded-full mb-4 inline-block ${
+            serviceOption === "with-driver"
+              ? "bg-green-500 text-white"
+              : "bg-blue-500 text-white"
+          }`}
+        >
+          Service:{" "}
+          {serviceOption === "with-driver" ? "With Driver" : "Self-Drive"}
+        </div>
+
         <div className="space-y-3">
+          {/* --- MODIFIED: Detailed breakdown --- */}
           <div className="flex justify-between text-xs md:text-sm">
-            <span>Daily Fee (x{days} days)</span>
-            <span>{price.toFixed(2)} birr</span>
+            <span>Car Rental Fee (x{days} days)</span>
+            <span>{carRentalPrice.toFixed(2)} birr</span>
           </div>
+
+          {serviceOption === "with-driver" && (
+            <div className="flex justify-between text-xs md:text-sm">
+              <span>Driver Service Fee (x{days} days)</span>
+              <span>{driverServicePrice.toFixed(2)} birr</span>
+            </div>
+          )}
+
           <div className="flex justify-between text-xs md:text-sm">
-            <span>Service Fee (10%)</span>
+            <span>Service Fee</span>
             <span>{serviceFee.toFixed(2)} birr</span>
           </div>
           <div className="flex justify-between text-xs md:text-sm">
-            <span>Sub Total </span>
+            <span>Sub Total</span>
             <span>{subtotal.toFixed(2)} birr</span>
           </div>
           <div className="flex justify-between text-xs md:text-sm">
-            <span>TOT (10%)</span>
+            <span>Tax</span>
             <span>{turnoverTax.toFixed(2)} birr</span>
           </div>
           <div className="h-px bg-white/20 my-3" />
@@ -362,30 +399,12 @@ export default function PriceBreakdown({
           </div>
         </div>
 
-        {/* --- NEW: Driver Request Toggle Switch --- */}
-        <div className="flex items-center justify-between mt-6">
-          <span className="text-sm font-medium text-white">
-            Request a Driver?
-          </span>
-          <label
-            htmlFor="driver-toggle"
-            className="relative inline-flex items-center cursor-pointer"
-          >
-            <input
-              type="checkbox"
-              id="driver-toggle"
-              className="sr-only peer"
-              checked={driverProvided}
-              onChange={() => setDriverProvided(!driverProvided)}
-            />
-            <div className="w-11 h-6 bg-gray-500 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-          </label>
-        </div>
+        {/* --- REMOVED: Driver toggle switch is no longer needed here --- */}
 
         <button
           onClick={handleRequestBooking}
           disabled={!canRequestBooking}
-          className={`w-full text-[#0d1b3e] font-medium py-2 text-xs md:text-sm rounded-full mt-4 transition-colors duration-150 ${
+          className={`w-full text-[#0d1b3e] font-medium py-2 text-xs md:text-sm rounded-full mt-6 transition-colors duration-150 ${
             canRequestBooking
               ? "bg-white hover:bg-gray-200"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -395,8 +414,7 @@ export default function PriceBreakdown({
         </button>
         {!canRequestBooking && (
           <p className="text-red-300 text-xs text-center mt-2">
-            Booking details incomplete. Please ensure all car information is
-            available.
+            Booking details incomplete. Please select dates and locations.
           </p>
         )}
       </div>
@@ -410,7 +428,8 @@ export default function PriceBreakdown({
           pickUpTime={pickUpTime}
           pickUpLocation={pickUpLocation}
           dropOffLocation={dropOffLocation}
-          driverProvided={driverProvided} // --- Pass the state to the modal ---
+          // --- MODIFIED: Pass the correct boolean value to the modal ---
+          driverProvided={serviceOption === "with-driver"}
           onClose={() => setShowPaymentDetails(false)}
         />
       )}

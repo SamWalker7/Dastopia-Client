@@ -37,6 +37,21 @@ const fileToBase64 = (file) => {
   });
 };
 
+// NEW: Helper to format service type for display
+const formatServiceType = (serviceType) => {
+  if (!serviceType) return "N/A";
+  switch (serviceType) {
+    case "self-drive":
+      return "Self-Drive Only";
+    case "with-driver":
+      return "With Driver Only";
+    case "both":
+      return "Both Options Available";
+    default:
+      return serviceType;
+  }
+};
+
 /**
  * A robust, self-contained component for displaying and editing vehicle details.
  * It manages its own state and handles the entire image upload workflow internally.
@@ -87,11 +102,9 @@ const Details = ({ selectedVehicleId }) => {
 
         const fetchedData = response.body;
 
-        // **THE FIX IS HERE: Correctly fetch download URLs using your function**
         const imagePromises = (fetchedData.vehicleImageKeys || []).map(
           async (key) => {
             try {
-              // Using the imported `getDownloadUrl` function directly
               const urlResponse = await getDownloadUrl(key);
               return { s3Key: key, displayUrl: urlResponse?.body || audia1 };
             } catch (error) {
@@ -106,11 +119,12 @@ const Details = ({ selectedVehicleId }) => {
 
         const images = await Promise.all(imagePromises);
 
-        // **NEW**: Add status to form data, defaulting to 'active' if not provided
+        // **NEW**: Add status and default serviceType to form data if not provided
         const initialFormData = {
           ...fetchedData,
           images,
           status: fetchedData.status || "active",
+          serviceType: fetchedData.serviceType || "self-drive", // Default to self-drive
         };
 
         setOriginalVehicle(initialFormData);
@@ -126,12 +140,9 @@ const Details = ({ selectedVehicleId }) => {
     };
 
     fetchDetails();
-    // `apiCallWithRetry` is stable, dependency is on `selectedVehicleId`
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedVehicleId]);
+  }, [selectedVehicleId, apiCallWithRetry]); // apiCallWithRetry is stable
 
-  // --- INTERNAL API HELPERS ---
-
+  // --- INTERNAL API HELPERS (Unchanged) ---
   const getPresignedUrl = async (filename, contentType) => {
     const response = await apiCallWithRetry(
       "https://xo55y7ogyj.execute-api.us-east-1.amazonaws.com/prod/add_vehicle",
@@ -175,7 +186,6 @@ const Details = ({ selectedVehicleId }) => {
 
   const handleCancelEdit = () => {
     setUiState((prev) => ({ ...prev, isEditing: false }));
-    // Reset form data to the pristine original version
     setFormData(originalVehicle);
   };
 
@@ -183,6 +193,18 @@ const Details = ({ selectedVehicleId }) => {
     const { name, value, type, checked } = e.target;
     const val = type === "checkbox" ? checked : value;
     setFormData((prev) => ({ ...prev, [name]: val }));
+  };
+
+  // NEW: Handler for driver working days checkboxes
+  const handleWorkingDaysChange = (e) => {
+    const { value, checked } = e.target;
+    setFormData((prev) => {
+      const currentDays = prev.driverWorkingDays || [];
+      const newDays = checked
+        ? [...currentDays, value]
+        : currentDays.filter((day) => day !== value);
+      return { ...prev, driverWorkingDays: [...new Set(newDays)] };
+    });
   };
 
   const handleFeaturesChange = (e) => {
@@ -244,16 +266,24 @@ const Details = ({ selectedVehicleId }) => {
     }));
   };
 
+  // --- MODIFIED: `handleSaveChanges` to include new fields ---
   const handleSaveChanges = async () => {
     setUiState((prev) => ({ ...prev, isSaving: true, saveError: null }));
 
-    // Prepare main payload, excluding fields handled by other endpoints
     const payload = { ...formData };
     payload.vehicleImageKeys = formData.images.map((img) => img.s3Key);
     payload.vehichleNumber = formData.vehicleNumber;
     delete payload.images;
     delete payload.vehicleNumber;
     delete payload.status; // Status is handled by a separate endpoint
+
+    // NEW: Clear driver fields if service type is self-drive
+    if (payload.serviceType === "self-drive") {
+      payload.driverPrice = null;
+      payload.driverMaxHours = null;
+      payload.driverHours = "";
+      payload.driverWorkingDays = [];
+    }
 
     try {
       // 1. Save main vehicle details
@@ -266,18 +296,17 @@ const Details = ({ selectedVehicleId }) => {
         }
       );
 
-      // 2. Handle status change if necessary, using its dedicated endpoint
+      // 2. Handle status change if necessary
       if (formData.status !== originalVehicle.status) {
         const statusEndpoint =
           formData.status === "active"
             ? `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/activate_status/${selectedVehicleId}`
             : `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/deactivate_status/${selectedVehicleId}`;
 
-        // This API call is a GET request as per the provided specification
         await apiCallWithRetry(statusEndpoint, { method: "GET" });
       }
 
-      // 3. On full success, update the 'original' state and UI
+      // 3. On success, update state
       setOriginalVehicle(formData);
       setUiState((prev) => ({
         ...prev,
@@ -299,7 +328,6 @@ const Details = ({ selectedVehicleId }) => {
   };
 
   // --- RENDER LOGIC ---
-
   if (uiState.isLoading) {
     return (
       <div className="p-10 text-center">
@@ -323,7 +351,7 @@ const Details = ({ selectedVehicleId }) => {
   return (
     <div className="w-full">
       <div className="p-10 bg-white shadow-lg rounded-lg">
-        {/* --- Header & Action Buttons --- */}
+        {/* --- Header & Action Buttons (Unchanged) --- */}
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-semibold">Detail Listing</h1>
           <div className="flex space-x-2">
@@ -360,7 +388,7 @@ const Details = ({ selectedVehicleId }) => {
           </div>
         </div>
 
-        {/* --- User Feedback Banners --- */}
+        {/* --- User Feedback Banners (Unchanged) --- */}
         {uiState.saveSuccess && (
           <div className="bg-green-100 text-green-700 p-3 rounded-md mb-4 text-sm flex items-center gap-2">
             <FaCheckCircle /> {uiState.saveSuccess}
@@ -372,7 +400,7 @@ const Details = ({ selectedVehicleId }) => {
           </div>
         )}
 
-        {/* --- Reusable Hidden File Input --- */}
+        {/* --- Reusable Hidden File Input (Unchanged) --- */}
         <input
           type="file"
           accept="image/*"
@@ -381,7 +409,7 @@ const Details = ({ selectedVehicleId }) => {
           style={{ display: "none" }}
         />
 
-        {/* --- Image Section --- */}
+        {/* --- Image Section (Unchanged) --- */}
         <div className="flex lg:flex-row flex-col gap-4 w-full mb-8 relative">
           {uiState.isUploading && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-md z-20">
@@ -436,8 +464,7 @@ const Details = ({ selectedVehicleId }) => {
             )}
           </div>
         </div>
-
-        {/* --- Form Fields --- */}
+        {/* --- Form Fields (Unchanged) --- */}
         <h4 className="mt-8 text-xl font-semibold">Car Specification</h4>
         <div className="grid lg:grid-cols-3 grid-cols-2 gap-4 mt-4">
           {/* ... existing fields from original code ... */}
@@ -569,7 +596,7 @@ const Details = ({ selectedVehicleId }) => {
           </div>
         </div>
 
-        {/* --- NEW: Vehicle Status Section --- */}
+        {/* --- Vehicle Status Section (Unchanged) --- */}
         <section className="my-12">
           <h2 className="font-semibold text-lg mb-4">Vehicle Status</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -607,6 +634,7 @@ const Details = ({ selectedVehicleId }) => {
           </div>
         </section>
 
+        {/* --- Features Section (Unchanged) --- */}
         <section className="my-12">
           <h2 className="font-semibold text-lg mb-4">Features</h2>
           {uiState.isEditing ? (
@@ -631,59 +659,181 @@ const Details = ({ selectedVehicleId }) => {
           )}
         </section>
 
+        {/* --- NEW & MODIFIED: Service & Pricing Section --- */}
         <section className="my-12">
-          <h2 className="font-semibold text-lg mb-4">Booking & Pricing</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <span className="text-gray-500">Price (Birr)</span>
-              {uiState.isEditing ? (
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  className="font-medium p-1 border rounded w-full"
-                />
-              ) : (
-                <p className="font-medium">{displayData.price}</p>
-              )}
-            </div>
-            <div>
-              <span className="text-gray-500">Notice Period</span>
-              {uiState.isEditing ? (
-                <input
-                  type="text"
-                  name="advanceNoticePeriod"
-                  value={formData.advanceNoticePeriod}
-                  onChange={handleInputChange}
-                  className="font-medium p-1 border rounded w-full"
-                />
-              ) : (
-                <p className="font-medium">{displayData.advanceNoticePeriod}</p>
-              )}
-            </div>
-            <div className="flex items-center mt-4">
-              {uiState.isEditing ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="instantBooking"
-                    name="instantBooking"
-                    checked={formData.instantBooking}
+          <h2 className="font-semibold text-lg mb-4">Service & Pricing</h2>
+          {/* --- EDITING VIEW --- */}
+          {uiState.isEditing ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <span className="text-gray-500">Service Type</span>
+                  <select
+                    name="serviceType"
+                    value={formData.serviceType}
                     onChange={handleInputChange}
-                    className="h-5 w-5"
-                  />
-                  <label htmlFor="instantBooking">Instant Booking</label>
+                    className="font-medium p-2 border rounded w-full bg-white"
+                  >
+                    <option value="self-drive">Self-Drive Only</option>
+                    <option value="with-driver">With Driver Only</option>
+                    <option value="both">Both Options Available</option>
+                  </select>
                 </div>
-              ) : (
-                <p className="font-medium">
-                  {displayData.instantBooking
-                    ? "Instant Booking Enabled"
-                    : "Requires Approval"}
-                </p>
+                <div>
+                  <span className="text-gray-500">Self-Drive Price (Birr)</span>
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price || ""}
+                    onChange={handleInputChange}
+                    className="font-medium p-1 border rounded w-full"
+                  />
+                </div>
+                <div className="flex items-center mt-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="instantBooking"
+                      name="instantBooking"
+                      checked={formData.instantBooking}
+                      onChange={handleInputChange}
+                      className="h-5 w-5"
+                    />
+                    <label htmlFor="instantBooking">Instant Booking</label>
+                  </div>
+                </div>
+              </div>
+
+              {formData.serviceType !== "self-drive" && (
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="font-semibold text-md mb-4 text-gray-700">
+                    Driver Configuration
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <span className="text-gray-500">Driver Price (Birr)</span>
+                      <input
+                        type="number"
+                        name="driverPrice"
+                        value={formData.driverPrice || ""}
+                        onChange={handleInputChange}
+                        className="font-medium p-1 border rounded w-full"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Max Hours/Day</span>
+                      <input
+                        type="number"
+                        name="driverMaxHours"
+                        value={formData.driverMaxHours || ""}
+                        onChange={handleInputChange}
+                        className="font-medium p-1 border rounded w-full"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Working Hours</span>
+                      <input
+                        type="text"
+                        name="driverHours"
+                        value={formData.driverHours || ""}
+                        placeholder="e.g., 8:00 AM - 6:00 PM"
+                        onChange={handleInputChange}
+                        className="font-medium p-1 border rounded w-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <span className="text-gray-500">Working Days</span>
+                    <div className="flex flex-wrap gap-4 mt-2">
+                      {[
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday",
+                        "sunday",
+                      ].map((day) => (
+                        <label
+                          key={day}
+                          className="flex items-center space-x-2"
+                        >
+                          <input
+                            type="checkbox"
+                            value={day}
+                            checked={formData.driverWorkingDays?.includes(day)}
+                            onChange={handleWorkingDaysChange}
+                          />
+                          <span>
+                            {day.charAt(0).toUpperCase() + day.slice(1)}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               )}
-            </div>
-          </div>
+            </>
+          ) : (
+            /* --- VIEWING MODE --- */
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <span className="text-gray-500">Service Type</span>
+                  <p className="font-medium">
+                    {formatServiceType(displayData.serviceType)}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Self-Drive Price (Birr)</span>
+                  <p className="font-medium">{displayData.price}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Booking Policy</span>
+                  <p className="font-medium">
+                    {displayData.instantBooking
+                      ? "Instant Booking Enabled"
+                      : "Requires Approval"}
+                  </p>
+                </div>
+              </div>
+
+              {displayData.serviceType !== "self-drive" && (
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="font-semibold text-md mb-4 text-gray-700">
+                    Driver Service Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <span className="text-gray-500">Driver Price (Birr)</span>
+                      <p className="font-medium">
+                        {displayData.driverPrice || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Max Hours/Day</span>
+                      <p className="font-medium">
+                        {displayData.driverMaxHours || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Working Hours</span>
+                      <p className="font-medium">
+                        {displayData.driverHours || "N/A"}
+                      </p>
+                    </div>
+                    <div className="md:col-span-3">
+                      <span className="text-gray-500">Working Days</span>
+                      <p className="font-medium">
+                        {(displayData.driverWorkingDays || []).join(", ") ||
+                          "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </section>
       </div>
     </div>

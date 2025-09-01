@@ -17,8 +17,9 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
-import SettingsIcon from "@mui/icons-material/Settings";
+import SettingsIcon from "@mui/icons-material/Settings"; // For Transmission
 import CategoryIcon from "@mui/icons-material/Category";
+import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline"; // NEW: For Service Type
 
 import ResultsGrid from "../components/Search/ResultsGrid";
 import makesData from "../api/makes.json";
@@ -26,19 +27,25 @@ import modelData from "../api/models.json";
 import MapComponent from "../components/GoogleMaps";
 import Footer from "../components/Footer";
 
+// Primary color defined
 const PRIMARY_COLOR = "#172554";
-const PRIMARY_COLOR_DARKER = "#0d1732";
+const PRIMARY_COLOR_DARKER = "#0d1732"; // For hover states
+
+// Price constant
 const MAX_PRICE = 50000;
 
+// Helper to create filter button style
 const filterButtonStyle =
   "bg-white border border-gray-300 hover:border-gray-500 text-gray-700 px-4 py-2 rounded-md text-sm flex items-center justify-center shadow-sm transition-colors duration-150 ease-in-out";
+// Active filter buttons will use the primary color for border and text
 const activeFilterButtonStyle = `bg-gray-50 border-[${PRIMARY_COLOR}] text-[${PRIMARY_COLOR}] hover:bg-gray-100 px-4 py-2 rounded-md text-sm flex items-center justify-center shadow-sm transition-colors duration-150 ease-in-out`;
 
+// Helper component for the clear icon button
 const ClearFilterButton = ({ onClick }) => (
   <IconButton
     size="small"
     onClick={(e) => {
-      e.stopPropagation();
+      e.stopPropagation(); // Prevent modal from opening if the parent is a button
       onClick();
     }}
     aria-label="clear filter"
@@ -72,6 +79,7 @@ const Search = () => {
     "Hawassa",
   ];
 
+  // Filter States
   const [make, setMake] = useState("any");
   const [modelList, setModelList] = useState([]);
   const [selectedModel, setSelectedModel] = useState("any");
@@ -81,14 +89,18 @@ const Search = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [serviceType, setServiceType] = useState("any"); // NEW: Service Type filter state
 
+  // Modal States
   const [openDateModal, setOpenDateModal] = useState(false);
   const [openPriceModal, setOpenPriceModal] = useState(false);
   const [openMakeModelModal, setOpenMakeModelModal] = useState(false);
   const [openTransmissionModal, setOpenTransmissionModal] = useState(false);
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
+  const [openServiceTypeModal, setOpenServiceTypeModal] = useState(false); // NEW
   const [openAllFiltersModal, setOpenAllFiltersModal] = useState(false);
 
+  // Temporary states for modal inputs
   const [tempStartDate, setTempStartDate] = useState("");
   const [tempEndDate, setTempEndDate] = useState("");
   const [tempPriceRange, setTempPriceRange] = useState([0, MAX_PRICE]);
@@ -96,6 +108,7 @@ const Search = () => {
   const [tempModel, setTempModel] = useState("any");
   const [tempTransmission, setTempTransmission] = useState("any");
   const [tempCategory, setTempCategory] = useState("any");
+  const [tempServiceType, setTempServiceType] = useState("any"); // NEW
 
   const primaryButtonStyle = {
     backgroundColor: PRIMARY_COLOR,
@@ -121,10 +134,48 @@ const Search = () => {
     if (pickupLocation && ethiopianCities.includes(pickupLocation)) {
       setSelectedCity(pickupLocation);
     }
-    if (pickupDateQuery) setStartDate(pickupDateQuery);
-    if (dropOffDateQuery) setEndDate(dropOffDateQuery);
+    if (pickupDateQuery) {
+      setStartDate(pickupDateQuery);
+    }
+    if (dropOffDateQuery) {
+      setEndDate(dropOffDateQuery);
+    }
   }, [ethiopianCities]);
 
+  // --- All existing handlers (handleOpenDateModal, etc.) are unchanged ---
+
+  // NEW: Handlers for Service Type Modal
+  const handleOpenServiceTypeModal = () => {
+    setTempServiceType(serviceType);
+    setOpenServiceTypeModal(true);
+  };
+  const handleApplyServiceType = () => {
+    setServiceType(tempServiceType);
+    setOpenServiceTypeModal(false);
+  };
+
+  // UPDATED: handleOpenAllFiltersModal to include serviceType
+  const handleOpenAllFiltersModal = () => {
+    setTempPriceRange(priceRange);
+    setTempMake(make);
+    setTempModel(selectedModel);
+    setTempTransmission(transmission);
+    setTempCategory(category);
+    setTempServiceType(serviceType); // NEW
+
+    if (make !== "any") {
+      const makeModelsData = modelData.find(
+        (m) => Object.keys(m)[0].toLowerCase() === make.toLowerCase()
+      );
+      setModelList(
+        makeModelsData ? makeModelsData[Object.keys(makeModelsData)[0]] : []
+      );
+    } else {
+      setModelList([]);
+    }
+    setOpenAllFiltersModal(true);
+  };
+  // (the rest of the handlers are unchanged)
   const handleOpenDateModal = () => {
     setTempStartDate(startDate);
     setTempEndDate(endDate);
@@ -140,18 +191,19 @@ const Search = () => {
     if (currentTempEndDate) currentTempEndDate.setHours(0, 0, 0, 0);
 
     let dateError = "";
-    if (tempStartDate && !tempEndDate)
+    if (tempStartDate && !tempEndDate) {
       dateError = "Please select a drop-off date.";
-    else if (!tempStartDate && tempEndDate)
+    } else if (!tempStartDate && tempEndDate) {
       dateError = "Please select a pick-up date.";
-    else if (currentTempStartDate && currentTempStartDate < today)
+    } else if (currentTempStartDate && currentTempStartDate < today) {
       dateError = "Pickup date cannot be before today.";
-    else if (
+    } else if (
       currentTempStartDate &&
       currentTempEndDate &&
       currentTempEndDate <= currentTempStartDate
-    )
+    ) {
       dateError = "End date must be after pickup date.";
+    }
 
     if (dateError) {
       alert(dateError);
@@ -238,69 +290,62 @@ const Search = () => {
     setOpenCategoryModal(false);
   };
 
-  const handleOpenAllFiltersModal = () => {
-    setTempPriceRange(priceRange);
-    setTempMake(make);
-    setTempModel(selectedModel);
-    setTempTransmission(transmission);
-    setTempCategory(category);
-    if (make !== "any") {
-      const makeModelsData = modelData.find(
-        (m) => Object.keys(m)[0].toLowerCase() === make.toLowerCase()
-      );
-      setModelList(
-        makeModelsData ? makeModelsData[Object.keys(makeModelsData)[0]] : []
-      );
-    } else {
-      setModelList([]);
-    }
-    setOpenAllFiltersModal(true);
-  };
-
+  // --- UPDATED: fetchData to include serviceType ---
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
+
     const fetchData = async () => {
       setIsLoading(true);
       setError("");
+      setVehicles([]); // Clear previous results
+
+      let accumulatedVehicles = [];
+      let lastEvaluatedKey = null;
+      let hasMore = true;
+
       try {
-        const url = new URL(
-          "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/search"
-        );
-        const params = {
-          make: make !== "any" ? make : undefined,
-          model: selectedModel !== "any" ? selectedModel : undefined,
-          transmission: transmission !== "any" ? transmission : undefined,
-          category: category !== "any" ? category : undefined,
-          pickUp: startDate || undefined,
-          dropOff: endDate || undefined,
-          isActive: "active",
-          isApproved: "approved",
-        };
-        Object.entries(params).forEach(([key, value]) => {
-          if (value) url.searchParams.append(key, value);
-        });
-        const response = await fetch(url.toString(), { signal });
-        if (!response.ok) {
-          const errorData = await response
-            .json()
-            .catch(() => ({ message: "Network response was not ok" }));
-          throw new Error(
-            errorData.message || `HTTP error! status: ${response.status}`
+        while (hasMore) {
+          const url = new URL(
+            "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/vehicle/search"
           );
+          const params = {
+            make: make !== "any" ? make : undefined,
+            model: selectedModel !== "any" ? selectedModel : undefined,
+            transmission: transmission !== "any" ? transmission : undefined,
+            category: category !== "any" ? category : undefined,
+            serviceType: serviceType !== "any" ? serviceType : undefined, // NEW
+            pickUp: startDate || undefined,
+            dropOff: endDate || undefined,
+            isActive: "active",
+            isApproved: "approved",
+            lastEvaluatedKey: lastEvaluatedKey || undefined,
+          };
+
+          Object.entries(params).forEach(([key, value]) => {
+            if (value) url.searchParams.append(key, value);
+          });
+
+          const response = await fetch(url.toString(), { signal });
+
+          if (!response.ok) {
+            const errorData = await response
+              .json()
+              .catch(() => ({ message: "Network response was not ok" }));
+            throw new Error(
+              errorData.message || `HTTP error! status: ${response.status}`
+            );
+          }
+
+          const data = await response.json();
+          const fetchedVehicles =
+            data.body && Array.isArray(data.body) ? data.body : [];
+          accumulatedVehicles = [...accumulatedVehicles, ...fetchedVehicles];
+
+          hasMore = data.hasMore || false;
+          lastEvaluatedKey = data.lastEvaluatedKey || null;
         }
-        const data = await response.json();
-        const fetchedVehicles =
-          data.body && Array.isArray(data.body) ? data.body : [];
-
-        // --- MODIFICATION: Sort vehicles by createdAt date in descending order (newest first) ---
-        const sortedVehicles = fetchedVehicles.sort((a, b) => {
-          const dateA = new Date(a.createdAt || 0);
-          const dateB = new Date(b.createdAt || 0);
-          return dateB - dateA;
-        });
-
-        setVehicles(sortedVehicles);
+        setVehicles(accumulatedVehicles);
       } catch (error) {
         if (error.name !== "AbortError") {
           console.error("Fetch error:", error);
@@ -316,16 +361,21 @@ const Search = () => {
           setVehicles([]);
         }
       } finally {
-        setIsLoading(false);
+        if (!signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
+
     fetchData();
+
     return () => controller.abort();
   }, [
     make,
     selectedModel,
     transmission,
     category,
+    serviceType, // NEW Dependency
     startDate,
     endDate,
     retryTrigger,
@@ -337,9 +387,9 @@ const Search = () => {
       const priceVal = parseFloat(vehicle.price) || 0;
       return priceVal >= min && priceVal <= max;
     });
-    // The main sorting is now by date. This price sort is now secondary if needed, but not required.
-    // We'll keep it for price-based filtering, but the primary display is by date from the fetch.
-    return filtered;
+    return filtered.sort(
+      (a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0)
+    );
   }, [vehicles, priceRange]);
 
   const transmissionType = ["Automatic", "Manual"];
@@ -351,9 +401,15 @@ const Search = () => {
     "Truck",
     "Hatchback",
   ];
+  // NEW: Service type list
+  const serviceTypeList = [
+    { value: "self-drive", label: "Self-Drive" },
+    { value: "with-driver", label: "With Driver" },
+  ];
 
   const isPriceFilterActive = priceRange[0] > 0 || priceRange[1] < MAX_PRICE;
 
+  // UPDATED: countActiveFilters
   const countActiveFilters = () => {
     let count = 0;
     if (startDate && endDate) count++;
@@ -361,22 +417,26 @@ const Search = () => {
     if (make !== "any") count++;
     if (transmission !== "any") count++;
     if (category !== "any") count++;
+    if (serviceType !== "any") count++; // NEW
     return count;
   };
   const activeFilterCount = countActiveFilters();
 
+  // UPDATED: clearAllFilters
   const clearAllFilters = () => {
     setMake("any");
     setSelectedModel("any");
     setModelList([]);
     setTransmission("any");
     setCategory("any");
+    setServiceType("any"); // NEW
     setPriceRange([0, MAX_PRICE]);
     setTempMake("any");
     setTempModel("any");
     setTempPriceRange([0, MAX_PRICE]);
     setTempTransmission("any");
     setTempCategory("any");
+    setTempServiceType("any"); // NEW
     setOpenAllFiltersModal(false);
   };
 
@@ -388,6 +448,7 @@ const Search = () => {
         <div className=" bg-[#FAF9FE] pt-24 sm:pt-32 pb-10">
           <div className="container mx-auto px-4">
             <div className="flex flex-wrap items-center gap-2 mb-6 overflow-x-auto pb-2">
+              {/* --- Existing filter buttons --- */}
               <button
                 onClick={handleOpenDateModal}
                 className={
@@ -411,6 +472,7 @@ const Search = () => {
                   />
                 )}
               </button>
+
               <button
                 onClick={handleOpenPriceModal}
                 className={
@@ -429,6 +491,7 @@ const Search = () => {
                   />
                 )}
               </button>
+
               <button
                 onClick={handleOpenMakeModelModal}
                 className={
@@ -451,6 +514,27 @@ const Search = () => {
                   />
                 )}
               </button>
+
+              {/* --- NEW: Service Type Filter Button --- */}
+              <button
+                onClick={handleOpenServiceTypeModal}
+                className={
+                  serviceType !== "any"
+                    ? activeFilterButtonStyle
+                    : filterButtonStyle
+                }
+              >
+                <PeopleOutlineIcon fontSize="small" className="mr-2" />
+                {serviceType === "self-drive"
+                  ? "Self-Drive"
+                  : serviceType === "with-driver"
+                  ? "With Driver"
+                  : "Service Type"}
+                {serviceType !== "any" && (
+                  <ClearFilterButton onClick={() => setServiceType("any")} />
+                )}
+              </button>
+
               <button
                 onClick={handleOpenTransmissionModal}
                 className={
@@ -465,6 +549,7 @@ const Search = () => {
                   <ClearFilterButton onClick={() => setTransmission("any")} />
                 )}
               </button>
+
               <button
                 onClick={handleOpenCategoryModal}
                 className={
@@ -479,6 +564,7 @@ const Search = () => {
                   <ClearFilterButton onClick={() => setCategory("any")} />
                 )}
               </button>
+
               <button
                 onClick={handleOpenAllFiltersModal}
                 className={
@@ -492,6 +578,7 @@ const Search = () => {
               </button>
             </div>
           </div>
+
           <div className="flex lg:flex-row flex-col items-start w-full container mx-auto px-4">
             <div className="flex flex-col w-full lg:w-3/5 xl:w-2/3 lg:pr-6">
               <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
@@ -517,7 +604,7 @@ const Search = () => {
                       {filteredVehicles.length === 1 ? "" : "s"} available
                     </div>
                     <ResultsGrid
-                      key={`${make}-${selectedModel}-${transmission}-${category}-${priceRange[0]}-${priceRange[1]}-${startDate}-${endDate}`}
+                      key={`${make}-${selectedModel}-${transmission}-${category}-${priceRange[0]}-${priceRange[1]}-${startDate}-${endDate}-${serviceType}`} // Added serviceType to key
                       vehicles={filteredVehicles}
                       pickUpTime={startDate}
                       DropOffTime={endDate}
@@ -538,6 +625,9 @@ const Search = () => {
             </div>
           </div>
         </div>
+
+        {/* --- All existing modals are unchanged --- */}
+        {/* Date Modal */}
         <Dialog
           open={openDateModal}
           onClose={() => setOpenDateModal(false)}
@@ -575,15 +665,18 @@ const Search = () => {
             />
           </DialogContent>
           <DialogActions>
+            {" "}
             <Button
               onClick={handleApplyDates}
               variant="contained"
               sx={primaryButtonStyle}
             >
               Apply Dates
-            </Button>
+            </Button>{" "}
           </DialogActions>
         </Dialog>
+
+        {/* Price Modal */}
         <Dialog
           open={openPriceModal}
           onClose={() => setOpenPriceModal(false)}
@@ -635,6 +728,8 @@ const Search = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Make/Model Modal */}
         <Dialog
           open={openMakeModelModal}
           onClose={() => setOpenMakeModelModal(false)}
@@ -696,6 +791,54 @@ const Search = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* --- NEW: Service Type Modal --- */}
+        <Dialog
+          open={openServiceTypeModal}
+          onClose={() => setOpenServiceTypeModal(false)}
+          fullWidth
+          maxWidth="xs"
+        >
+          <DialogTitle>
+            Select Service Type{" "}
+            <IconButton
+              aria-label="close"
+              onClick={() => setOpenServiceTypeModal(false)}
+              sx={{ position: "absolute", right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            <TextField
+              select
+              label="Service Type"
+              value={tempServiceType}
+              onChange={(e) => setTempServiceType(e.target.value)}
+              fullWidth
+              margin="normal"
+              SelectProps={{ native: true }}
+            >
+              <option value="any">Any</option>
+              {serviceTypeList.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </TextField>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleApplyServiceType}
+              variant="contained"
+              sx={primaryButtonStyle}
+            >
+              Apply Service Type
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Transmission Modal */}
         <Dialog
           open={openTransmissionModal}
           onClose={() => setOpenTransmissionModal(false)}
@@ -740,6 +883,8 @@ const Search = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Category Modal */}
         <Dialog
           open={openCategoryModal}
           onClose={() => setOpenCategoryModal(false)}
@@ -784,6 +929,8 @@ const Search = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* --- MODIFIED: All Filters Modal --- */}
         <Dialog
           open={openAllFiltersModal}
           onClose={() => setOpenAllFiltersModal(false)}
@@ -801,6 +948,7 @@ const Search = () => {
             </IconButton>
           </DialogTitle>
           <DialogContent dividers>
+            {/* Price Range */}
             <div className="mb-4 p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Price Range (ETB)</h3>
               <Box sx={{ width: "95%", mx: "auto", mt: 2 }}>
@@ -825,6 +973,7 @@ const Search = () => {
                 />
               </Box>
             </div>
+            {/* Vehicle Make/Model */}
             <div className="mb-4 p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Vehicle</h3>
               <TextField
@@ -863,6 +1012,28 @@ const Search = () => {
                 ))}
               </TextField>
             </div>
+            {/* NEW: Service Type in All Filters */}
+            <div className="mb-4 p-4 border rounded-lg">
+              <h3 className="font-semibold mb-2">Service Type</h3>
+              <TextField
+                select
+                label="Service Type"
+                value={tempServiceType}
+                onChange={(e) => setTempServiceType(e.target.value)}
+                fullWidth
+                margin="dense"
+                size="small"
+                SelectProps={{ native: true }}
+              >
+                <option value="any">Any</option>
+                {serviceTypeList.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </TextField>
+            </div>
+            {/* Transmission */}
             <div className="mb-4 p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Transmission</h3>
               <TextField
@@ -883,6 +1054,7 @@ const Search = () => {
                 ))}
               </TextField>
             </div>
+            {/* Category */}
             <div className="p-4 border rounded-lg">
               <h3 className="font-semibold mb-2">Category</h3>
               <TextField
@@ -934,6 +1106,7 @@ const Search = () => {
                   setSelectedModel(tempModel);
                   setTransmission(tempTransmission);
                   setCategory(tempCategory);
+                  setServiceType(tempServiceType); // NEW
                   setOpenAllFiltersModal(false);
                 }}
                 variant="contained"

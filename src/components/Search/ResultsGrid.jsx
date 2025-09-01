@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useLayoutEffect,
+} from "react";
 import { getDownloadUrl, paginatedSearch } from "../../api";
 import {
   FaGasPump,
@@ -6,9 +12,9 @@ import {
   FaUserFriends,
   FaSpinner,
   FaExclamationTriangle,
-  FaTimes, // For lightbox close
-  FaChevronLeft, // For lightbox prev
-  FaChevronRight, // For lightbox next
+  FaTimes,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
@@ -29,9 +35,13 @@ const ResultsGrid = ({
   const [fullScreenVehicleImages, setFullScreenVehicleImages] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const isMountedRef = useRef(false);
-  const prevPageRef = useRef(currentPage);
   const hasAttemptedFetchRef = useRef(false);
+  const prevPageRef = useRef(1);
+  const topOfGridRef = useRef(null);
+
+  // Track when a Next/Previous click requested a scroll
+  const pendingScrollRef = useRef(false);
+  const prevLoadingRef = useRef(false);
 
   const itemsPerPage = 10;
   const placeholderImage = "https://via.placeholder.com/400x225?text=Vehicle";
@@ -39,22 +49,67 @@ const ResultsGrid = ({
 
   const navigate = useNavigate();
 
-  // All hooks and functions (useEffect, fetchAndSetIndividualImage, processVehicles, etc.) remain unchanged.
-  // ...
+  // If you have a sticky header, set its height here (px) so we scroll a bit above the grid
+  const HEADER_OFFSET = 0; // e.g. 72
 
+  // --- Scroll helpers -------------------------------------------------------
+  const getScrollParent = (node) => {
+    if (!node) return window;
+    let parent = node.parentElement;
+    const overflowRe = /(auto|scroll)/i;
+
+    while (parent && parent !== document.body) {
+      const style = getComputedStyle(parent);
+      const overflowY = style.overflowY || style.overflow;
+      const hasScrollableY =
+        overflowRe.test(overflowY) && parent.scrollHeight > parent.clientHeight;
+
+      if (hasScrollableY) return parent;
+      parent = parent.parentElement;
+    }
+    return window;
+  };
+
+  const scrollToGridTop = useCallback(() => {
+    const target = topOfGridRef.current;
+    if (!target) return;
+
+    const container = getScrollParent(target);
+    const targetRect = target.getBoundingClientRect();
+
+    if (container === window) {
+      const y = Math.max(
+        window.pageYOffset + targetRect.top - HEADER_OFFSET,
+        0
+      );
+      window.scrollTo({ top: y, behavior: "smooth" });
+    } else {
+      const containerRect = container.getBoundingClientRect();
+      const y =
+        targetRect.top -
+        containerRect.top +
+        container.scrollTop -
+        HEADER_OFFSET;
+      container.scrollTo({ top: Math.max(y, 0), behavior: "smooth" });
+    }
+  }, [HEADER_OFFSET]);
+
+  // After loading finishes, if a page change triggered a scroll, do it now
   useEffect(() => {
-    if (isMountedRef.current && prevPageRef.current !== currentPage) {
-      const timer = setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-    prevPageRef.current = currentPage;
-    if (!isMountedRef.current) {
-      isMountedRef.current = true;
-    }
-  }, [currentPage]);
+    const wasLoading = prevLoadingRef.current;
+    const nowLoading = isLoadingData;
 
+    if (wasLoading && !nowLoading && pendingScrollRef.current) {
+      // Ensure we scroll after the DOM has painted new content
+      requestAnimationFrame(() => {
+        scrollToGridTop();
+        pendingScrollRef.current = false;
+      });
+    }
+    prevLoadingRef.current = nowLoading;
+  }, [isLoadingData, scrollToGridTop]);
+
+  // --- Data/image helpers ---------------------------------------------------
   const fetchAndSetIndividualImage = useCallback(
     async (vehicleId, imageKey, isPrimary = true) => {
       if (!imageKey) {
@@ -89,13 +144,12 @@ const ResultsGrid = ({
           const delay = INITIAL_DELAY * Math.pow(2, attempt - 1);
           console.warn(
             `Attempt ${attempt} failed for image key ${imageKey}. Retrying in ${delay}ms...`,
-            error.message
+            error?.message || error
           );
 
           if (attempt === MAX_RETRIES) {
             console.error(
-              `All ${MAX_RETRIES} retries failed for image key ${imageKey} (vehicle ${vehicleId}):`,
-              error
+              `All ${MAX_RETRIES} retries failed for image key ${imageKey} (vehicle ${vehicleId}).`
             );
             if (isPrimary) {
               setImageLoadStates((prev) => ({ ...prev, [vehicleId]: "error" }));
@@ -165,44 +219,27 @@ const ResultsGrid = ({
           allResolvedImages = [placeholderImage];
         }
 
-        const displayImage = allResolvedImages[0];
-
-        if (
-          displayImage === placeholderImage ||
-          displayImage === fallbackImage
-        ) {
-          if (imageLoadStates[vehicle.id] !== "error") {
-          }
-        } else if (
-          imageLoadStates[vehicle.id] !== "loaded" &&
-          imageLoadStates[vehicle.id] !== "error"
-        ) {
-          setImageLoadStates((prev) => ({ ...prev, [vehicle.id]: "loaded" }));
-        }
-
         return {
           ...vehicle,
-          displayImage,
+          displayImage: allResolvedImages[0],
           allDisplayImages: allResolvedImages,
         };
       });
       return Promise.all(dataWithImagePromises);
     },
-    [
-      fetchAndSetIndividualImage,
-      imageLoadStates,
-      placeholderImage,
-      fallbackImage,
-    ]
+    [fetchAndSetIndividualImage, imageLoadStates, placeholderImage]
   );
 
-  const applyProcessedVehicles = async (vehiclesToProcess) => {
-    hasAttemptedFetchRef.current = true;
-    setIsLoadingData(true);
-    const processed = await processVehicles(vehiclesToProcess);
-    setCurrentVehicles(processed.filter((v) => v && v.id));
-    setIsLoadingData(false);
-  };
+  const applyProcessedVehicles = useCallback(
+    async (vehiclesToProcess) => {
+      hasAttemptedFetchRef.current = true;
+      setIsLoadingData(true);
+      const processed = await processVehicles(vehiclesToProcess);
+      setCurrentVehicles(processed.filter((v) => v && v.id));
+      setIsLoadingData(false);
+    },
+    [processVehicles]
+  );
 
   const fetchVehiclesForPageAPI = useCallback(
     async (page, keyForPage) => {
@@ -211,20 +248,6 @@ const ResultsGrid = ({
       try {
         const data = await paginatedSearch(itemsPerPage, keyForPage);
         if (data && data.Items) {
-          const freshImageStates = {};
-          data.Items.forEach((item) => {
-            if (
-              item &&
-              item.id &&
-              imageLoadStates[item.id] !== "loaded" &&
-              imageLoadStates[item.id] !== "error"
-            ) {
-              freshImageStates[item.id] = "loading";
-            }
-          });
-          if (Object.keys(freshImageStates).length > 0)
-            setImageLoadStates((prev) => ({ ...prev, ...freshImageStates }));
-
           const processed = await processVehicles(data.Items);
           setCurrentVehicles(processed);
           setLastEvaluated(data.LastEvaluatedKey || null);
@@ -240,45 +263,27 @@ const ResultsGrid = ({
         setIsLoadingData(false);
       }
     },
-    [processVehicles, imageLoadStates]
+    [processVehicles]
   );
 
+  // Effect 1: Initial load or filters change
   useEffect(() => {
     hasAttemptedFetchRef.current = false;
-    const newPage = 1;
     setLastEvaluated(lastEvaluatedKey || null);
+    setCurrentPage(1);
+    prevPageRef.current = 1;
 
     if (vehicles && Array.isArray(vehicles)) {
       applyProcessedVehicles(vehicles.slice(0, itemsPerPage));
-      if (currentPage !== newPage) setCurrentPage(newPage);
-      else prevPageRef.current = newPage;
-    } else if (lastEvaluatedKey && !vehicles) {
-      fetchVehiclesForPageAPI(1, lastEvaluatedKey);
-      if (currentPage !== newPage) setCurrentPage(newPage);
-      else prevPageRef.current = newPage;
-    } else if (!vehicles) {
-      fetchVehiclesForPageAPI(1, null);
-      if (currentPage !== newPage) setCurrentPage(newPage);
-      else prevPageRef.current = newPage;
     } else {
-      setCurrentVehicles([]);
-      setIsLoadingData(false);
-      hasAttemptedFetchRef.current = true;
-      if (currentPage !== newPage) setCurrentPage(newPage);
-      else prevPageRef.current = newPage;
+      fetchVehiclesForPageAPI(1, lastEvaluatedKey || null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vehicles, lastEvaluatedKey]); // Removed applyProcessedVehicles, fetchVehiclesForPageAPI, processVehicles to avoid loop due to imageLoadStates
+  }, [vehicles, lastEvaluatedKey]);
 
-  // This effect handles pagination after the initial load.
+  // Effect 2: Handle page changes (fetch/update data)
   useEffect(() => {
-    if (currentPage === 1 && !isMountedRef.current) return;
-    if (
-      currentPage === prevPageRef.current &&
-      isMountedRef.current &&
-      hasAttemptedFetchRef.current
-    )
-      return;
+    if (currentPage === prevPageRef.current) return;
 
     if (vehicles && Array.isArray(vehicles)) {
       const startIdx = (currentPage - 1) * itemsPerPage;
@@ -287,8 +292,10 @@ const ResultsGrid = ({
     } else if (!vehicles && currentPage > 1) {
       fetchVehiclesForPageAPI(currentPage, lastEvaluated);
     }
+
+    prevPageRef.current = currentPage;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]); // Listen only to currentPage for pagination changes.
+  }, [currentPage]);
 
   const handlePageChange = (newPage) => {
     if (newPage < 1 || isLoadingData || newPage === currentPage) return;
@@ -299,6 +306,9 @@ const ResultsGrid = ({
     if (!vehicles && newPage > currentPage && lastEvaluated === null) {
       if (currentVehicles.length < itemsPerPage && currentPage > 0) return;
     }
+
+    // mark that we should scroll once loading finishes
+    pendingScrollRef.current = true;
     setCurrentPage(newPage);
   };
 
@@ -342,7 +352,7 @@ const ResultsGrid = ({
     }
   };
 
-  if (isLoadingData && currentVehicles.length === 0 && !isMountedRef.current) {
+  if (isLoadingData && currentVehicles.length === 0) {
     return (
       <div className="flex justify-center items-center my-20">
         <FaSpinner className="animate-spin text-4xl text-blue-600" />
@@ -352,123 +362,116 @@ const ResultsGrid = ({
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {isLoadingData &&
-        (isMountedRef.current || currentVehicles.length > 0) && (
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white/80 p-4 rounded-lg shadow-xl">
-            <FaSpinner className="animate-spin text-3xl text-blue-500" />
-          </div>
-        )}
+    <div ref={topOfGridRef} className="container mx-auto px-4 py-8">
+      {isLoadingData && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white/80 p-4 rounded-lg shadow-xl">
+          <FaSpinner className="animate-spin text-3xl text-blue-500" />
+        </div>
+      )}
 
       <div className="flex flex-col space-y-6">
-        {currentVehicles.length > 0
-          ? currentVehicles.map((vehicle) => (
+        {currentVehicles.length > 0 ? (
+          currentVehicles.map((vehicle) => (
+            <div
+              key={vehicle.id}
+              className="flex flex-col sm:flex-row w-full bg-white rounded-md shadow-md overflow-hidden"
+            >
               <div
-                key={vehicle.id}
-                className="flex flex-col sm:flex-row w-full bg-white rounded-md shadow-md overflow-hidden"
+                className="w-full sm:w-2/5 h-56 flex-shrink-0 bg-gray-200 flex justify-center items-center relative cursor-pointer group"
+                onClick={() => openFullScreenViewer(vehicle.allDisplayImages)}
               >
-                <div
-                  className="w-full sm:w-2/5 h-56 flex-shrink-0 bg-gray-200 flex justify-center items-center relative cursor-pointer group"
-                  onClick={() => openFullScreenViewer(vehicle.allDisplayImages)}
-                >
-                  {imageLoadStates[vehicle.id] === "loading" && (
-                    <FaSpinner className="animate-spin text-2xl text-blue-600" />
-                  )}
-                  {imageLoadStates[vehicle.id] === "error" && (
-                    <div className="flex flex-col items-center text-gray-500">
-                      <FaExclamationTriangle size={30} className="mb-2" />
-                      <p className="text-sm">Image unavailable</p>
-                    </div>
-                  )}
-                  {imageLoadStates[vehicle.id] === "loaded" &&
-                    vehicle.displayImage && (
-                      <img
-                        className="w-full h-full object-cover"
-                        src={vehicle.displayImage}
-                        alt={`${vehicle.make || "Vehicle"} ${
-                          vehicle.model || ""
-                        }`}
-                        onError={() => handleImageError(vehicle.id)}
-                      />
-                    )}
-                  {!imageLoadStates[vehicle.id] && (
-                    <FaSpinner className="animate-spin text-2xl text-blue-600" />
-                  )}
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-300 flex justify-center items-center">
-                    <p className="text-white text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      View Images
-                    </p>
+                {imageLoadStates[vehicle.id] === "loading" && (
+                  <FaSpinner className="animate-spin text-2xl text-blue-600" />
+                )}
+                {imageLoadStates[vehicle.id] === "error" && (
+                  <div className="flex flex-col items-center text-gray-500">
+                    <FaExclamationTriangle size={30} className="mb-2" />
+                    <p className="text-sm">Image unavailable</p>
                   </div>
+                )}
+                {imageLoadStates[vehicle.id] === "loaded" &&
+                  vehicle.displayImage && (
+                    <img
+                      className="w-full h-full object-cover"
+                      src={vehicle.displayImage}
+                      alt={`${vehicle.make || "Vehicle"} ${
+                        vehicle.model || ""
+                      }`}
+                      onError={() => handleImageError(vehicle.id)}
+                    />
+                  )}
+                {!imageLoadStates[vehicle.id] && (
+                  <FaSpinner className="animate-spin text-2xl text-blue-600" />
+                )}
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-300 flex justify-center items-center">
+                  <p className="text-white text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    View Images
+                  </p>
                 </div>
+              </div>
 
-                {/* --- START: MODIFIED JSX for clickable details area --- */}
-                <div
-                  className="flex w-full sm:w-3/5 flex-col p-5 justify-between text-black cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => handleNavigation(vehicle)}
-                >
-                  {/* --- END: MODIFIED JSX for clickable details area --- */}
-                  <div>
-                    <div className="flex w-full justify-between items-start mb-2">
-                      <div>
-                        <h3 className="text-xl lg:text-2xl font-semibold">
-                          {vehicle.make || "N/A"}{" "}
-                          <span className="font-medium">
-                            {vehicle.model || "N/A"}
-                          </span>
-                          <span className="font-medium text-gray-500">
-                            {" "}
-                            <t /> ({vehicle.year || "N/A"})
-                          </span>
-                        </h3>
-                        <p className="text-sm mt-1">
-                          {vehicle.category || "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3 gap-y-2 my-3 text-sm">
-                      <div className="flex items-center space-x-1.5">
-                        <FaGasPump size={15} className="text-gray-600" />
-                        <span>{vehicle.fuelType || "N/A"}</span>
-                      </div>
-                      <div className="flex items-center space-x-1.5">
-                        <FaCogs size={15} className="text-gray-600" />
-                        <span>{vehicle.transmission || "N/A"}</span>
-                      </div>
-                      <div className="flex items-center space-x-1.5">
-                        <FaUserFriends size={16} className="text-gray-600" />
-                        <span>{vehicle.seats || "N/A"} Seats</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex justify-between items-center pt-3 border-t border-gray-200">
+              <div
+                className="flex w-full sm:w-3/5 flex-col p-5 justify-between text-black cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => handleNavigation(vehicle)}
+              >
+                <div>
+                  <div className="flex w-full justify-between items-start mb-2">
                     <div>
-                      <p className="text-xs">Daily Price</p>
-                      <p className="text-lg lg:text-xl font-semibold">
-                        {vehicle.price ? `${vehicle.price} Birr` : "N/A"}
+                      <h3 className="text-xl lg:text-2xl font-semibold">
+                        {vehicle.make || "N/A"}{" "}
+                        <span className="font-medium">
+                          {vehicle.model || "N/A"}
+                        </span>
+                        <span className="font-medium text-gray-500">
+                          {" "}
+                          ({vehicle.year || "N/A"})
+                        </span>
+                      </h3>
+                      <p className="text-sm mt-1">
+                        {vehicle.category || "N/A"}
                       </p>
                     </div>
-                    {/* --- START: MODIFIED JSX for button --- */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent parent div's onClick
-                        handleNavigation(vehicle);
-                      }}
-                      className="bg-blue-950 hover:bg-blue-800 transition-colors text-white rounded-full px-6 py-2.5 text-sm font-medium"
-                    >
-                      View Details
-                    </button>
-                    {/* --- END: MODIFIED JSX for button --- */}
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3 gap-y-2 my-3 text-sm">
+                    <div className="flex items-center space-x-1.5">
+                      <FaGasPump size={15} className="text-gray-600" />
+                      <span>{vehicle.fuelType || "N/A"}</span>
+                    </div>
+                    <div className="flex items-center space-x-1.5">
+                      <FaCogs size={15} className="text-gray-600" />
+                      <span>{vehicle.transmission || "N/A"}</span>
+                    </div>
+                    <div className="flex items-center space-x-1.5">
+                      <FaUserFriends size={16} className="text-gray-600" />
+                      <span>{vehicle.seats || "N/A"} Seats</span>
+                    </div>
                   </div>
                 </div>
+                <div className="mt-4 flex justify-between items-center pt-3 border-t border-gray-200">
+                  <div>
+                    <p className="text-xs">Daily Price</p>
+                    <p className="text-lg lg:text-xl font-semibold">
+                      {vehicle.price ? `${vehicle.price} Birr` : "N/A"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNavigation(vehicle);
+                    }}
+                    className="bg-blue-950 hover:bg-blue-800 transition-colors text-white rounded-full px-6 py-2.5 text-sm font-medium"
+                  >
+                    View Details
+                  </button>
+                </div>
               </div>
-            ))
-          : !isLoadingData &&
-            hasAttemptedFetchRef.current && (
-              <div className="w-full text-center py-10 text-black text-lg">
-                No vehicles found for your selection. Adjust your search
-                criteria.
-              </div>
-            )}
+            </div>
+          ))
+        ) : !isLoadingData && hasAttemptedFetchRef.current ? (
+          <div className="w-full text-center py-10 text-black text-lg">
+            No vehicles found for your selection. Adjust your search criteria.
+          </div>
+        ) : null}
       </div>
 
       {((!vehicles &&

@@ -33,7 +33,6 @@ const CalendarModal = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full mx-auto">
         {" "}
-        {/* Adjusted max-width and padding */}
         <div className="flex items-center justify-between mb-6">
           <select
             value={`${
@@ -93,7 +92,7 @@ const CalendarModal = ({
           {daysOfWeek.map((day) => (
             <div
               key={day}
-              className="w-8 h-8 flex items-center justify-center text-gray-600 text-xs sm:text-sm font-semibold" // smaller text on small screens
+              className="w-8 h-8 flex items-center justify-center text-gray-600 text-xs sm:text-sm font-semibold"
             >
               {day}
             </div>
@@ -126,17 +125,13 @@ const CalendarModal = ({
 const Step3 = ({ nextStep, prevStep }) => {
   const { vehicleData, updateVehicleData } = useVehicleFormStore();
   const [searchTerm, setSearchTerm] = useState("");
-  const [tempRangeStart, setTempRangeStart] = useState(null); // Only need start for temp range
+  const [tempRangeStart, setTempRangeStart] = useState(null);
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  // selectedUnavailableEntries stores objects: { date: Date } or { start: Date, end: Date } for UI
   const [selectedUnavailableEntries, setSelectedUnavailableEntries] = useState(
     () => {
       try {
-        // Initialize from store: vehicleData.unavailableDates are ISO strings
-        // For UI, treat each as a single unavailable date entry initially.
-        // More complex range reconstruction from flat list is possible but adds significant complexity.
         return vehicleData.unavailableDates &&
           Array.isArray(vehicleData.unavailableDates)
           ? vehicleData.unavailableDates
@@ -144,7 +139,7 @@ const Step3 = ({ nextStep, prevStep }) => {
                 const date = normalizeDate(new Date(isoString));
                 return date ? { date } : null;
               })
-              .filter(Boolean) // Remove nulls from invalid dates
+              .filter(Boolean)
           : [];
       } catch (e) {
         console.error("Error parsing unavailableDates for UI:", e);
@@ -153,18 +148,14 @@ const Step3 = ({ nextStep, prevStep }) => {
     }
   );
 
-  // Effect to update the Zustand store (vehicleData.unavailableDates)
-  // This effect will flatten selectedUnavailableEntries into an array of ISO date strings
   useEffect(() => {
     const allUnavailableIsoDates = [];
     selectedUnavailableEntries.forEach((entry) => {
       if (entry.date) {
-        // Single date entry
         if (entry.date instanceof Date && !isNaN(entry.date)) {
           allUnavailableIsoDates.push(normalizeDate(entry.date).toISOString());
         }
       } else if (entry.start && entry.end) {
-        // Date range entry
         if (
           entry.start instanceof Date &&
           !isNaN(entry.start) &&
@@ -181,12 +172,11 @@ const Step3 = ({ nextStep, prevStep }) => {
         }
       }
     });
-    // Ensure unique dates in the store
-    const uniqueIsoDates = [...new Set(allUnavailableIsoDates)].sort(); // Sort for consistency
+    const uniqueIsoDates = [...new Set(allUnavailableIsoDates)].sort();
     updateVehicleData({ unavailableDates: uniqueIsoDates });
   }, [selectedUnavailableEntries, updateVehicleData]);
 
-  const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"]; // Shorter names for small cells
+  const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"];
   const months = [
     "January",
     "February",
@@ -201,8 +191,6 @@ const Step3 = ({ nextStep, prevStep }) => {
     "November",
     "December",
   ];
-
-  // Constants (unchanged)
   const carFeatures = [
     "GPS",
     "AWD",
@@ -215,15 +203,23 @@ const Step3 = ({ nextStep, prevStep }) => {
     "Backup Camera",
     "Heated Seats",
   ];
-  const noticePeriods = [
-    "2 hours",
-    "6 hours",
-    "12 hours",
-    "1 day",
-    "2 days",
-    "3 days",
-  ];
 
+  // Helper function to capitalize first letter
+  const capitalize = (s) => (s && s.charAt(0).toUpperCase() + s.slice(1)) || "";
+
+  // Helper to manage working days selection
+  const handleWorkingDayChange = (day, isSelected) => {
+    const currentDays = vehicleData.driverWorkingDays || [];
+    let newDays;
+    if (isSelected) {
+      newDays = [...currentDays, day];
+    } else {
+      newDays = currentDays.filter((d) => d !== day);
+    }
+    updateVehicleData({ driverWorkingDays: [...new Set(newDays)] }); // Ensure uniqueness
+  };
+
+  // --- All other existing functions (getDaysInMonth, formatDate, etc.) are unchanged ---
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -268,7 +264,6 @@ const Step3 = ({ nextStep, prevStep }) => {
     },
     [selectedUnavailableEntries]
   );
-
   const handleDateSelect = (day) => {
     let selectedDate = new Date(
       currentMonth.getFullYear(),
@@ -414,9 +409,9 @@ const Step3 = ({ nextStep, prevStep }) => {
           key={day}
           onClick={() => handleDateSelect(day)}
           className={`
-            w-8 h-8 flex items-center justify-center focus:outline focus:outline-1 
+            w-8 h-8 flex items-center justify-center focus:outline focus:outline-1
             focus:outline-blue-400 rounded-full text-xs sm:text-sm transition-all duration-200
-            ${isCurrentlyUnavailable ? "bg-red-500 text-white" : ""} 
+            ${isCurrentlyUnavailable ? "bg-red-500 text-white" : ""}
             ${
               isTempSelectionStart
                 ? "bg-red-300 text-black ring-2 ring-red-500"
@@ -478,32 +473,37 @@ const Step3 = ({ nextStep, prevStep }) => {
     "Auto Parking",
   ];
 
-  // --- Validation Logic ---
-  const isAdvanceNoticePeriodFilled =
-    vehicleData.advanceNoticePeriod &&
-    vehicleData.advanceNoticePeriod.trim() !== "";
-  // No longer require specific availability dates. Empty unavailableDates means fully available.
-  // const isAvailabilityDatesFilled = selectedUnavailableEntries.length > 0; // Or vehicleData.unavailableDates.length > 0
-  const isInstantBookingFilled =
-    typeof vehicleData.instantBooking === "boolean";
+  // --- NEW & UPDATED Validation Logic ---
+  const isServiceTypeSelected = ["self-drive", "with-driver", "both"].includes(
+    vehicleData.serviceType
+  );
+
   const isPriceFilled =
-    vehicleData.price !== undefined &&
-    vehicleData.price !== null &&
-    vehicleData.price.toString().trim() !== "" &&
+    vehicleData.price !== "" &&
     !isNaN(parseFloat(vehicleData.price)) &&
     parseFloat(vehicleData.price) >= 0;
 
+  const isDriverPriceValid =
+    vehicleData.serviceType === "self-drive" ||
+    (vehicleData.driverPrice !== "" &&
+      !isNaN(parseFloat(vehicleData.driverPrice)) &&
+      parseFloat(vehicleData.driverPrice) > 0);
+
+  const areDriverDaysSelected =
+    vehicleData.serviceType === "self-drive" ||
+    (vehicleData.driverWorkingDays && vehicleData.driverWorkingDays.length > 0);
+
   const allRequiredFieldsFilled =
-    //isAdvanceNoticePeriodFilled &&
-    // isAvailabilityDatesFilled && // This might be optional now
-    // isInstantBookingFilled &&
-    isPriceFilled;
+    isServiceTypeSelected &&
+    isPriceFilled &&
+    isDriverPriceValid &&
+    areDriverDaysSelected;
   // --- End Validation Logic ---
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 bg-[#F8F8FF] p-4 sm:p-0">
       <div className="lg:mx-auto p-4 sm:p-8 md:w-full lg:w-2/3 bg-white rounded-2xl shadow-sm text-base">
-        {/* Progress Bar */}
+        {/* Progress Bar and Step Counter (unchanged) */}
         <div className="flex items-center justify-center">
           <div className="w-3/5 border-b-4 border-[#00113D] mr-2"></div>
           <div className="w-2/5 border-b-4 border-blue-200"></div>
@@ -516,7 +516,7 @@ const Step3 = ({ nextStep, prevStep }) => {
           </div>
         </div>
 
-        {/* Car Features Section (largely unchanged) */}
+        {/* Car Features Section (unchanged) */}
         <section className="mb-12">
           <h1 className="text-2xl sm:text-3xl font-semibold mt-8">
             Car Features
@@ -588,41 +588,199 @@ const Step3 = ({ nextStep, prevStep }) => {
           </div>
         </section>
 
-        {/* Car Unavailability Section */}
+        {/* --- NEW: Service & Pricing Section --- */}
         <section className="my-8">
           <h2 className="text-2xl sm:text-3xl font-semibold my-8">
-            Car Unavailability
+            Service & Pricing
           </h2>
 
-          {/* Advance Notice Period */}
-          {/* <div className="mb-8">
+          {/* Service Type Selection */}
+          <div className="mb-8">
             <h3 className="text-base sm:text-lg font-semibold mb-3">
-              Advance Notice Period
+              Service Type *
             </h3>
             <p className="text-gray-600 text-sm sm:text-base mb-3">
-              How long in advance do you need to be notified before a trip
-              starts.
+              Choose how your vehicle can be rented. "Both" allows users to
+              select their preference during booking.
             </p>
             <select
               className="w-full sm:w-4/6 p-2 border rounded-lg text-xs sm:text-sm"
-              value={vehicleData.advanceNoticePeriod || ""}
+              value={vehicleData.serviceType}
               onChange={(e) =>
-                updateVehicleData({ advanceNoticePeriod: e.target.value })
+                updateVehicleData({ serviceType: e.target.value })
               }
+              required
             >
-              <option value="">Set period duration</option>
-              {noticePeriods.map((period) => (
-                <option key={period} value={period}>
-                  {period}
-                </option>
-              ))}
+              <option value="self-drive">Self-Drive Only</option>
+              <option value="with-driver">With Driver Only</option>
+              <option value="both">Both Options Available</option>
             </select>
-            {!isAdvanceNoticePeriodFilled && (
+          </div>
+
+          {/* Self-Drive Pricing */}
+          <div className="mb-8">
+            <h3 className="text-base sm:text-lg font-semibold mb-3">
+              Self-Drive Daily Price *
+            </h3>
+            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg mb-4">
+              <p className="text-xs sm:text-sm text-blue-800">
+                Please be aware that a service fee will be automatically
+                deducted from the price you set.
+              </p>
+            </div>
+            <p className="text-gray-600 text-sm sm:text-base mb-3">
+              Set the daily price for renting your car without a driver.
+            </p>
+            <div className="flex items-center border rounded-lg overflow-hidden">
+              <span className="px-3 font-semibold text-gray-700 text-xs sm:text-sm bg-gray-50 py-2.5">
+                ETB
+              </span>
+              <input
+                type="number"
+                min="0"
+                className="w-full p-2 text-xs sm:text-sm outline-none"
+                placeholder="Set Daily car rent price"
+                value={vehicleData.price ?? ""}
+                onChange={(e) => updateVehicleData({ price: e.target.value })}
+                required
+              />
+            </div>
+            {!isPriceFilled && (
               <p className="text-red-500 text-xs mt-1">
-                This field is required.
+                Please enter a valid price.
               </p>
             )}
-          </div> */}
+          </div>
+
+          {/* --- NEW: Conditional Driver Service Configuration --- */}
+          {vehicleData.serviceType !== "self-drive" && (
+            <div className="border-t pt-8 mt-8">
+              <h3 className="text-xl sm:text-2xl font-semibold mb-6 text-navy-900">
+                Driver Service Configuration
+              </h3>
+
+              {/* Driver Daily Price */}
+              <div className="mb-8">
+                <h4 className="text-base sm:text-lg font-semibold mb-3">
+                  Driver Daily Price (ETB) *
+                </h4>
+                <p className="text-gray-600 text-sm sm:text-base mb-3">
+                  Set the additional daily rate for the driver service.
+                </p>
+                <div className="flex items-center border rounded-lg overflow-hidden">
+                  <span className="px-3 font-semibold text-gray-700 text-xs sm:text-sm bg-gray-50 py-2.5">
+                    ETB
+                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    className="w-full p-2 text-xs sm:text-sm outline-none"
+                    placeholder="e.g., 1000"
+                    value={vehicleData.driverPrice ?? ""}
+                    onChange={(e) =>
+                      updateVehicleData({ driverPrice: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                {!isDriverPriceValid && (
+                  <p className="text-red-500 text-xs mt-1">
+                    Driver price is required and must be a positive number.
+                  </p>
+                )}
+              </div>
+
+              {/* Driver Hours */}
+              <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-base sm:text-lg font-semibold mb-3">
+                    Maximum Hours Per Day
+                  </h4>
+                  <input
+                    type="number"
+                    min="1"
+                    max="24"
+                    className="w-full p-2 border rounded-lg text-xs sm:text-sm"
+                    placeholder="e.g., 8"
+                    value={vehicleData.driverMaxHours ?? ""}
+                    onChange={(e) =>
+                      updateVehicleData({ driverMaxHours: e.target.value })
+                    }
+                  />
+                  <p className="text-gray-500 text-xs mt-1">
+                    Maximum hours the driver will work per day.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-base sm:text-lg font-semibold mb-3">
+                    Working Hours
+                  </h4>
+                  <input
+                    type="text"
+                    className="w-full p-2 border rounded-lg text-xs sm:text-sm"
+                    placeholder="e.g., 8:00 AM - 6:00 PM"
+                    value={vehicleData.driverHours ?? ""}
+                    onChange={(e) =>
+                      updateVehicleData({ driverHours: e.target.value })
+                    }
+                  />
+                  <p className="text-gray-500 text-xs mt-1">
+                    Driver's daily working hours.
+                  </p>
+                </div>
+              </div>
+
+              {/* Driver Working Days */}
+              <div className="mb-8">
+                <h4 className="text-base sm:text-lg font-semibold mb-3">
+                  Working Days *
+                </h4>
+                <p className="text-gray-600 text-sm sm:text-base mb-3">
+                  Select the days when the driver service is available.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday",
+                  ].map((day) => {
+                    const isSelected =
+                      vehicleData.driverWorkingDays?.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => handleWorkingDayChange(day, !isSelected)}
+                        className={`px-4 py-2 text-sm rounded-full border transition-colors duration-200 ${
+                          isSelected
+                            ? "bg-navy-900 text-white border-navy-900"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        {capitalize(day)}
+                      </button>
+                    );
+                  })}
+                </div>
+                {!areDriverDaysSelected && (
+                  <p className="text-red-500 text-xs mt-2">
+                    Please select at least one working day for the driver.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Car Unavailability Section (largely unchanged) */}
+        <section className="my-8">
+          <h2 className="text-2xl sm:text-3xl font-semibold my-8">
+            Car Availability
+          </h2>
 
           {/* Set Car Unavailability Dates */}
           <div className="mb-8">
@@ -665,14 +823,6 @@ const Step3 = ({ nextStep, prevStep }) => {
                 ))}
               </div>
             )}
-            {/*
-            If making unavailable dates mandatory:
-            {!isAvailabilityDatesFilled && (
-              <p className="text-red-500 text-xs mt-1">
-                Please select at least one unavailable date or range if applicable.
-              </p>
-            )}
-            */}
           </div>
 
           <CalendarModal
@@ -685,7 +835,7 @@ const Step3 = ({ nextStep, prevStep }) => {
             months={months}
           />
 
-          {/* Instant Booking (largely unchanged) */}
+          {/* Instant Booking (unchanged) */}
           <div className="flex items-center gap-3 mb-8">
             <div
               className={`w-12 h-6 rounded-full p-1 cursor-pointer flex items-center transition-colors duration-300 ${
@@ -723,52 +873,6 @@ const Step3 = ({ nextStep, prevStep }) => {
               Instant booking
             </span>
           </div>
-          {/* This field might not need an error message if a default is assumed, 
-               but if undefined is the initial and not allowed:
-            {!isInstantBookingFilled && (
-                 <p className="text-red-500 text-xs mt-1 -translate-y-6">Please specify instant booking preference.</p>
-            )} */}
-
-          {/* Pricing (largely unchanged) */}
-          <div className="mb-8">
-            <h3 className="text-base sm:text-lg font-semibold mb-3">Pricing</h3>
-            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg mb-4">
-              <p className="text-xs sm:text-sm text-blue-800">
-                Please be aware that a service fee will be automatically
-                deducted from the price you set.
-              </p>
-            </div>
-            <p className="text-gray-600 text-sm sm:text-base mb-3">
-              Set daily price for your car.
-            </p>
-            <div className="flex items-center border rounded-lg overflow-hidden">
-              <span className="px-3 font-semibold text-gray-700 text-xs sm:text-sm bg-gray-50 py-2.5">
-                ETB
-              </span>
-              <input
-                type="number"
-                min="0"
-                className="w-full p-2 text-xs sm:text-sm outline-none"
-                placeholder="Set Daily car rent price"
-                value={
-                  vehicleData.price === null || vehicleData.price === undefined
-                    ? ""
-                    : vehicleData.price
-                }
-                onChange={(e) => {
-                  const val = e.target.value;
-                  updateVehicleData({
-                    price: val === "" ? "" : parseFloat(val),
-                  });
-                }}
-              />
-            </div>
-            {!isPriceFilled && (
-              <p className="text-red-500 text-xs mt-1">
-                Please enter a valid price.
-              </p>
-            )}
-          </div>
         </section>
 
         {/* Navigation Buttons */}
@@ -793,12 +897,11 @@ const Step3 = ({ nextStep, prevStep }) => {
         </div>
       </div>
 
-      {/* Side Panel */}
+      {/* Side Panel (unchanged) */}
       <div className="p-4 sm:p-8 lg:w-1/4 md:flex hidden text-xs sm:text-sm bg-blue-100 py-6 h-fit rounded-lg shadow-sm">
-        Ensure all availability (unavailable dates) and pricing details are
-        accurate. If no dates are marked as unavailable, your car will be
-        considered available for booking at any time, subject to your advance
-        notice period.
+        Ensure all availability and pricing details are accurate. If you offer a
+        driver service, make sure the pricing and working days reflect their
+        availability.
       </div>
     </div>
   );
