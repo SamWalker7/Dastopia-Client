@@ -609,7 +609,6 @@ const useVehicleFormStore = create(
         await get().uploadPowerOfAttorney(file);
       },
 
-      // --- MODIFIED: Action to submit the vehicle listing to the API ---
       submitVehicleListing: async () => {
         const vehicleData = get().vehicleData;
 
