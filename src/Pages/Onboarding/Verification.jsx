@@ -2,7 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import flag from "../../images/hero/image.png"; // Ensure this path is correct
 import { useLocation } from "react-router-dom";
-import { IconButton } from "@mui/material";
+import {
+  IconButton,
+  TextField,
+  InputAdornment,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  FormControl,
+  FormLabel,
+} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close"; // For the close button
 
 const Login = () => {
@@ -16,6 +25,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setpassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState(""); // State for confirm password
+  const [user_type, setUserType] = useState("rent"); // State for user role
   const [errors, setErrors] = useState({});
 
   // Phone number validation useEffect
@@ -127,6 +137,7 @@ const Login = () => {
         currentErrors.confirmPassword = "Please confirm your password.";
       if (phone_number === prefix)
         currentErrors.phone_number = "Phone number is required.";
+      if (!user_type) currentErrors.user_type = "Please select a role.";
       setErrors(currentErrors);
       return;
     }
@@ -137,6 +148,7 @@ const Login = () => {
         last_name: lastName,
         phone_number,
         password,
+        user_type, // Add user_type to the request
       };
 
       if (email) {
@@ -193,7 +205,8 @@ const Login = () => {
     !!errors.confirmPassword || // Check for password mismatch error
     !password || // Password is empty
     !confirmPassword || // Confirm password is empty
-    phone_number === prefix; // Phone number is just the prefix
+    phone_number === prefix || // Phone number is just the prefix
+    !user_type; // user_type must be selected
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -242,83 +255,87 @@ const Login = () => {
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col mb-4">
-            <div className="relative inline-block my-3 text-lg w-full">
-              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
-                Phone Number
-              </label>
-              <div className="border border-gray-400 items-center rounded-md flex bg-white">
-                <img
-                  src={flag}
-                  className="w-12 h-8 rounded-xl ml-4 object-contain"
-                  alt="Flag"
+            {/* Role Selection */}
+            <FormControl component="fieldset" className="my-3">
+              <FormLabel component="legend">You are here to:</FormLabel>
+              <RadioGroup
+                row
+                aria-label="user_type"
+                name="user_type"
+                value={user_type}
+                onChange={(e) => setUserType(e.target.value)}
+              >
+                <FormControlLabel
+                  value="rent"
+                  control={<Radio />}
+                  label="Rent a Car"
                 />
-                <input
-                  type="tel"
-                  name="phone_number"
-                  value={phone_number}
-                  onChange={handlePhoneNumberChange}
-                  className="flex w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
-                  placeholder="+251XXXXXXXXX"
+                <FormControlLabel
+                  value="list"
+                  control={<Radio />}
+                  label="List a Car"
                 />
-              </div>
-              {errors.phone_number && (
-                <p className="text-red-500 text-xs mt-1 ml-1">
-                  {errors.phone_number}
-                </p>
-              )}
-            </div>
-            <div className="relative inline-block my-3 text-lg w-full">
-              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
-                Email (Optional)
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter Your Email"
-                className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
-              />
-              {errors.email && (
-                <p className="text-red-500 text-xs mt-1 ml-1">{errors.email}</p>
-              )}
-            </div>
-            <div className="relative inline-block my-3 text-lg w-full">
-              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
-                Password
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={password}
-                onChange={(e) => setpassword(e.target.value)}
-                placeholder="Enter Your Password"
-                className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
-              />
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1 ml-1">
-                  {errors.password}
-                </p>
-              )}
-            </div>
-            <div className="relative inline-block my-3 text-lg w-full">
-              <label className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm Your Password"
-                className="flex border border-gray-400 justify-between w-full p-3 py-4 bg-white text-gray-500 rounded-md focus:outline focus:outline-1 focus:outline-blue-400"
-              />
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1 ml-1">
-                  {errors.confirmPassword}
-                </p>
-              )}
-            </div>
+                <FormControlLabel
+                  value="both"
+                  control={<Radio />}
+                  label="Both"
+                />
+              </RadioGroup>
+            </FormControl>
+
+            <TextField
+              label="Phone Number"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              name="phone_number"
+              value={phone_number}
+              onChange={handlePhoneNumberChange}
+              error={!!errors.phone_number}
+              helperText={errors.phone_number}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <img src={flag} className="w-8 h-6 rounded-md" alt="Flag" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              label="Email (Optional)"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              error={!!errors.email}
+              helperText={errors.email}
+            />
+            <TextField
+              label="Password"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              type="password"
+              name="password"
+              value={password}
+              onChange={(e) => setpassword(e.target.value)}
+              error={!!errors.password}
+              helperText={errors.password}
+            />
+            <TextField
+              label="Confirm Password"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              type="password"
+              name="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              error={!!errors.confirmPassword}
+              helperText={errors.confirmPassword}
+            />
           </div>
 
           {errors.general && (

@@ -1,38 +1,40 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import Logo from "../images/logo/dasguzo_logo.png";
-import Img2 from "../images/user/person.png";
-import { signout } from "../api/auth";
-import { FiPlus } from "react-icons/fi";
-import { MdMenu } from "react-icons/md";
-import { useLocation } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import React, { useState, useRef, useEffect } from "react";
-import {
-  FaBars,
-  FaCarSide,
-  FaListUl,
-  FaCog,
-  FaLanguage,
-  FaUser,
-  FaCreditCard,
-  FaComments,
-  FaChevronDown,
-  FaChevronUp,
-  FaClipboardList,
-  FaBookmark,
-  FaCheckSquare,
-  FaWindowClose,
-  FaHome,
-} from "react-icons/fa";
-import Img3 from "../images/testimonials/avatar.png";
+import Logo from "../images/logo/dasguzo_logo.png";
+import DefaultAvatar from "../images/testimonials/avatar.png";
+import { getDownloadUrl } from "../api";
 
-const MenuItem = ({ icon, text, hasDropdown, children, onClick }) => {
+// Import MUI Icons for a consistent look and feel
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
+import AddIcon from "@mui/icons-material/Add";
+import CircularProgress from "@mui/material/CircularProgress";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import ListIcon from "@mui/icons-material/List";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import SettingsIcon from "@mui/icons-material/Settings";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import HomeIcon from "@mui/icons-material/Home";
+import InfoIcon from "@mui/icons-material/Info";
+import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
+import ContactMailIcon from "@mui/icons-material/ContactMail";
+
+// Reusable MenuItem component for dropdowns and mobile menu
+const MenuItem = ({ icon, text, hasDropdown, children, path, onClick }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleClick = () => {
     if (hasDropdown) {
       setIsOpen(!isOpen);
-    } else if (onClick) {
-      onClick();
+    } else if (path) {
+      navigate(path);
+      if (onClick) onClick(); // Also call onClick to close the parent menu
     }
   };
 
@@ -46,204 +48,318 @@ const MenuItem = ({ icon, text, hasDropdown, children, onClick }) => {
           {icon}
           <span>{text}</span>
         </div>
-        {hasDropdown && (
-          <span>{isOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
-        )}
+        {hasDropdown && (isOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />)}
       </button>
-      {hasDropdown && isOpen && <div className="pl-12">{children}</div>}
+      {hasDropdown && isOpen && (
+        <div className="pl-8 bg-gray-50/50 rounded-b-lg">
+          {React.Children.map(children, (child) =>
+            React.cloneElement(child, { onClick })
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-function Navbar1({ user2 }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef(null);
+// Centralized configurations for menu items to ensure consistency
+const mainNavLinks = [
+  { text: "Home", path: "/", icon: <HomeIcon /> },
+  { text: "Explore Cars", path: "/search", icon: <DirectionsCarIcon /> },
+  { text: "About Us", path: "/about", icon: <InfoIcon /> },
+  { text: "Contact Us", path: "/contact", icon: <ContactMailIcon /> },
+];
 
+const userMenuItems = [
+  { text: "Rental Requests", icon: <AssignmentIcon />, path: "/rentalrequest" },
+  { text: "Active Bookings", icon: <BookmarkIcon />, path: "/booking" },
+  { text: "My Requests", icon: <DirectionsCarIcon />, path: "/myrequest" },
+  {
+    text: "My Listings",
+    icon: <ListIcon />,
+    hasDropdown: true,
+    children: [
+      { text: "My Vehicle", icon: <DirectionsCarIcon />, path: "/mylisting" },
+    ],
+  },
+  {
+    text: "General Settings",
+    icon: <SettingsIcon />,
+    hasDropdown: true,
+    children: [
+      {
+        text: "Personal Details",
+        icon: <AccountCircleIcon />,
+        path: "/profile",
+      },
+      {
+        text: "Payment History",
+        icon: <CreditCardIcon />,
+        path: "/payment-history",
+      },
+    ],
+  },
+  { text: "Chats", icon: <ChatBubbleIcon />, path: "/chat" },
+];
+
+function Navbar1({ user2, setUser }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const menuRef = useRef(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(DefaultAvatar);
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Effect to fetch the user's profile picture
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!user2?.AccessToken) {
+        setIsImageLoading(false);
+        setProfileImageUrl(DefaultAvatar);
+        return;
+      }
+      setIsImageLoading(true);
+      try {
+        const response = await fetch(
+          "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/account/get_profile",
+          {
+            headers: { Authorization: `Bearer ${user2.AccessToken}` },
+          }
+        );
+        if (!response.ok) throw new Error("Failed to fetch profile");
+
+        const data = await response.json();
+        const profileKey = data?.data?.formattedProfile?.profilePicture;
+
+        if (profileKey) {
+          const urlResponse = await getDownloadUrl(profileKey);
+          setProfileImageUrl(urlResponse?.body || DefaultAvatar);
+        } else {
+          setProfileImageUrl(DefaultAvatar);
+        }
+      } catch (error) {
+        console.error("Error fetching profile image:", error);
+        setProfileImageUrl(DefaultAvatar);
+      } finally {
+        setIsImageLoading(false);
+      }
+    };
+    fetchProfileData();
+  }, [user2]);
+
+  // Effect to close dropdown menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsOpen(false);
+        setMenuOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleNavigate = (path) => {
-    console.log(`Navigating to: ${path}`);
-    navigate(path); // Navigate to the specified path
-    setIsOpen(false); // Close the modal or menu if open
-  };
-  const location = useLocation();
-  const [nav, setNav] = useState(false);
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  const handleLogout = async () => {
-    await signout();
-    localStorage.removeItem("user");
-    localStorage.removeItem("accToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("accExp");
+  const handleLogout = () => {
+    localStorage.removeItem("customer");
+    if (setUser) setUser(null);
+    closeAllMenus();
     navigate("/");
-    setNav(false);
   };
 
-  const alternativePages = ["/contact", "/howitworks"];
-  const isAlternativeColor = alternativePages.includes(location.pathname);
-  const backgroundColor = isAlternativeColor
-    ? "bg-[#00173C] text-gray-300 font-normal"
+  const closeAllMenus = () => {
+    setMenuOpen(false);
+    setNavOpen(false);
+  };
+
+  const isAlternativeColor = ["/contact", "/howitworks"].includes(
+    location.pathname
+  );
+  const desktopNavBg = isAlternativeColor
+    ? "bg-[#00173C] text-gray-300"
     : "bg-white text-gray-600";
-  const backgroundColor1 = !isAlternativeColor
-    ? "bg-[#00173C] text-gray-300 font-normal"
-    : "bg-white text-gray-900";
+  const authButtonBg = isAlternativeColor
+    ? "bg-white text-gray-900"
+    : "bg-[#00173C] text-gray-300";
 
-  const openNav = () => {
-    setNav(!nav);
-  };
-
-  const gotoProfile = () => {
-    navigate("/profile", { state: { user2 } });
-  };
   return (
     <>
-      <nav className="fixed w-screen md:bg-transparent bg-white  z-20">
-        <div className="mx-auto px-8 sm:px-6 lg:px-12  flex   w-full justify-between items-center h-20">
-          {/* Mobile Hamburger */}
+      <nav className="fixed w-full md:bg-transparent bg-white z-30">
+        <div className="mx-auto px-4 sm:px-6 lg:px-12 flex justify-between items-center h-20">
           <div className="md:hidden">
-            <button onClick={openNav} className="focus:outline-none">
-              {nav ? (
-                <FaWindowClose size={20} className=" text-gray-900" />
-              ) : (
-                <FaBars size={20} className=" text-gray-900" />
-              )}
+            <button
+              onClick={() => setNavOpen(!navOpen)}
+              className="focus:outline-none "
+            >
+              {navOpen ? <CloseIcon /> : <MenuIcon />}
             </button>
           </div>
 
-          {/* Left: Logo */}
-          <div className="flex-shrink-0">
-            <Link to="/" onClick={() => window.scrollTo(0, 0)}>
-              <img src={Logo} alt="logo-img" className="h-10 w-auto" />
-            </Link>
-          </div>
-          <div onClick={gotoProfile} className="md:hidden ">
-            <img
-              src={Img3}
-              className="w-10 h-10 rounded-full text-white md:mb-4 md:mr-6"
-            />
-          </div>
+          <Link to="/" onClick={() => window.scrollTo(0, 0)}>
+            <img src={Logo} alt="logo-img" className="h-10 w-auto" />
+          </Link>
 
-          {/* Desktop Menu */}
+          {user2 && (
+            <div
+              className="md:hidden cursor-pointer"
+              onClick={() => navigate("/profile")}
+            >
+              {isImageLoading ? (
+                <CircularProgress size={24} />
+              ) : (
+                <img
+                  src={profileImageUrl}
+                  className="w-10 h-10 rounded-full object-cover"
+                  alt="Profile"
+                />
+              )}
+            </div>
+          )}
+
           <div
-            className={`${backgroundColor} py-0 hidden md:flex px-6  rounded-full space-x-4 items-center`}
+            className={`${desktopNavBg} hidden md:flex items-center py-2 px-6 rounded-full space-x-6 text-sm`}
           >
-            {[
-              { to: "/", label: "Home" },
-              { to: "/search", label: "Explore Cars" },
-              { to: "/about", label: "About Us" },
-              { to: "/contact", label: "Contact Us" },
-            ].map(({ to, label }) => (
+            {mainNavLinks.map((link) => (
               <NavLink
-                key={to}
-                to={to}
+                key={link.path}
+                to={link.path}
                 className={({ isActive }) =>
-                  `px-0 py-0 text-gray-600 text-sm  hover:text-yellow-500 ${
-                    isActive
-                      ? "text-yellow-500 border-b-2 border-yellow-500"
-                      : ""
-                  }`
+                  isActive ? "text-yellow-500" : "hover:text-yellow-500"
                 }
               >
-                {label}
+                {link.text}
               </NavLink>
             ))}
+          </div>
 
-            {!user && (
+          <div className="hidden md:flex items-center gap-4">
+            {user2 ? (
               <>
                 <NavLink
-                  className={` ${backgroundColor1} text-sm flex items-center justify-center rounded-full px-4 ml-4 my-2 py-1`}
-                  to="/signup"
+                  to="/addcar"
+                  className={`${authButtonBg} text-sm flex items-center rounded-full px-4 py-2`}
                 >
-                  {" "}
-                  Register
+                  <AddIcon className="mr-2" style={{ fontSize: "1rem" }} /> List
+                  Your Car
+                </NavLink>
+                <div
+                  onClick={() => navigate("/profile")}
+                  className="cursor-pointer"
+                >
+                  {isImageLoading ? (
+                    <CircularProgress size={24} />
+                  ) : (
+                    <img
+                      src={profileImageUrl}
+                      className="w-10 h-10 rounded-full object-cover"
+                      alt="Profile"
+                    />
+                  )}
+                </div>
+                <div className="relative" ref={menuRef}>
+                  <button
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    aria-label="Menu"
+                  >
+                    <MenuIcon />
+                  </button>
+                  {menuOpen && (
+                    <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border z-50">
+                      {userMenuItems.map((item, index) => (
+                        <MenuItem key={index} {...item} onClick={closeAllMenus}>
+                          {item.children?.map((child, childIndex) => (
+                            <MenuItem
+                              key={childIndex}
+                              {...child}
+                              onClick={closeAllMenus}
+                            />
+                          ))}
+                        </MenuItem>
+                      ))}
+                      <div className="p-4">
+                        <button
+                          onClick={handleLogout}
+                          className="w-full p-3 text-sm text-center border rounded-full hover:bg-gray-50"
+                        >
+                          Log Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <NavLink to="/login" className="px-4 py-2 text-sm">
+                  Login
                 </NavLink>
                 <NavLink
-                  className={` text-sm flex items-center justify-center rounded-full px-4  my-2 py-1`}
-                  to="/login"
+                  to="/signup"
+                  className={`${authButtonBg} text-sm rounded-full px-5 py-2`}
                 >
-                  {" "}
-                  Login
+                  Register
                 </NavLink>
               </>
             )}
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {nav && (
-          <div className="md:hidden bg-white shadow-md fixed w-[100vw] inset-0 z-10 flex flex-col px-4 space-y-2">
-            {[
-              { to: "/", label: "Home" },
-              { to: "/about", label: "About" },
-              { to: "/models", label: "Vehicles" },
-              { to: "/search", label: "Explore Cars" },
-              { to: "/team", label: "Our Team" },
-              { to: "/contact", label: "Contact" },
-            ].map(({ to, label }) => (
-              <MenuItem
-                icon={<FaHome className="text-md" />}
-                text={label}
-                onClick={() => {
-                  openNav();
-                  handleNavigate(to);
-                }}
-              />
-              // <NavLink
-              //   key={to}
-              //   to={to}
-              //   onClick={openNav}
-
-              //   className={({ isActive }) =>
-              //     `block px-3 py-0  text-sm font-medium ${
-              //       isActive
-              //         ? "text-yellow-500 border-b-2 border-yellow-500"
-              //         : "text-gray-600 hover:text-gray-900"
-              //     }`
-              //   }
-              // >
-              //   {label}
-              // </NavLink>
-            ))}
-
-            {!user && (
-              <>
-                {/* <NavLink
-                  className="text-primary block w-full text-left px-4 py-0  border border-primary hover:bg-primary hover:text-white"
-                  to="/signin"
-                  onClick={openNav}
-                >
-                  Sign In/Signup
-                </NavLink> */}
-                <NavLink
-                  className=" bg-primary block w-full text-left px-4 py-0  hover:bg-opacity-90"
-                  to="/signup"
-                  onClick={openNav}
-                >
-                  Register
-                </NavLink>
-                <NavLink
-                  className=" bg-primary block w-full text-left px-4 py-0  hover:bg-opacity-90"
-                  to="/login"
-                  onClick={openNav}
-                >
-                  Login
-                </NavLink>
-              </>
-            )}
-          </div>
-        )}
       </nav>
+
+      {/* Mobile Menu */}
+      {navOpen && (
+        <div className="md:hidden bg-white shadow-lg fixed w-full inset-0 z-20 flex flex-col pt-20 px-4 space-y-1 overflow-y-auto">
+          {mainNavLinks.map((link) => (
+            <NavLink
+              key={link.path}
+              to={link.path}
+              onClick={closeAllMenus}
+              className="p-4 flex items-center gap-4 text-gray-600 hover:bg-gray-50"
+            >
+              {link.icon} {link.text}
+            </NavLink>
+          ))}
+          <hr className="my-2" />
+
+          {user2 ? (
+            <>
+              {userMenuItems.map((item, index) => (
+                <MenuItem key={index} {...item} onClick={closeAllMenus}>
+                  {item.children?.map((child, childIndex) => (
+                    <MenuItem
+                      key={childIndex}
+                      {...child}
+                      onClick={closeAllMenus}
+                    />
+                  ))}
+                </MenuItem>
+              ))}
+              <div className="p-4">
+                <button
+                  onClick={handleLogout}
+                  className="w-full p-3 text-sm text-center border rounded-full hover:bg-gray-50"
+                >
+                  Log Out
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="p-4 space-y-4">
+              <NavLink
+                to="/login"
+                onClick={closeAllMenus}
+                className="w-full block text-center p-3 text-sm border rounded-full hover:bg-gray-50"
+              >
+                Login
+              </NavLink>
+              <NavLink
+                to="/signup"
+                onClick={closeAllMenus}
+                className="w-full block text-center p-3 text-sm bg-[#00173C] text-white rounded-full"
+              >
+                Register
+              </NavLink>
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 }

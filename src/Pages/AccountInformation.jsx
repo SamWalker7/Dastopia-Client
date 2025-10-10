@@ -1,16 +1,19 @@
 import React, { useState } from "react";
 import { FaSpinner } from "react-icons/fa";
-import { IoFileTray, IoClose } from "react-icons/io5"; // Added IoClose
-import { TextField } from "@mui/material";
+import { IoFileTray, IoClose } from "react-icons/io5";
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@mui/material"; // Added MUI Select components
 import placeholderImage from "../images/testimonials/avatar.png";
 import editIcon from "../images/hero/editIcon.png";
 import flag from "../images/hero/image.png";
-// getDownloadUrl is not used in this component, it's used in the parent
-// import { getDownloadUrl } from "../api";
 
 const AccountInformation = ({
   profile,
-  // setProfile, // setProfile is not directly used here; updates go via handleChange and handleUpdate
   errors,
   handleChange,
   handleUpdate,
@@ -18,7 +21,7 @@ const AccountInformation = ({
   onProfilePicUploaded,
   profileImageUrl,
   isImageLoading,
-  isUpdatingProfileDetails, // New prop for parent-driven loading state
+  isUpdatingProfileDetails,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedProfilePicFile, setSelectedProfilePicFile] = useState(null);
@@ -28,7 +31,6 @@ const AccountInformation = ({
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
     if (isModalVisible) {
-      // Reset when closing
       setSelectedProfilePicFile(null);
       setTempImageUrl("");
     }
@@ -38,15 +40,13 @@ const AccountInformation = ({
     const file = e.target.files[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        // 2MB limit
         alert("File size should be less than 2MB.");
-        e.target.value = null; // Reset file input
+        e.target.value = null;
         return;
       }
       setSelectedProfilePicFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        // Use onloadend for safety
         setTempImageUrl(reader.result);
       };
       reader.readAsDataURL(file);
@@ -87,7 +87,6 @@ const AccountInformation = ({
     const token = JSON.parse(tokenData);
 
     try {
-      // Step 1: Get presigned URL for upload
       const presignedResponse = await fetch(
         `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/account/get_account_presigned_url/${userId}`,
         {
@@ -96,74 +95,41 @@ const AccountInformation = ({
             Authorization: `Bearer ${token.AccessToken}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            filename: filename,
-            contentType: contentType,
-          }),
+          body: JSON.stringify({ filename, contentType }),
         }
       );
 
       if (!presignedResponse.ok) {
-        const errorData = await presignedResponse.json().catch(() => ({})); // Try to parse error
-        console.error(
-          "Failed to get upload URL:",
-          presignedResponse.status,
-          errorData
-        );
         throw new Error(
           `Failed to get upload URL. Status: ${presignedResponse.status}`
         );
       }
 
       const responseData = await presignedResponse.json();
-      let parsedBody;
-      if (typeof responseData.body === "string") {
-        try {
-          parsedBody = JSON.parse(responseData.body);
-        } catch (e) {
-          console.error(
-            "Failed to parse responseData.body string:",
-            e,
-            responseData.body
-          );
-          throw new Error(
-            "Invalid response format from presigned URL endpoint."
-          );
-        }
-      } else {
-        parsedBody = responseData.body;
-      }
+      const parsedBody =
+        typeof responseData.body === "string"
+          ? JSON.parse(responseData.body)
+          : responseData.body;
 
       if (!parsedBody || !parsedBody.url || !parsedBody.key) {
-        console.error("Presigned URL or key missing in response:", parsedBody);
         throw new Error(
           "Presigned URL or key missing in response from server."
         );
       }
       const { url, key } = parsedBody;
 
-      // Step 2: Upload to S3
       const uploadResponse = await fetch(url, {
         method: "PUT",
-        headers: {
-          "Content-Type": contentType,
-        },
+        headers: { "Content-Type": contentType },
         body: selectedProfilePicFile,
       });
 
       if (!uploadResponse.ok) {
-        console.error(
-          "S3 Upload failed:",
-          uploadResponse.status,
-          await uploadResponse.text()
-        );
         throw new Error(`Upload failed. Status: ${uploadResponse.status}`);
       }
 
-      // Step 3: Update user profile with new key
-      onProfilePicUploaded(key); // Notify parent
-      toggleModal(); // Close modal on success
-      // alert("Profile picture uploaded successfully!"); // Optional: Parent can handle success message
+      onProfilePicUploaded(key);
+      toggleModal();
     } catch (error) {
       console.error("Profile picture upload error:", error);
       alert(
@@ -171,17 +137,13 @@ const AccountInformation = ({
       );
     } finally {
       setIsUploading(false);
-      // setSelectedProfilePicFile(null); // Reset by toggleModal or if modal stays open
-      // setTempImageUrl("");
     }
   };
 
   return (
     <div className="bg-white p-6 shadow-lg rounded-lg space-y-6 md:w-2/4 h-fit">
       <h2 className="text-xl font-semibold">Account Information</h2>
-
       <div className="flex flex-col items-center md:items-start md:flex-row md:space-x-8 space-y-6 md:space-y-0">
-        {/* Profile Picture Section */}
         <div className="relative group w-fit flex-shrink-0">
           {isImageLoading ? (
             <div className="w-40 h-40 rounded-full flex items-center justify-center bg-gray-100">
@@ -192,7 +154,7 @@ const AccountInformation = ({
               src={profileImageUrl || placeholderImage}
               alt="Profile"
               className="w-40 h-40 rounded-full object-cover border-4 border-gray-200 shadow-sm"
-              onError={(e) => (e.currentTarget.src = placeholderImage)} // Fallback for broken profileImageUrl
+              onError={(e) => (e.currentTarget.src = placeholderImage)}
             />
           )}
           <button
@@ -204,7 +166,6 @@ const AccountInformation = ({
           </button>
         </div>
 
-        {/* Profile Picture Upload Modal */}
         {isModalVisible && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm">
             <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6">
@@ -220,7 +181,6 @@ const AccountInformation = ({
                   <IoClose size={24} />
                 </button>
               </div>
-
               <label
                 htmlFor="profilePicInput"
                 className="block mb-4 cursor-pointer"
@@ -252,7 +212,6 @@ const AccountInformation = ({
                   className="hidden"
                 />
               </label>
-
               <div className="text-xs text-gray-600 space-y-2 mb-6 p-3 bg-gray-50 rounded-md">
                 <p className="font-semibold">Image Requirements:</p>
                 <ul className="list-disc list-inside space-y-1">
@@ -262,12 +221,11 @@ const AccountInformation = ({
                   <li>Max file size: 2MB</li>
                 </ul>
               </div>
-
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={toggleModal}
                   type="button"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
                 >
                   Cancel
                 </button>
@@ -275,7 +233,7 @@ const AccountInformation = ({
                   onClick={handleProfilePicUpload}
                   type="button"
                   disabled={!tempImageUrl || isUploading}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-950 rounded-md hover:bg-blue-800 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center min-w-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-950 rounded-md hover:bg-blue-800 disabled:opacity-60"
                 >
                   {isUploading ? (
                     <FaSpinner className="animate-spin" />
@@ -288,7 +246,6 @@ const AccountInformation = ({
           </div>
         )}
 
-        {/* Profile Form Fields */}
         <div className="w-full space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <TextField
@@ -310,7 +267,6 @@ const AccountInformation = ({
               fullWidth
             />
           </div>
-
           <TextField
             label="Email"
             variant="outlined"
@@ -323,31 +279,26 @@ const AccountInformation = ({
             error={!!errors.email}
             helperText={errors.email}
           />
-
-          <div className="relative">
-            <TextField
-              label="Phone Number"
-              variant="outlined"
-              name="phoneNumber"
-              value={profile.phoneNumber || ""}
-              // onChange={handleChange} // Kept disabled as per original, but if editable, enable this
-              size="small"
-              fullWidth
-              disabled={true} // Assuming phone number is not editable here or verified elsewhere
-              error={!!errors.phoneNumber}
-              helperText={errors.phoneNumber}
-              InputProps={{
-                startAdornment: (
-                  <img
-                    src={flag}
-                    alt="Country flag"
-                    className="w-5 h-4 mr-2 opacity-70"
-                  />
-                ),
-              }}
-            />
-          </div>
-
+          <TextField
+            label="Phone Number"
+            variant="outlined"
+            name="phoneNumber"
+            value={profile.phoneNumber || ""}
+            size="small"
+            fullWidth
+            disabled={true}
+            error={!!errors.phoneNumber}
+            helperText={errors.phoneNumber}
+            InputProps={{
+              startAdornment: (
+                <img
+                  src={flag}
+                  alt="Country flag"
+                  className="w-5 h-4 mr-2 opacity-70"
+                />
+              ),
+            }}
+          />
           <TextField
             label="Address"
             variant="outlined"
@@ -368,6 +319,32 @@ const AccountInformation = ({
             size="small"
             fullWidth
           />
+
+          {/* NEW: Added Field for ID Number */}
+          <TextField
+            label="Fayda / ID Number"
+            variant="outlined"
+            name="idNumber"
+            value={profile.idNumber || ""}
+            onChange={handleChange}
+            size="small"
+            fullWidth
+          />
+
+          {/* NEW: Added Field for User Type */}
+          <FormControl fullWidth size="small">
+            <InputLabel>Account Type</InputLabel>
+            <Select
+              label="Account Type"
+              name="userType"
+              value={profile.userType || ""}
+              onChange={handleChange}
+            >
+              <MenuItem value="rent">I want to rent cars (Renter)</MenuItem>
+              <MenuItem value="list">I want to list my car (Owner)</MenuItem>
+              <MenuItem value="both">Both</MenuItem>
+            </Select>
+          </FormControl>
 
           <button
             onClick={handleUpdate}
