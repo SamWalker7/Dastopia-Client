@@ -6,6 +6,7 @@ import {
   IoFileTray,
   IoLocationOutline,
   IoPersonOutline,
+  IoShieldCheckmarkOutline,
 } from "react-icons/io5";
 import { MdOutlineLocalPhone, MdOutlineMail } from "react-icons/md";
 import useVehicleFormStore from "../../store/useVehicleFormStore";
@@ -19,7 +20,6 @@ const formatTime = (seconds) => {
   return [h, m, s].map((unit) => String(unit).padStart(2, "0")).join(":");
 };
 
-// NEW: Helper function to format service type for display
 const formatServiceType = (serviceType) => {
   if (!serviceType) return "N/A";
   switch (serviceType) {
@@ -36,9 +36,8 @@ const formatServiceType = (serviceType) => {
 
 const RentalRequests = () => {
   const navigate = useNavigate();
-
   const [rentalRequests, setRentalRequests] = useState([]);
-  const [extensionRequests, setExtensionRequests] = useState([]); // Separate state for extensions
+  const [extensionRequests, setExtensionRequests] = useState([]);
   const [vehicleDetailsMap, setVehicleDetailsMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -142,7 +141,8 @@ const RentalRequests = () => {
             `${req.renteeInfo?.given_name || ""} ${
               req.renteeInfo?.family_name || ""
             }`.trim() || "Unknown",
-          renterAvatarUrl: image,
+          // UPDATED: Use dynamic profile picture from API, fallback to static image
+          renterAvatarUrl: req.renteeInfo?.profile_picture || image,
           displayPickUpLocation: processLocation(req.pickUp),
           displayDropOffLocation: processLocation(req.dropOff),
         }));
@@ -199,7 +199,8 @@ const RentalRequests = () => {
             `${req.renteeInfo?.given_name || ""} ${
               req.renteeInfo?.family_name || ""
             }`.trim() || "Unknown",
-          renterAvatarUrl: image,
+          // UPDATED: Use dynamic profile picture from API, fallback to static image
+          renterAvatarUrl: req.renteeInfo?.profile_picture || image,
           displayPickUpLocation: processLocation(req.pickUp),
           displayDropOffLocation: processLocation(req.dropOff),
         }));
@@ -301,7 +302,6 @@ const RentalRequests = () => {
 
   const handleChatWithRentee = useCallback(
     (booking) => {
-      // Preserved original function
       const renteeId = booking?.renteeId;
       const renteeGivenName = booking?.renteeInfo?.given_name || "";
       const renteeFamilyName = booking?.renteeInfo?.family_name || "";
@@ -638,29 +638,131 @@ const RentalRequests = () => {
               </section>
             </div>
 
+            {/* ==================== NEW: Enhanced Rentee Details Section ==================== */}
             <section className="h-fit bg-white p-6 space-y-6 rounded-xl shadow-lg">
-              <h2 className="text-lg font-semibold text-[#00113D]">
-                Rentee Details
-              </h2>
-              <div className="items-center flex md:flex-row flex-col gap-6 md:gap-8">
-                <img
-                  src={selectedRequest.renterAvatarUrl}
-                  alt="Renter Profile"
-                  className="w-12 h-12 md:w-12 md:h-12 rounded-full object-cover"
-                />
-                <div className="grid gap-x-6 gap-y-3 md:grid-cols-2 grid-cols-1 w-full">
-                  <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
-                    <IoPersonOutline size={18} className="text-gray-500" />
-                    <span>{selectedRequest.renterName}</span>
+              <div className="flex items-start justify-between">
+                <h2 className="text-lg font-semibold text-[#00113D]">
+                  Rentee Details
+                </h2>
+                <div
+                  className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-2 ${
+                    selectedRequest?.renteeInfo?.id_verified === "1"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  <IoShieldCheckmarkOutline />
+                  {selectedRequest?.renteeInfo?.id_verified === "1"
+                    ? "ID Verified"
+                    : "ID Not Verified"}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 pt-4 border-t">
+                <div className="flex items-center gap-3 text-sm">
+                  <img
+                    src={selectedRequest.renterAvatarUrl}
+                    alt="Renter Profile"
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                  <div>
+                    <span className="font-semibold text-black block">
+                      {selectedRequest.renterName}
+                    </span>
+                    <span className="text-[#5A5A5A]">
+                      {selectedRequest?.renteeInfo?.email || "No email"}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-[#5A5A5A]">
+                  <IoFileTray
+                    size={18}
+                    className="text-gray-500 flex-shrink-0"
+                  />
+                  <span>
+                    <span className="font-semibold text-black">
+                      ID Number:{" "}
+                    </span>
+                    {selectedRequest?.renteeInfo?.id_number || "N/A"}
+                  </span>
+                </div>
+                <div className="flex items-start gap-3 text-sm text-[#5A5A5A] md:col-span-2">
+                  <IoLocationOutline
+                    size={18}
+                    className="text-gray-500 flex-shrink-0 mt-1"
+                  />
+                  <div>
+                    <span className="font-semibold text-black">Address: </span>
+                    {selectedRequest?.renteeInfo?.address || "No address"}
+                    {", "}
+                    {selectedRequest?.renteeInfo?.city || ""}
                   </div>
                 </div>
               </div>
+              <div className="pt-4 border-t">
+                <h3 className="text-md font-semibold text-gray-800 mb-3">
+                  Submitted Documents
+                </h3>
+                <div className="flex flex-wrap gap-4">
+                  {selectedRequest?.renteeInfo?.selfie && (
+                    <a
+                      href={selectedRequest.renteeInfo.selfie}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-center group"
+                    >
+                      <img
+                        src={selectedRequest.renteeInfo.selfie}
+                        alt="Selfie"
+                        className="w-24 h-24 rounded-lg object-cover border-2 border-transparent group-hover:border-blue-500 transition"
+                      />
+                      <span className="text-xs text-gray-600 mt-1 block">
+                        Selfie
+                      </span>
+                    </a>
+                  )}
+                  {selectedRequest?.renteeInfo?.id_front && (
+                    <a
+                      href={selectedRequest.renteeInfo.id_front}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-center group"
+                    >
+                      <img
+                        src={selectedRequest.renteeInfo.id_front}
+                        alt="ID Front"
+                        className="w-24 h-24 rounded-lg object-cover border-2 border-transparent group-hover:border-blue-500 transition"
+                      />
+                      <span className="text-xs text-gray-600 mt-1 block">
+                        ID Front
+                      </span>
+                    </a>
+                  )}
+                  {selectedRequest?.renteeInfo?.id_back && (
+                    <a
+                      href={selectedRequest.renteeInfo.id_back}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-center group"
+                    >
+                      <img
+                        src={selectedRequest.renteeInfo.id_back}
+                        alt="ID Back"
+                        className="w-24 h-24 rounded-lg object-cover border-2 border-transparent group-hover:border-blue-500 transition"
+                      />
+                      <span className="text-xs text-gray-600 mt-1 block">
+                        ID Back
+                      </span>
+                    </a>
+                  )}
+                </div>
+              </div>
+
               {actionError && (
-                <p className="text-red-500 text-sm text-center mt-2">
+                <p className="text-red-500 text-sm text-center">
                   {actionError}
                 </p>
               )}
-
               {selectedRequest.isNewRequest && (
                 <div className="flex text-base gap-4 pt-4 border-t border-gray-200">
                   <button
@@ -670,9 +772,7 @@ const RentalRequests = () => {
                     }
                     className="flex-1 py-3 rounded-full bg-red-50 text-red-700 border border-red-600 hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50"
                   >
-                    {actionLoading && selectedRequest.id === selectedRequest?.id
-                      ? "Rejecting..."
-                      : "Reject Request"}
+                    Reject Request
                   </button>
                   <button
                     onClick={() => handleApproveRequest(selectedRequest.id)}
@@ -681,9 +781,7 @@ const RentalRequests = () => {
                     }
                     className="flex-1 py-3 rounded-full bg-[#00113D] text-white hover:bg-blue-800 transition-colors disabled:opacity-50"
                   >
-                    {actionLoading && selectedRequest.id === selectedRequest?.id
-                      ? "Approving..."
-                      : "Approve Request"}
+                    Approve Request
                   </button>
                 </div>
               )}
