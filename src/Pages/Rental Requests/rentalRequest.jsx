@@ -53,6 +53,7 @@ const RentalRequests = () => {
 
   const ownerId = useMemo(() => customer?.username || customer?.id, [customer]);
 
+  // --- All existing functions remain unchanged ---
   const fetchVehicleDetails = useCallback(
     async (carId) => {
       if (!carId || !customer?.AccessToken) return null;
@@ -552,6 +553,7 @@ const RentalRequests = () => {
                       </p>
                     </div>
                   </div>
+                  {/* --- NEW: Display Service and Driver Price --- */}
                   <div className="pt-4 mt-4 border-t">
                     <div className="mb-2">
                       <span className="font-medium text-black block">
@@ -610,14 +612,17 @@ const RentalRequests = () => {
                     </div>
                   </div>
                 </div>
+                {/* --- MODIFIED: Renamed to Service Type --- */}
                 <div className="mt-6 text-sm">
                   <span className="font-medium text-black block">
                     Service Type
                   </span>
+
                   <p className="text-gray-600 font-semibold">
                     {selectedRequest.driverProvided
                       ? "With Driver"
                       : "Self-Drive"}
+
                   </p>
                 </div>
                 <div className="mt-4 text-sm">
