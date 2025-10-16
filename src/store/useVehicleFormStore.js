@@ -691,6 +691,7 @@ const useVehicleFormStore = create(
           incomingData.powerOfAttorney = null;
         }
 
+        // Conditionally clear driver fields if service type is self-drive (UNCHANGED)
         if (incomingData.serviceType === "self-drive") {
           incomingData.driverPrice = null;
           incomingData.driverMaxHours = null;

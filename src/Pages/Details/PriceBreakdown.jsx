@@ -29,9 +29,11 @@ const PopupNotification = ({ message, type, visible, onClose }) => {
   );
 };
 
-// PaymentDetailsModal is updated to accept the 'driverProvided' prop
+// PaymentDetailsModal updated to handle the new API structure
 const PaymentDetailsModal = ({
-  totalPrice,
+  price,
+  subtotal,
+  days,
   id,
   ownerId,
   owenerId,
@@ -39,7 +41,7 @@ const PaymentDetailsModal = ({
   pickUpTime,
   pickUpLocation,
   dropOffLocation,
-  driverProvided, // This prop is now correctly determined by the service selection
+  driverProvided,
   onClose,
 }) => {
   const [isChecked, setIsChecked] = useState(false);
@@ -53,22 +55,11 @@ const PaymentDetailsModal = ({
   const USER_ID =
     customer?.userAttributes?.find((attr) => attr.Name === "sub")?.Value || "";
 
-  useEffect(() => {
-    let redirectTimer;
-    if (viewMode === "success") {
-      redirectTimer = setTimeout(() => {
-        handleProceedAfterSuccess();
-      }, 5200);
-    }
-    return () => clearTimeout(redirectTimer);
-  }, [viewMode]);
-
   const handleCheckboxChange = (event) => setIsChecked(event.target.checked);
   const showErrorPopup = (message) =>
     setPopup({ visible: true, message, type: "error" });
   const closeErrorPopup = () =>
     setPopup({ visible: false, message: "", type: "" });
-  const handleProceedAfterSuccess = () => onClose();
 
   const handleApproveBooking = async () => {
     if (!pickUpLocation || !dropOffLocation) {
@@ -89,6 +80,24 @@ const PaymentDetailsModal = ({
         ? dropOffLocation
         : [dropOffLocation];
       const key = ownerId ? "ownerId" : "owenerId";
+
+      const requestBody = {
+        [key]: ownerId || owenerId,
+        renteeId: USER_ID,
+        carId: id,
+        startDate: pickUpTime,
+        endDate: dropOffTime,
+        // rentalDays: days,
+        pickUp: pickUpArray,
+        dropOff: dropOffArray,
+        selectedServiceType: driverProvided ? "with-driver" : "self-drive",
+        // --- FIX: Convert price and finalPrice numbers to strings to match API requirements ---
+        finalPrice: String(subtotal),
+        price: String(price),
+        cancelUrl: "https://app.example.com/cancel",
+        returnUrl: "https://app.example.com/return",
+      };
+
       const bookingResponse = await fetch(
         "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/booking/",
         {
@@ -97,38 +106,40 @@ const PaymentDetailsModal = ({
             Authorization: `Bearer ${customer.AccessToken}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            [key]: ownerId || owenerId,
-            renteeId: USER_ID,
-            carId: id,
-            startDate: pickUpTime,
-            endDate: dropOffTime,
-            price: totalPrice.toString(),
-            pickUp: pickUpArray,
-            dropOff: dropOffArray,
-            driverProvided: driverProvided, // Use the prop passed from PriceBreakdown
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
-      if (bookingResponse.ok) {
-        const bookingData = await bookingResponse.json();
-        console.log("Booking created successfully", bookingData);
-        setSuccessMessage("Booking successful!");
-        setViewMode("success");
-      } else {
-        const bookingData = await bookingResponse.json();
+      const responseData = await bookingResponse.json();
 
-        const errorData = await bookingResponse.json().catch(() => ({
-          message: "Failed to create booking. Server returned an error.",
-        }));
-        showErrorPopup(
-          `Booking failed: ${JSON.stringify(bookingData.body.message, null, 2)}`
-        );
+      if (bookingResponse.ok) {
+        const checkoutUrl = responseData?.body?.checkoutUrl;
+        if (checkoutUrl) {
+          setSuccessMessage("Redirecting to secure payment page...");
+          setViewMode("success");
+          window.location.href = checkoutUrl;
+        } else {
+          console.error(
+            "Booking created, but checkout URL is missing.",
+            responseData
+          );
+          showErrorPopup(
+            "Booking created, but payment failed. Please contact support."
+          );
+          setIsLoading(false);
+        }
+      } else {
+        const errorMessage =
+          responseData?.body?.message ||
+          responseData?.message ||
+          "An unknown error occurred.";
+        showErrorPopup(`Booking failed: ${errorMessage}`);
         setIsLoading(false);
       }
     } catch (error) {
-      showErrorPopup(`Booking failed 2: ${error.message || "Network error"}`);
+      showErrorPopup(
+        `Booking request failed: ${error.message || "Network error"}`
+      );
       setIsLoading(false);
     }
   };
@@ -227,39 +238,17 @@ const PaymentDetailsModal = ({
         }`}
         disabled={!isChecked || isLoading}
       >
-        {isLoading ? "Processing..." : "Book Now"}
+        {isLoading ? "Processing..." : "Confirm Booking"}
       </button>
     </>
   );
 
   const renderSuccessView = () => (
     <div className="flex flex-col items-center justify-center text-center h-full p-4">
-      <svg
-        className="mx-auto mb-4 w-16 h-16 text-green-500"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-        ></path>
-      </svg>
       <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-3">
-        Success!
+        Booking Confirmed!
       </h3>
-      <p className="text-gray-600 text-sm md:text-base mb-6">
-        {successMessage}
-      </p>
-      <button
-        onClick={handleProceedAfterSuccess}
-        className="bg-blue-950 hover:bg-blue-900 text-white font-semibold py-2.5 px-8 rounded-lg transition-colors text-sm md:text-base"
-      >
-        OK
-      </button>
+      <p className="text-gray-600 text-sm md:text-base">{successMessage}</p>
     </div>
   );
 
@@ -289,7 +278,7 @@ const PaymentDetailsModal = ({
   );
 };
 
-// --- MODIFIED PriceBreakdown Component ---
+// PriceBreakdown Component (with 1-day minimum logic)
 export default function PriceBreakdown({
   days,
   selfDriveDailyPrice,
@@ -304,10 +293,7 @@ export default function PriceBreakdown({
   dropOffLocation,
 }) {
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
-  // --- NEW STATE for the driver toggle ---
-  const [driverProvided, setDriverProvided] = useState(false);
 
-  // --- MODIFIED: Calculations are now based on props ---
   const {
     carRentalPrice,
     driverServicePrice,
@@ -315,11 +301,15 @@ export default function PriceBreakdown({
     serviceFee,
     turnoverTax,
     finalTotalPrice,
+    effectiveDays,
   } = useMemo(() => {
-    const carPrice = (days || 0) * (selfDriveDailyPrice || 0);
+    // Enforce a minimum of 1 day for all calculations.
+    const effectiveDays = Math.max(days || 0, 1);
+
+    const carPrice = effectiveDays * (selfDriveDailyPrice || 0);
     const driverPrice =
       serviceOption === "with-driver"
-        ? (days || 0) * (driverDailyPrice || 0)
+        ? effectiveDays * (driverDailyPrice || 0)
         : 0;
 
     const totalRental = carPrice + driverPrice;
@@ -335,8 +325,10 @@ export default function PriceBreakdown({
       serviceFee: service,
       turnoverTax: tax,
       finalTotalPrice: finalTotal,
+      effectiveDays: effectiveDays,
     };
   }, [days, selfDriveDailyPrice, driverDailyPrice, serviceOption]);
+
   const handleRequestBooking = () => {
     if (!pickUpLocation || !dropOffLocation) {
       alert(
@@ -355,7 +347,6 @@ export default function PriceBreakdown({
       <div className="bg-[#0d1b3e] text-gray-300 shadow-lg p-6 rounded-2xl w-full max-w-md">
         <h1 className="text-xl md:text-2xl text-white mb-2">Price Breakdown</h1>
 
-        {/* --- NEW: Display selected service option --- */}
         <div
           className={`text-center py-1 px-3 text-xs font-semibold rounded-full mb-4 inline-block ${
             serviceOption === "with-driver"
@@ -368,15 +359,14 @@ export default function PriceBreakdown({
         </div>
 
         <div className="space-y-3">
-          {/* --- MODIFIED: Detailed breakdown --- */}
           <div className="flex justify-between text-xs md:text-sm">
-            <span>Car Rental Fee (x{days} days)</span>
+            <span>Car Rental Fee (x{effectiveDays} days)</span>
             <span>{carRentalPrice.toFixed(2)} birr</span>
           </div>
 
           {serviceOption === "with-driver" && (
             <div className="flex justify-between text-xs md:text-sm">
-              <span>Driver Service Fee (x{days} days)</span>
+              <span>Driver Service Fee (x{effectiveDays} days)</span>
               <span>{driverServicePrice.toFixed(2)} birr</span>
             </div>
           )}
@@ -400,7 +390,6 @@ export default function PriceBreakdown({
           </div>
         </div>
 
-        {/* --- REMOVED: Driver toggle switch is no longer needed here --- */}
         <button
           onClick={handleRequestBooking}
           disabled={!canRequestBooking}
@@ -420,7 +409,9 @@ export default function PriceBreakdown({
       </div>
       {showPaymentDetails && canRequestBooking && (
         <PaymentDetailsModal
-          totalPrice={finalTotalPrice}
+          price={finalTotalPrice}
+          subtotal={subtotal}
+          days={effectiveDays}
           id={id}
           ownerId={ownerId}
           owenerId={owenerId}
@@ -428,7 +419,6 @@ export default function PriceBreakdown({
           pickUpTime={pickUpTime}
           pickUpLocation={pickUpLocation}
           dropOffLocation={dropOffLocation}
-          // --- MODIFIED: Pass the correct boolean value to the modal ---
           driverProvided={serviceOption === "with-driver"}
           onClose={() => setShowPaymentDetails(false)}
         />
