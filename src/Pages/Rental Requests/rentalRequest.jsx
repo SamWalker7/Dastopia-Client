@@ -610,6 +610,7 @@ const RentalRequests = () => {
                     </div>
                   </div>
                 </div>
+                {/* --- MODIFIED: Renamed to Service Type --- */}
                 <div className="mt-6 text-sm">
                   <span className="font-medium text-black block">
                     Service Type
