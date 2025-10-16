@@ -566,7 +566,7 @@ export default function Details2() {
       const end = new Date(endDate);
       end.setHours(0, 0, 0, 0);
 
-      if (start >= end) return false;
+      if (start > end) return false;
 
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         if (!isDaySelectable(new Date(d))) {
@@ -597,7 +597,7 @@ export default function Details2() {
       setCurrentDropOffDate(null);
       return;
     }
-    if (date && date <= currentPickUpDate) {
+    if (date && date < currentPickUpDate) {
       setDateError("Drop-off date must be after pick-up.");
       setCurrentDropOffDate(null);
       return;
