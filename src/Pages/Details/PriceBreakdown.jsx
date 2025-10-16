@@ -238,7 +238,7 @@ const PaymentDetailsModal = ({
         }`}
         disabled={!isChecked || isLoading}
       >
-        {isLoading ? "Processing..." : "Confirm and Pay"}
+        {isLoading ? "Processing..." : "Confirm Booking"}
       </button>
     </>
   );
@@ -329,21 +329,6 @@ export default function PriceBreakdown({
     };
   }, [days, selfDriveDailyPrice, driverDailyPrice, serviceOption]);
 
-    const totalRental = carPrice + driverPrice;
-    const service = totalRental * 0.1;
-    const sub = totalRental + service;
-    const tax = sub * 0.1;
-    const finalTotal = sub + tax;
-
-    return {
-      carRentalPrice: carPrice,
-      driverServicePrice: driverPrice,
-      subtotal: sub,
-      serviceFee: service,
-      turnoverTax: tax,
-      finalTotalPrice: finalTotal,
-    };
-  }, [days, selfDriveDailyPrice, driverDailyPrice, serviceOption]);
   const handleRequestBooking = () => {
     if (!pickUpLocation || !dropOffLocation) {
       alert(
@@ -374,7 +359,6 @@ export default function PriceBreakdown({
         </div>
 
         <div className="space-y-3">
-          {/* --- MODIFIED: Detailed breakdown --- */}
           <div className="flex justify-between text-xs md:text-sm">
             <span>Car Rental Fee (x{effectiveDays} days)</span>
             <span>{carRentalPrice.toFixed(2)} birr</span>
