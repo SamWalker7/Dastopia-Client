@@ -24,6 +24,7 @@ const Login = () => {
   const [phone_number, setphone_number] = useState(prefix); // Initialize with prefix
   const [email, setEmail] = useState("");
   const [password, setpassword] = useState("");
+  const [promoCode, setPromoCode] = useState("");
   const [confirmPassword, setConfirmPassword] = useState(""); // State for confirm password
   const [user_type, setUserType] = useState("rent"); // State for user role
   const [errors, setErrors] = useState({});
@@ -149,6 +150,7 @@ const Login = () => {
         phone_number,
         password,
         user_type, // Add user_type to the request
+        promoCode
       };
 
       if (email) {
@@ -335,6 +337,18 @@ const Login = () => {
               onChange={(e) => setConfirmPassword(e.target.value)}
               error={!!errors.confirmPassword}
               helperText={errors.confirmPassword}
+            />
+            <TextField
+              label="Promo Code"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              type="text"
+              name="promoCode"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+              error={!!errors.promoCode}
+              helperText={errors.promoCode}
             />
           </div>
 

@@ -383,6 +383,10 @@ export default function PriceBreakdown({
             <span>Tax</span>
             <span>{turnoverTax.toFixed(2)} birr</span>
           </div>
+          <div className="flex justify-between text-xs md:text-sm">
+            <span>Promo Code</span>
+            <span>101G0G</span>
+          </div>
           <div className="h-px bg-white/20 my-3" />
           <div className="flex justify-between text-sm font-semibold text-white">
             <span>Total cost</span>
