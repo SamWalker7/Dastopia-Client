@@ -150,7 +150,7 @@ const Login = () => {
         phone_number,
         password,
         user_type, // Add user_type to the request
-        promoCode
+        referral_code: promoCode
       };
 
       if (email) {
@@ -338,18 +338,25 @@ const Login = () => {
               error={!!errors.confirmPassword}
               helperText={errors.confirmPassword}
             />
-            <TextField
-              label="Promo Code"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              type="text"
-              name="promoCode"
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value)}
-              error={!!errors.promoCode}
-              helperText={errors.promoCode}
-            />
+
+            <div className="mt-8">
+              <h3 className="text-gray-700 font-semibold mb-2">Optional Details</h3>
+
+              <div className="p-4 border rounded-xl bg-gray-50 shadow-sm">
+                <TextField
+                  label="Promo Code (Optional)"
+                  variant="outlined"
+                  fullWidth
+                  type="text"
+                  name="promoCode"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  helperText="Leave blank if you don’t have a promo code"
+                />
+              </div>
+            </div>
+
+
           </div>
 
           {errors.general && (
