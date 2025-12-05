@@ -91,4 +91,34 @@ export const fetchVehicles1 = async () => {
     );
   }
 };
+
+export const fetchReferral = async () => {
+  const token = JSON.parse(localStorage.getItem("customer")).AccessToken;
+  const controller = new AbortController();
+  let referralCode = ""
+  try {
+    const res = await fetch(
+      `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/referrals/code`,
+      {
+        method: "GET",
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const json = await res.json();
+    referralCode = json.data.referralCode;
+
+  } catch (err) {
+    if (err.name !== "AbortError") {
+      console.log("Error fetching referral code:", err);
+      referralCode = "DAS-NO";
+    }
+  }
+
+  return referralCode;
+};
 // src/api.js

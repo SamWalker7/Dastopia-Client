@@ -24,7 +24,7 @@ const Login = () => {
   const [phone_number, setphone_number] = useState(prefix); // Initialize with prefix
   const [email, setEmail] = useState("");
   const [password, setpassword] = useState("");
-  const [promoCode, setPromoCode] = useState("");
+  const [refferalCode, setRefferalCode] = useState("");
   const [confirmPassword, setConfirmPassword] = useState(""); // State for confirm password
   const [user_type, setUserType] = useState("rent"); // State for user role
   const [errors, setErrors] = useState({});
@@ -150,7 +150,7 @@ const Login = () => {
         phone_number,
         password,
         user_type, // Add user_type to the request
-        referral_code: promoCode
+        referral_code: refferalCode
       };
 
       if (email) {
@@ -344,14 +344,14 @@ const Login = () => {
 
               <div className="p-4 border rounded-xl bg-gray-50 shadow-sm">
                 <TextField
-                  label="Promo Code (Optional)"
+                  label="Referral Code (Optional)"
                   variant="outlined"
                   fullWidth
                   type="text"
-                  name="promoCode"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  helperText="Leave blank if you don’t have a promo code"
+                  name="refferalCode"
+                  value={refferalCode}
+                  onChange={(e) => setRefferalCode(e.target.value)}
+                  helperText="Leave blank if you don’t have a referral code"
                 />
               </div>
             </div>
