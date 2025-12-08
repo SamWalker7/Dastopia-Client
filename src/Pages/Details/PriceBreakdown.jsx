@@ -293,16 +293,9 @@ export default function PriceBreakdown({
 }) {
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
 
-  const [referralCode, setReferralCode] = useState("");
+  const [promoCode, setPromoCode] = useState("");
 
-  useEffect(() => {
-    const getReferralCode = async () => {
-      const code = await fetchReferral();
-      setReferralCode(code);
-    };
 
-    getReferralCode();
-  }, []);
 
   const {
     carRentalPrice,
@@ -336,8 +329,9 @@ export default function PriceBreakdown({
       turnoverTax: tax,
       finalTotalPrice: finalTotal,
       effectiveDays: effectiveDays,
+      promoCode
     };
-  }, [days, selfDriveDailyPrice, driverDailyPrice, serviceOption]);
+  }, [days, selfDriveDailyPrice, driverDailyPrice, serviceOption, promoCode]);
 
   const handleRequestBooking = () => {
     if (!pickUpLocation || !dropOffLocation) {
@@ -392,10 +386,21 @@ export default function PriceBreakdown({
             <span>Tax</span>
             <span>{turnoverTax.toFixed(2)} birr</span>
           </div>
-          <div className="flex justify-between text-xs md:text-sm">
-            <span>Referral Code</span>
-            <span>{referralCode}</span>
+          <div className="flex justify-between items-center text-xs md:text-sm whitespace-nowrap">
+            <span>Promo Code</span>
+
+            {/* <span className="mx-2">:</span> */}
+
+            <input
+              type="text"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+              placeholder="Enter promo code"
+              className="border rounded px-2 py-1 text-right w-20 md:w-20"
+            />
           </div>
+
+
           <div className="h-px bg-white/20 my-3" />
           <div className="flex justify-between text-sm font-semibold text-white">
             <span>Total cost</span>
