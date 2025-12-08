@@ -1,11 +1,12 @@
 import { IconButton } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import CloseIcon from "@mui/icons-material/Close"; // For the close button
 
 const SignupForm = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [referralCode, setRefferalCode] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const navigate = useNavigate();
@@ -13,10 +14,25 @@ const SignupForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (acceptedTerms) {
-      navigate("/verification", { state: { firstName, lastName } });
+      console.log("reffr subimi: ", referralCode);
+
+      navigate("/verification", { state: { firstName, lastName, referralCode } });
     }
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get("refCode");
+
+    if (refCode) {
+      setRefferalCode(refCode);
+    }
+  }, [])
+
+  useEffect(() => {
+    console.log(referralCode);
+
+  }, [referralCode])
   const isFormValid = firstName && lastName && acceptedTerms;
 
   return (

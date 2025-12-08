@@ -17,17 +17,23 @@ import CloseIcon from "@mui/icons-material/Close"; // For the close button
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { firstName, lastName } = location.state || {};
+  const { firstName, lastName, referralCode } = location.state || {};
 
   const prefix = "+251"; // Define prefix at component scope
 
   const [phone_number, setphone_number] = useState(prefix); // Initialize with prefix
   const [email, setEmail] = useState("");
   const [password, setpassword] = useState("");
-  const [refferalCode, setRefferalCode] = useState("");
+  const [refferal, setRefferal] = useState("");
   const [confirmPassword, setConfirmPassword] = useState(""); // State for confirm password
   const [user_type, setUserType] = useState("rent"); // State for user role
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    console.log("referralCode: ", referralCode);
+
+    if (referralCode) setRefferal(referralCode);
+  }, [referralCode])
 
   // Phone number validation useEffect
   useEffect(() => {
@@ -150,7 +156,7 @@ const Login = () => {
         phone_number,
         password,
         user_type, // Add user_type to the request
-        referral_code: refferalCode
+        referral_code: referralCode
       };
 
       if (email) {
@@ -349,8 +355,8 @@ const Login = () => {
                   fullWidth
                   type="text"
                   name="refferalCode"
-                  value={refferalCode}
-                  onChange={(e) => setRefferalCode(e.target.value)}
+                  value={refferal}
+                  onChange={(e) => setRefferal(e.target.value)}
                   helperText="Leave blank if you don’t have a referral code"
                 />
               </div>
