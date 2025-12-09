@@ -28,6 +28,7 @@ import InfoIcon from "@mui/icons-material/Info"; // For About Us, and now How It
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote"; // For Testimonials
 import GroupIcon from "@mui/icons-material/Group"; // For Our Team
 import ContactMailIcon from "@mui/icons-material/ContactMail"; // For Contact
+import { ShareIcon } from "lucide-react";
 
 const MenuItem = ({ icon, text, hasDropdown, children, onClick }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -65,6 +66,7 @@ function Navbar({ user2, setUser }) {
   const [profilePicKeyNavbar, setProfilePicKeyNavbar] = useState(null);
   const [profileImageUrlNavbar, setProfileImageUrlNavbar] = useState(Img3); // Default to Img3
   const [isImageLoadingNavbar, setIsImageLoadingNavbar] = useState(true);
+  const [referralCode, setRefferalCode] = useState();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -85,6 +87,7 @@ function Navbar({ user2, setUser }) {
           if (data?.success && data?.data?.formattedProfile) {
             const formattedProfile = data.data.formattedProfile;
             setProfilePicKeyNavbar(formattedProfile.profilePicture);
+            setRefferalCode(formattedProfile.referralCode);
           } else {
             console.error("Failed to fetch profile data for navbar:", data);
             setIsImageLoadingNavbar(false);
@@ -343,6 +346,29 @@ function Navbar({ user2, setUser }) {
                           text="Chats"
                           onClick={() => handleNavigate("/chat")}
                         />
+
+                        <MenuItem
+                          icon={<ShareIcon className="text-md" />}
+                          text="Referral Code"
+                          onClick={() => {
+                            const referralLink = `${window.location.origin}/signup?refCode=${referralCode}`;
+
+                            if (navigator.share) {
+                              navigator.share({
+                                title: "Referral Invite",
+                                text: "Join using my referral link!",
+                                url: referralLink,
+                              })
+                                .catch(err => console.error("Share failed:", err));
+                            } else {
+                              // fallback for unsupported browsers
+                              navigator.clipboard.writeText(referralLink)
+                                .then(() => alert("Referral link copied to clipboard!"))
+                                .catch(err => console.error("Copy failed", err));
+                            }
+                          }}
+                        />
+
 
                         <div className="px-4 pt-2 pb-4">
                           <button

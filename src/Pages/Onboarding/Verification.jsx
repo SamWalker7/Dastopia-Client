@@ -17,16 +17,23 @@ import CloseIcon from "@mui/icons-material/Close"; // For the close button
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { firstName, lastName } = location.state || {};
+  const { firstName, lastName, referralCode } = location.state || {};
 
   const prefix = "+251"; // Define prefix at component scope
 
   const [phone_number, setphone_number] = useState(prefix); // Initialize with prefix
   const [email, setEmail] = useState("");
   const [password, setpassword] = useState("");
+  const [refferal, setRefferal] = useState("");
   const [confirmPassword, setConfirmPassword] = useState(""); // State for confirm password
   const [user_type, setUserType] = useState("rent"); // State for user role
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    console.log("referralCode: ", referralCode);
+
+    if (referralCode) setRefferal(referralCode);
+  }, [referralCode])
 
   // Phone number validation useEffect
   useEffect(() => {
@@ -149,6 +156,7 @@ const Login = () => {
         phone_number,
         password,
         user_type, // Add user_type to the request
+        referral_code: referralCode
       };
 
       if (email) {
@@ -336,6 +344,25 @@ const Login = () => {
               error={!!errors.confirmPassword}
               helperText={errors.confirmPassword}
             />
+
+            <div className="mt-8">
+              <h3 className="text-gray-700 font-semibold mb-2">Optional Details</h3>
+
+              <div className="p-4 border rounded-xl bg-gray-50 shadow-sm">
+                <TextField
+                  label="Referral Code (Optional)"
+                  variant="outlined"
+                  fullWidth
+                  type="text"
+                  name="refferalCode"
+                  value={refferal}
+                  onChange={(e) => setRefferal(e.target.value)}
+                  helperText="Leave blank if you don’t have a referral code"
+                />
+              </div>
+            </div>
+
+
           </div>
 
           {errors.general && (

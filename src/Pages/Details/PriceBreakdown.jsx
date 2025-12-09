@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchReferral } from "../../api";
 
 // A simple Popup Notification Component (remains the same)
 const PopupNotification = ({ message, type, visible, onClose }) => {
@@ -231,11 +232,10 @@ const PaymentDetailsModal = ({
       </div>
       <button
         onClick={handleApproveBooking}
-        className={`w-full py-2.5 mt-3 text-white text-sm font-medium rounded-full transition-colors duration-150 ${
-          isChecked && !isLoading
-            ? "bg-blue-950 hover:bg-blue-900"
-            : "bg-gray-400 cursor-not-allowed"
-        }`}
+        className={`w-full py-2.5 mt-3 text-white text-sm font-medium rounded-full transition-colors duration-150 ${isChecked && !isLoading
+          ? "bg-blue-950 hover:bg-blue-900"
+          : "bg-gray-400 cursor-not-allowed"
+          }`}
         disabled={!isChecked || isLoading}
       >
         {isLoading ? "Processing..." : "Confirm Booking"}
@@ -259,11 +259,10 @@ const PaymentDetailsModal = ({
         onClick={viewMode === "details" && !isLoading ? onClose : undefined}
       ></div>
       <div
-        className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 flex flex-col items-start p-6 gap-4 w-11/12 md:w-2/4 lg:w-1/3 ${
-          viewMode === "success"
-            ? "max-h-[50vh] justify-center"
-            : "max-h-[85vh]"
-        } bg-white rounded-lg shadow-xl`}
+        className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 flex flex-col items-start p-6 gap-4 w-11/12 md:w-2/4 lg:w-1/3 ${viewMode === "success"
+          ? "max-h-[50vh] justify-center"
+          : "max-h-[85vh]"
+          } bg-white rounded-lg shadow-xl`}
       >
         {viewMode === "details" && renderDetailsView()}
         {viewMode === "success" && renderSuccessView()}
@@ -293,6 +292,10 @@ export default function PriceBreakdown({
   dropOffLocation,
 }) {
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
+
+  const [promoCode, setPromoCode] = useState("");
+
+
 
   const {
     carRentalPrice,
@@ -326,8 +329,9 @@ export default function PriceBreakdown({
       turnoverTax: tax,
       finalTotalPrice: finalTotal,
       effectiveDays: effectiveDays,
+      promoCode
     };
-  }, [days, selfDriveDailyPrice, driverDailyPrice, serviceOption]);
+  }, [days, selfDriveDailyPrice, driverDailyPrice, serviceOption, promoCode]);
 
   const handleRequestBooking = () => {
     if (!pickUpLocation || !dropOffLocation) {
@@ -348,11 +352,10 @@ export default function PriceBreakdown({
         <h1 className="text-xl md:text-2xl text-white mb-2">Price Breakdown</h1>
 
         <div
-          className={`text-center py-1 px-3 text-xs font-semibold rounded-full mb-4 inline-block ${
-            serviceOption === "with-driver"
-              ? "bg-green-500 text-white"
-              : "bg-blue-500 text-white"
-          }`}
+          className={`text-center py-1 px-3 text-xs font-semibold rounded-full mb-4 inline-block ${serviceOption === "with-driver"
+            ? "bg-green-500 text-white"
+            : "bg-blue-500 text-white"
+            }`}
         >
           Service:{" "}
           {serviceOption === "with-driver" ? "With Driver" : "Self-Drive"}
@@ -383,6 +386,21 @@ export default function PriceBreakdown({
             <span>Tax</span>
             <span>{turnoverTax.toFixed(2)} birr</span>
           </div>
+          <div className="flex justify-between items-center text-xs md:text-sm whitespace-nowrap">
+            <span>Promo Code</span>
+
+            {/* <span className="mx-2">:</span> */}
+
+            <input
+              type="text"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+              placeholder="Enter promo code"
+              className="border rounded px-2 py-1 text-right w-20 md:w-20"
+            />
+          </div>
+
+
           <div className="h-px bg-white/20 my-3" />
           <div className="flex justify-between text-sm font-semibold text-white">
             <span>Total cost</span>
@@ -393,11 +411,10 @@ export default function PriceBreakdown({
         <button
           onClick={handleRequestBooking}
           disabled={!canRequestBooking}
-          className={`w-full text-[#0d1b3e] font-medium py-2 text-xs md:text-sm rounded-full mt-4 transition-colors duration-150 ${
-            canRequestBooking
-              ? "bg-white hover:bg-gray-200"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
+          className={`w-full text-[#0d1b3e] font-medium py-2 text-xs md:text-sm rounded-full mt-4 transition-colors duration-150 ${canRequestBooking
+            ? "bg-white hover:bg-gray-200"
+            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
         >
           Continue
         </button>
