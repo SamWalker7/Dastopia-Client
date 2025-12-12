@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Clipboard, RefreshCw } from "lucide-react";
 import ReferralTable from "./ReferralTable"; // we'll make this reusable
+import { fetchReferralStats } from "../../api";
 
 // Summary Card Component
 const SummaryCard = ({ title, value }) => (
@@ -53,18 +54,9 @@ export default function ReferralDashboard() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [referralLink, setReferralLink] = useState('');
+    const [referralStats, setReferralStats] = useState({});
 
-    const [balances, setBalances] = useState({
-        available: 1240,
-        lifetime: 3580,
-    });
-
-    const [history, setHistory] = useState([
-        { id: 1, date: "2025-12-10", type: "Referral Earning", amount: 500, direction: "credit" },
-        { id: 2, date: "2025-12-09", type: "Adjustment", amount: -60, direction: "debit" },
-    ]);
-
-    
+    const [history, setHistory] = useState();
 
     useEffect(() => {
         const customer = JSON.parse(localStorage.getItem("customer"));
@@ -75,13 +67,32 @@ export default function ReferralDashboard() {
         );
 
         if (referralAttr) {
+            fetchReferralStats().then(res => {
+                setReferralStats(res)
+                setHistory(res.referrals);
+            });
             setReferralLink(`${window.location.origin}/signup?refCode=${referralAttr.Value}`);
         }
     }, []);
 
+    useEffect(() => {
+        console.log("history: ", history);
+    }, [history])
 
     function copyReferralLink() {
-        navigator.clipboard.writeText(referralLink);
+        if (navigator.share) {
+            navigator.share({
+                title: "Referral Invite",
+                text: "Join using my referral link!",
+                url: referralLink,
+            })
+                .catch(err => console.error("Share failed:", err));
+        } else {
+            // fallback for unsupported browsers
+            navigator.clipboard.writeText(referralLink)
+                .then(() => alert("Referral link copied to clipboard!"))
+                .catch(err => console.error("Copy failed", err));
+        }
         alert("Referral link copied to clipboard!");
     }
 
@@ -103,8 +114,8 @@ export default function ReferralDashboard() {
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <SummaryCard title="Total Commission Available" value={balances.available} />
-                    <SummaryCard title="Lifetime Commission Earned" value={balances.lifetime} />
+                    <SummaryCard title="Total Commission Available" value={referralStats.totalCommission} />
+                    <SummaryCard title="Paid Commission Earned" value={referralStats.paidCommission} />
                 </div>
 
                 {/* Referral Link */}

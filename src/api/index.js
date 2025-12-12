@@ -121,4 +121,34 @@ export const fetchReferral = async () => {
 
   return referralCode;
 };
+
+export const fetchReferralStats = async () => {
+  const token = JSON.parse(localStorage.getItem("customer")).AccessToken;
+  const controller = new AbortController();
+  let stats = ""
+  try {
+    const res = await fetch(
+      `https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/referrals/stats`,
+      {
+        method: "GET",
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const json = await res.json();
+    stats = json.data;
+
+  } catch (err) {
+    if (err.name !== "AbortError") {
+      console.log("Error fetching referral stats:", err);
+      stats = "";
+    }
+  }
+
+  return stats;
+};
 // src/api.js

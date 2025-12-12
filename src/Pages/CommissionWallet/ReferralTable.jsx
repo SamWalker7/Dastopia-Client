@@ -16,21 +16,24 @@ export default function ReferralTable({ history }) {
                 <thead className="border-b border-gray-200">
                     <tr>
                         <th className="pb-2 text-sm text-gray-500">Date</th>
-                        <th className="pb-2 text-sm text-gray-500">Type</th>
+                        <th className="pb-2 text-sm text-gray-500">Status</th>
                         <th className="pb-2 text-sm text-gray-500 text-right">Amount</th>
+                        <th className="pb-2 text-sm text-gray-500 text-right">Commission Status</th>
+
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                     {history.map((entry) => (
                         <tr key={entry.id}>
-                            <td className="py-3 text-gray-700">{entry.date}</td>
-                            <td className="py-3 text-gray-700">{entry.type}</td>
+                            <td className="py-3 text-gray-700">{entry.firstBookingDate}</td>
+                            <td className="py-3 text-gray-700">{entry.status}</td>
+                            <td className="py-3 text-gray-700">{entry.commissionStatus}</td>
                             <td
                                 className={`py-3 text-right font-semibold ${entry.direction === "credit" ? "text-green-600" : "text-red-600"
                                     }`}
                             >
                                 {entry.direction === "credit" ? "+" : "-"}
-                                {Math.abs(entry.amount)} birr
+                                {Math.abs(entry.commissionAmount)} birr
                             </td>
                         </tr>
                     ))}
