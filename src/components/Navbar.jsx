@@ -350,23 +350,7 @@ function Navbar({ user2, setUser }) {
                         <MenuItem
                           icon={<ShareIcon className="text-md" />}
                           text="Referral Code"
-                          onClick={() => {
-                            const referralLink = `${window.location.origin}/signup?refCode=${referralCode}`;
-
-                            if (navigator.share) {
-                              navigator.share({
-                                title: "Referral Invite",
-                                text: "Join using my referral link!",
-                                url: referralLink,
-                              })
-                                .catch(err => console.error("Share failed:", err));
-                            } else {
-                              // fallback for unsupported browsers
-                              navigator.clipboard.writeText(referralLink)
-                                .then(() => alert("Referral link copied to clipboard!"))
-                                .catch(err => console.error("Copy failed", err));
-                            }
-                          }}
+                          onClick={() => handleNavigate("commission-wallet")}
                         />
 
 

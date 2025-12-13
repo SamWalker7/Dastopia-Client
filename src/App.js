@@ -51,6 +51,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { refreshToken } from "./store/auth/authThunks";
 import Review from "./components/Review";
 import PaymentSuccessModal from "./Pages/PaymentSuccessModal";
+import ReferralDashboard from "./Pages/CommissionWallet";
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -132,6 +133,7 @@ function App() {
         <Route path="testimonials" element={<TestimonialsPage />} />
         <Route path="team" element={<Team />} />
         <Route path="contact" element={<Contact />} />
+        <Route path="commission-wallet" element={<ReferralDashboard />} />
         <Route path="/details/:id" element={<Details />} />
         <Route path="/details2/:id" element={<Details2 />} />
         <Route path="search" element={<Search />} />
