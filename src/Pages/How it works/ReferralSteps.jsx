@@ -21,6 +21,11 @@ const referralSteps = [
         description:
             "When your referred friend completes their first booking within 90 days, the referral becomes eligible.",
     },
+    {
+        title: "Earn Commission",
+        description:
+            "You earn 10% commission from the platform fee. The commission is automatically added to your wallet.",
+    },
 ];
 
 const ReferralSteps = () => {
@@ -56,7 +61,7 @@ const ReferralSteps = () => {
                 ))}
             </div>
 
-            <div className="mt-12 text-black rounded-2xl p-8 text-center">
+            {/* <div className="mt-12 text-black rounded-2xl p-8 text-center">
 
                 <h4 className="text-2xl font-semibold mb-3">
                     <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#FFD700] text-black font-bold mb-4">
@@ -66,7 +71,7 @@ const ReferralSteps = () => {
                 <p className="text-lg opacity-90">
                     You earn 10% commission from the platform fee. The commission is automatically added to your wallet.
                 </p>
-            </div>
+            </div> */}
         </div>
     );
 };
