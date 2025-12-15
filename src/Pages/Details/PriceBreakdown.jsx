@@ -396,7 +396,7 @@ export default function PriceBreakdown({
               value={promoCode}
               onChange={(e) => setPromoCode(e.target.value)}
               placeholder="Enter promo code"
-              className="border rounded px-2 py-1 text-right w-20 md:w-20"
+              className="border border-black rounded px-2 py-1 text-right text-black placeholder-gray-500 w-20 md:w-20 focus:outline-none focus:ring-1 focus:ring-black"
             />
           </div>
 
