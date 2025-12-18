@@ -24,6 +24,7 @@ const Login = () => {
 
   const prefix = "+251"; // Define prefix at component scope
 
+  const [country, setCountry] = useState();
   const [phone_number, setphone_number] = useState(prefix); // Initialize with prefix
   const [email, setEmail] = useState("");
   const [password, setpassword] = useState("");
@@ -31,6 +32,14 @@ const Login = () => {
   const [confirmPassword, setConfirmPassword] = useState(""); // State for confirm password
   const [user_type, setUserType] = useState("rent"); // State for user role
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    const locale = navigator.language || "en-US";
+    const countryCode = locale.split("-")[1];
+    if (countryCode) {
+      setCountry(countryCode.toUpperCase());
+    }
+  }, []);
 
   useEffect(() => {
     console.log("referralCode: ", referralCode);
@@ -295,12 +304,15 @@ const Login = () => {
             </FormControl>
 
             <PhoneInput
-              placeholder="Enter phone number"
+              international
+              country={country}              
               value={phone_number}
               onChange={setphone_number}
-              defaultCountry={undefined} 
-              international 
-              countrySelectProps={{ unicodeFlags: true }}
+              onCountryChange={setCountry}
+              placeholder="Enter phone number"
+              countrySelectProps={{
+                unicodeFlags: true,
+              }}
             />
 
             <TextField
