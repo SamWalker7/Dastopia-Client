@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import flag from "../../images/hero/image.png"; // Ensure this path is correct
 import { useLocation } from "react-router-dom";
 import {
   IconButton,
   TextField,
-  InputAdornment,
   RadioGroup,
   FormControlLabel,
   Radio,
@@ -15,6 +13,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close"; // For the close button
 import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
+import PhoneMuiInput from "./PhoneMuiInput";
 
 
 const Login = () => {
@@ -305,14 +304,15 @@ const Login = () => {
 
             <PhoneInput
               international
-              country={country}              
+              country={country}
               value={phone_number}
               onChange={setphone_number}
               onCountryChange={setCountry}
-              placeholder="Enter phone number"
-              countrySelectProps={{
-                unicodeFlags: true,
-              }}
+              countrySelectProps={{ unicodeFlags: true }}
+              inputComponent={PhoneMuiInput}
+              label="Phone Number"
+              error={!!errors.phone_number}
+              helperText={errors.phone_number}
             />
 
             <TextField
