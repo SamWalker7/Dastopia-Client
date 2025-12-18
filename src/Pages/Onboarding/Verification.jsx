@@ -13,6 +13,9 @@ import {
   FormLabel,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close"; // For the close button
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
+
 
 const Login = () => {
   const navigate = useNavigate();
@@ -291,24 +294,15 @@ const Login = () => {
               </RadioGroup>
             </FormControl>
 
-            <TextField
-              label="Phone Number"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              name="phone_number"
+            <PhoneInput
+              placeholder="Enter phone number"
               value={phone_number}
-              onChange={handlePhoneNumberChange}
-              error={!!errors.phone_number}
-              helperText={errors.phone_number}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <img src={flag} className="w-8 h-6 rounded-md" alt="Flag" />
-                  </InputAdornment>
-                ),
-              }}
+              onChange={setphone_number}
+              defaultCountry={undefined} 
+              international 
+              countrySelectProps={{ unicodeFlags: true }}
             />
+
             <TextField
               label="Email (Optional)"
               variant="outlined"
