@@ -42,7 +42,7 @@ const ReferralLink = ({ link, onCopy }) => (
             />
             <button
                 onClick={onCopy}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-lg flex items-center gap-2"
+                className="hover:text-black bg-blue-950 text-white px-4 py-2 rounded-r-lg flex items-center gap-2"
             >
                 <Clipboard size={16} /> Copy / Share
             </button>
