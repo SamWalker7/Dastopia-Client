@@ -14,6 +14,7 @@ import CloseIcon from "@mui/icons-material/Close"; // For the close button
 import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
 import PhoneMuiInput from "./PhoneMuiInput";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 
 const Login = () => {
@@ -21,10 +22,10 @@ const Login = () => {
   const location = useLocation();
   const { firstName, lastName, referralCode } = location.state || {};
 
-  const prefix = "+251"; // Define prefix at component scope
 
+  const [prefix, setPrefix] = useState("");
   const [country, setCountry] = useState();
-  const [phone_number, setphone_number] = useState(prefix); // Initialize with prefix
+  const [phone_number, setphone_number] = useState(""); 
   const [email, setEmail] = useState("");
   const [password, setpassword] = useState("");
   const [refferal, setRefferal] = useState("");
@@ -33,74 +34,48 @@ const Login = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    const locale = navigator.language || "en-US";
-    const countryCode = locale.split("-")[1];
-    if (countryCode) {
-      setCountry(countryCode.toUpperCase());
-    }
+    const detectCountry = async () => {
+      try {
+        const res = await fetch("https://ipapi.co/json/");
+        const data = await res.json();
+
+        if (data?.country_code) {
+          setCountry(data.country_code);
+          setPrefix(data.country_calling_code);
+        } else {
+          setCountry("ET");
+        }
+      } catch (err) {
+        console.error("Geo detect failed", err);
+        setCountry("ET");
+      }
+    };
+
+    detectCountry();
   }, []);
 
   useEffect(() => {
-    console.log("referralCode: ", referralCode);
-
     if (referralCode) setRefferal(referralCode);
   }, [referralCode])
 
   // Phone number validation useEffect
   useEffect(() => {
-    const validatePhoneNumber = () => {
-      let phoneError = undefined;
-      const phoneRegex = /^\+251(9|7)\d{8}$/;
+    let phoneError;
 
-      if (phone_number === prefix) {
-        phoneError = "Phone number is required (e.g., +251912345678)";
-      } else if (!phoneRegex.test(phone_number)) {
-        phoneError =
-          "Invalid format. Use +251 followed by 9 or 7 and 8 digits (e.g., +251912345678).";
-      }
+    if (!phone_number) {
+      phoneError = "Phone number is required";
+    } else if (!isValidPhoneNumber(phone_number)) {
+      phoneError = "Invalid phone number";
+    }
 
-      setErrors((prevErrors) => {
-        const updatedErrors = { ...prevErrors };
-        if (phoneError) {
-          updatedErrors.phone_number = phoneError;
-        } else if (updatedErrors.hasOwnProperty("phone_number")) {
-          delete updatedErrors.phone_number;
-        }
-        return updatedErrors;
-      });
-    };
-
-    validatePhoneNumber();
+    setErrors((prev) => {
+      const updated = { ...prev };
+      if (phoneError) updated.phone_number = phoneError;
+      else delete updated.phone_number;
+      return updated;
+    });
   }, [phone_number]);
 
-  // Handle change for phone number input
-  const handlePhoneNumberChange = (e) => {
-    const maxSuffixLength = 9;
-    let inputValue = e.target.value;
-    let newPhoneNumber;
-
-    if (inputValue.startsWith(prefix)) {
-      const suffix = inputValue.substring(prefix.length);
-      let numericSuffix = suffix.replace(/[^0-9]/g, "");
-      if (numericSuffix.length > maxSuffixLength) {
-        numericSuffix = numericSuffix.substring(0, maxSuffixLength);
-      }
-      newPhoneNumber = prefix + numericSuffix;
-    } else if (
-      inputValue === "+" ||
-      inputValue === "+2" ||
-      inputValue === "+25"
-    ) {
-      newPhoneNumber = prefix;
-    } else {
-      let numericInput = inputValue.replace(/[^0-9]/g, "");
-      if (numericInput.length > maxSuffixLength) {
-        numericInput = numericInput.substring(0, maxSuffixLength);
-      }
-      newPhoneNumber = prefix + numericInput;
-    }
-    setphone_number(newPhoneNumber);
-  };
 
   // Email validation (optional)
   useEffect(() => {
@@ -224,7 +199,7 @@ const Login = () => {
     !!errors.confirmPassword || // Check for password mismatch error
     !password || // Password is empty
     !confirmPassword || // Confirm password is empty
-    phone_number === prefix || // Phone number is just the prefix
+    phone_number === prefix || 
     !user_type; // user_type must be selected
 
   return (
@@ -304,7 +279,7 @@ const Login = () => {
 
             <PhoneInput
               international
-              country={country}
+              defaultCountry={country}
               value={phone_number}
               onChange={setphone_number}
               onCountryChange={setCountry}
