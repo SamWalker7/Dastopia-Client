@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import flag from "../../images/hero/image.png"; // Ensure this path is correct
 import { useLocation } from "react-router-dom";
 import {
   IconButton,
   TextField,
-  InputAdornment,
   RadioGroup,
   FormControlLabel,
   Radio,
@@ -13,6 +11,10 @@ import {
   FormLabel,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close"; // For the close button
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
+import PhoneMuiInput from "./PhoneMuiInput";
+
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ const Login = () => {
 
   const prefix = "+251"; // Define prefix at component scope
 
+  const [country, setCountry] = useState();
   const [phone_number, setphone_number] = useState(prefix); // Initialize with prefix
   const [email, setEmail] = useState("");
   const [password, setpassword] = useState("");
@@ -28,6 +31,14 @@ const Login = () => {
   const [confirmPassword, setConfirmPassword] = useState(""); // State for confirm password
   const [user_type, setUserType] = useState("rent"); // State for user role
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    const locale = navigator.language || "en-US";
+    const countryCode = locale.split("-")[1];
+    if (countryCode) {
+      setCountry(countryCode.toUpperCase());
+    }
+  }, []);
 
   useEffect(() => {
     console.log("referralCode: ", referralCode);
@@ -291,24 +302,19 @@ const Login = () => {
               </RadioGroup>
             </FormControl>
 
-            <TextField
-              label="Phone Number"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              name="phone_number"
+            <PhoneInput
+              international
+              country={country}
               value={phone_number}
-              onChange={handlePhoneNumberChange}
+              onChange={setphone_number}
+              onCountryChange={setCountry}
+              countrySelectProps={{ unicodeFlags: true }}
+              inputComponent={PhoneMuiInput}
+              label="Phone Number"
               error={!!errors.phone_number}
               helperText={errors.phone_number}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <img src={flag} className="w-8 h-6 rounded-md" alt="Flag" />
-                  </InputAdornment>
-                ),
-              }}
             />
+
             <TextField
               label="Email (Optional)"
               variant="outlined"

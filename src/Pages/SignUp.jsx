@@ -12,8 +12,11 @@ import { v4 as uuidv4 } from "uuid";
 
 import { signup } from "../api/auth";
 import { useNavigate } from "react-router-dom";
-import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
+// import PhoneInput from "react-phone-input-2";
+// import "react-phone-input-2/lib/style.css";
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css'
+
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -245,14 +248,10 @@ const SignUp = () => {
           />
 
           <PhoneInput
-            country={"et"}
+            placeholder="Enter phone number"
             value={phone}
             onChange={setPhone}
-            placeholder="+251965667890"
-            inputStyle={{
-              width: "100%",
-              height: "60px",
-            }}
+            defaultCountry="ET"
           />
 
           <div>
