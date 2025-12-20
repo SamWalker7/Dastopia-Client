@@ -303,29 +303,34 @@ export default function PriceBreakdown({
     try {
       setPromoLoading(true);
       setPromoError("");
-      const token = JSON.parse(localStorage.getItem('customer')).AccessToken;
 
-      const res = await fetch("https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/promo-codes/validate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          code: promoCode,
-          subtotal,
-        }),
-      });
+      const token = JSON.parse(localStorage.getItem("customer"))?.AccessToken;
 
-      const data = await res.json();
+      const res = await fetch(
+        "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/promo-codes/validate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            code: promoCode,
+            subtotal,
+          }),
+        }
+      );
 
-      if (!data.valid) {
+      const response = await res.json();
+
+      if (!response.valid) {
         setPromoDiscount(0);
-        setPromoError(data.message || "Invalid promo code");
+        setPromoError(response.data?.message || "Invalid promo code");
         return;
       }
 
-      setPromoDiscount(data.promotion.discountAmount);
+      // ✅ percentage from backend
+      setPromoDiscount(response.data.discountPercentage);
     } catch (err) {
       setPromoDiscount(0);
       setPromoError("Failed to validate promo code");
@@ -338,6 +343,7 @@ export default function PriceBreakdown({
     carRentalPrice,
     driverServicePrice,
     subtotal,
+    discountAmount,
     discountedSubtotal,
     serviceFee,
     turnoverTax,
@@ -353,24 +359,34 @@ export default function PriceBreakdown({
         : 0;
 
     const totalRental = carPrice + driverPrice;
-    const service = totalRental * 0.1;
 
-    const sub = totalRental + service;
+    const serviceFee = totalRental * 0.1;
 
-    const discount = Math.min(promoDiscount || 0, sub);
-    const discountedSub = sub - discount;
+    // Subtotal BEFORE discount & tax
+    const subtotal = totalRental + serviceFee;
 
-    const tax = discountedSub * 0.1;
-    const finalTotal = discountedSub + tax;
+    // Promo discount (percentage)
+    const discountAmount =
+      promoDiscount > 0 ? subtotal * (promoDiscount / 100) : 0;
+
+    // Subtotal AFTER discount
+    const discountedSubtotal = subtotal - discountAmount;
+
+    // Tax applied AFTER discount
+    const turnoverTax = discountedSubtotal * 0.1;
+
+    // Final total
+    const finalTotalPrice = discountedSubtotal + turnoverTax;
 
     return {
       carRentalPrice: carPrice,
       driverServicePrice: driverPrice,
-      subtotal: sub,
-      discountedSubtotal: discountedSub,
-      serviceFee: service,
-      turnoverTax: tax,
-      finalTotalPrice: finalTotal,
+      subtotal,
+      discountAmount,
+      discountedSubtotal,
+      serviceFee,
+      turnoverTax,
+      finalTotalPrice,
       effectiveDays,
     };
   }, [
@@ -378,8 +394,9 @@ export default function PriceBreakdown({
     selfDriveDailyPrice,
     driverDailyPrice,
     serviceOption,
-    promoDiscount, 
+    promoDiscount,
   ]);
+
 
 
   const handleRequestBooking = () => {
@@ -434,10 +451,11 @@ export default function PriceBreakdown({
 
           {promoDiscount > 0 && (
             <div className="flex justify-between text-xs md:text-sm text-green-400">
-              <span>Promo Discount</span>
-              <span>-{promoDiscount.toFixed(2)} birr</span>
+              <span>Promo Discount ({promoDiscount}%)</span>
+              <span>-{discountAmount.toFixed(2)} birr</span>
             </div>
           )}
+
 
           <div className="flex justify-between text-xs md:text-sm">
             <span>Tax</span>
