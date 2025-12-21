@@ -204,7 +204,9 @@ const Login = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE]">
+      <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE]
+                max-h-[90vh] overflow-y-auto overscroll-contain">
+
         <div className="flex w-full justify-between items-center ">
           <h1 className="text-4xl font-bold my-8">Account Verification</h1>
           <Link to="/" className="relative -mt-40">
