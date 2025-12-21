@@ -8,10 +8,16 @@ import { IconButton, InputAdornment, TextField } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import CloseIcon from "@mui/icons-material/Close"; // For the close button
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
+import PhoneMuiInput from "./PhoneMuiInput";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 const Login = ({ onClose }) => {
   // Added onClose prop for modal closing
-  const [phoneNumberInput, setPhoneNumberInput] = useState(""); // Stores only the 9/7xxxxxxx part
+  const [prefix, setPrefix] = useState("");
+  const [country, setCountry] = useState();
+  const [phone_number, setphone_number] = useState(""); // Stores only the 9/7xxxxxxx part
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -24,7 +30,43 @@ const Login = ({ onClose }) => {
     (state) => state.auth
   );
 
-  const fullPhoneNumber = `+251${phoneNumberInput}`; // Construct full phone number
+  useEffect(() => {
+    const detectCountry = async () => {
+      try {
+        const res = await fetch("https://ipapi.co/json/");
+        const data = await res.json();
+
+        if (data?.country_code) {
+          setCountry(data.country_code);
+          setPrefix(data.country_calling_code);
+        } else {
+          setCountry("ET");
+        }
+      } catch (err) {
+        console.error("Geo detect failed", err);
+        setCountry("ET");
+      }
+    };
+
+    detectCountry();
+  }, []);
+
+  useEffect(() => {
+    let phoneError;
+
+    if (!phone_number) {
+      phoneError = "Phone number is required";
+    } else if (!isValidPhoneNumber(phone_number)) {
+      phoneError = "Invalid phone number";
+    }
+
+    setErrors((prev) => {
+      const updated = { ...prev };
+      if (phoneError) updated.phone_number = phoneError;
+      else delete updated.phone_number;
+      return updated;
+    });
+  }, [phone_number]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -40,12 +82,6 @@ const Login = ({ onClose }) => {
     setErrors({});
 
     const validationErrors = {};
-    if (!phoneNumberInput) {
-      validationErrors.phone_number = "Phone number is required";
-    } else if (!/^(9|7)\d{8}$/.test(phoneNumberInput)) {
-      validationErrors.phone_number =
-        "Invalid phone number. It should start with 9 or 7 and be 9 digits long after +251.";
-    }
 
     if (!password) {
       validationErrors.password = "Password is required";
@@ -58,7 +94,7 @@ const Login = ({ onClose }) => {
 
     try {
       // Use the constructed fullPhoneNumber for dispatch
-      const resultAction = await dispatch(login(fullPhoneNumber, password));
+      const resultAction = await dispatch(login(phone_number, password));
       await resultAction.unwrap();
       // Success is handled by the useEffect hook watching isAuthenticated
     } catch (rejectedValueOrSerializedError) {
@@ -73,38 +109,7 @@ const Login = ({ onClose }) => {
     navigate("/forgot");
   };
 
-  // Real-time validation for the phone number input part
-  useEffect(() => {
-    const validatePhoneNumberInput = () => {
-      let validationErrors = { ...errors };
-      const phoneRegex = /^(9|7)\d{0,8}$/; // Allows incomplete input for real-time feedback
-      const completePhoneRegex = /^(9|7)\d{8}$/;
 
-      if (!phoneNumberInput && errors.phone_number_touched) {
-        // Show required only if touched and empty
-        validationErrors.phone_number = "Phone number is required";
-      } else if (phoneNumberInput && !phoneRegex.test(phoneNumberInput)) {
-        validationErrors.phone_number =
-          "Invalid input. Must start with 9 or 7 and contain only digits.";
-      } else if (
-        phoneNumberInput &&
-        !completePhoneRegex.test(phoneNumberInput) &&
-        phoneNumberInput.length === 9
-      ) {
-        // If it's 9 digits but still doesn't match the complete pattern (e.g. starts with 8)
-        validationErrors.phone_number = "Number must start with 9 or 7.";
-      } else {
-        delete validationErrors.phone_number;
-      }
-      setErrors(validationErrors);
-    };
-
-    if (errors.phone_number_touched || phoneNumberInput) {
-      // Validate if touched or has input
-      validatePhoneNumberInput();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phoneNumberInput]);
 
   const handlePasswordChange = (e) => {
     const { value } = e.target;
@@ -128,30 +133,30 @@ const Login = ({ onClose }) => {
     event.preventDefault();
   };
 
-  const handlePhoneNumberInputChange = (e) => {
-    const input = e.target.value.replace(/\D/g, ""); // Remove non-digits
-    if (input.length <= 9) {
-      // Max 9 digits after +251
-      setPhoneNumberInput(input);
-    }
-  };
+  // const handlePhoneNumberInputChange = (e) => {
+  //   const input = e.target.value.replace(/\D/g, ""); // Remove non-digits
+  //   if (input.length <= 9) {
+  //     // Max 9 digits after +251
+  //     setphone_number(input);
+  //   }
+  // };
 
-  const handlePhoneBlur = () => {
-    setErrors((prev) => ({ ...prev, phone_number_touched: true }));
-    // Trigger validation explicitly on blur to catch required error if empty
-    if (!phoneNumberInput) {
-      setErrors((prev) => ({
-        ...prev,
-        phone_number: "Phone number is required",
-      }));
-    } else if (!/^(9|7)\d{8}$/.test(phoneNumberInput)) {
-      setErrors((prev) => ({
-        ...prev,
-        phone_number:
-          "Invalid phone number. It should be 9 digits starting with 9 or 7.",
-      }));
-    }
-  };
+  // const handlePhoneBlur = () => {
+  //   setErrors((prev) => ({ ...prev, phone_number_touched: true }));
+  //   // Trigger validation explicitly on blur to catch required error if empty
+  //   if (!phone_number) {
+  //     setErrors((prev) => ({
+  //       ...prev,
+  //       phone_number: "Phone number is required",
+  //     }));
+  //   } else if (!/^(9|7)\d{8}$/.test(phone_number)) {
+  //     setErrors((prev) => ({
+  //       ...prev,
+  //       phone_number:
+  //         "Invalid phone number. It should be 9 digits starting with 9 or 7.",
+  //     }));
+  //   }
+  // };
   const handlePasswordBlur = () => {
     setErrors((prev) => ({ ...prev, password_touched: true }));
     if (!password) {
@@ -192,37 +197,18 @@ const Login = ({ onClose }) => {
           <div className="flex flex-col gap-4 mb-4">
             {/* Phone Number Input with Fixed Prefix */}
             <div className="relative">
-              <label
-                className="absolute -top-2.5 left-3 text-xs bg-[#FAF9FE] px-1 text-gray-600" // Adjusted for better label float
-                htmlFor="phone_number_input"
-              >
-                Phone Number
-              </label>
-              <div className="flex items-center border border-gray-400 rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
-                <img
-                  src={flag}
-                  className="w-8 h-6 ml-3 rounded" // Adjusted flag size
-                  alt="Flag"
-                />
-                <span className="px-2 text-gray-700 text-base">+251</span>
-                <input
-                  type="tel" // Use type="tel" for phone numbers
-                  id="phone_number_input"
-                  name="phone_number_input"
-                  value={phoneNumberInput}
-                  onChange={handlePhoneNumberInputChange}
-                  onBlur={handlePhoneBlur}
-                  className="flex-grow p-3 bg-transparent text-gray-800 rounded-r-md focus:outline-none text-base placeholder-gray-400"
-                  placeholder="912345678"
-                  maxLength="9" // Max 9 digits
-                  autoComplete="tel-national"
-                />
-              </div>
-              {errors.phone_number && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.phone_number}
-                </p>
-              )}
+              <PhoneInput
+                international
+                defaultCountry={country}
+                value={phone_number}
+                onChange={setphone_number}
+                onCountryChange={setCountry}
+                countrySelectProps={{ unicodeFlags: true }}
+                inputComponent={PhoneMuiInput}
+                label="Phone Number"
+                error={!!errors.phone_number}
+                helperText={errors.phone_number}
+              />
             </div>
 
             {/* Password Input */}
@@ -280,14 +266,14 @@ const Login = ({ onClose }) => {
               !!errors.phone_number ||
               !!errors.password || // Check if any error string exists
               loading ||
-              !phoneNumberInput || // Ensure input part is filled
+              !phone_number || // Ensure input part is filled
               !password ||
-              !/^(9|7)\d{8}$/.test(phoneNumberInput) // Also validate format before enabling
+              !/^(9|7)\d{8}$/.test(phone_number) // Also validate format before enabling
             }
             className={`w-full text-white text-base font-medium rounded-full py-3 transition duration-150 ease-in-out ${
               !errors.phone_number &&
               !errors.password &&
-              /^(9|7)\d{8}$/.test(phoneNumberInput) &&
+              /^(9|7)\d{8}$/.test(phone_number) &&
               password &&
               !loading
                 ? "bg-[#00113D] hover:bg-blue-900"
