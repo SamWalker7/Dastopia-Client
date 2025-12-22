@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import flag from "../../images/hero/image.png"; // Ensure this path is correct
 import { useLocation } from "react-router-dom";
 import {
   IconButton,
   TextField,
-  InputAdornment,
   RadioGroup,
   FormControlLabel,
   Radio,
@@ -13,15 +11,21 @@ import {
   FormLabel,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close"; // For the close button
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
+import PhoneMuiInput from "./PhoneMuiInput";
+import { isValidPhoneNumber } from "react-phone-number-input";
+
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { firstName, lastName, referralCode } = location.state || {};
 
-  const prefix = "+251"; // Define prefix at component scope
 
-  const [phone_number, setphone_number] = useState(prefix); // Initialize with prefix
+  const [prefix, setPrefix] = useState("");
+  const [country, setCountry] = useState();
+  const [phone_number, setphone_number] = useState(""); 
   const [email, setEmail] = useState("");
   const [password, setpassword] = useState("");
   const [refferal, setRefferal] = useState("");
@@ -30,66 +34,48 @@ const Login = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    console.log("referralCode: ", referralCode);
+    const detectCountry = async () => {
+      try {
+        const res = await fetch("https://ipapi.co/json/");
+        const data = await res.json();
 
-    if (referralCode) setRefferal(referralCode);
-  }, [referralCode])
+        if (data?.country_code) {
+          setCountry(data.country_code);
+          setPrefix(data.country_calling_code);
+        } else {
+          setCountry("ET");
+        }
+      } catch (err) {
+        console.error("Geo detect failed", err);
+        setCountry("ET");
+      }
+    };
+
+    detectCountry();
+  }, []);
+
+  useEffect(() => {
+    if (referralCode) setRefferal(refferal);
+  }, [refferal])
 
   // Phone number validation useEffect
   useEffect(() => {
-    const validatePhoneNumber = () => {
-      let phoneError = undefined;
-      const phoneRegex = /^\+251(9|7)\d{8}$/;
+    let phoneError;
 
-      if (phone_number === prefix) {
-        phoneError = "Phone number is required (e.g., +251912345678)";
-      } else if (!phoneRegex.test(phone_number)) {
-        phoneError =
-          "Invalid format. Use +251 followed by 9 or 7 and 8 digits (e.g., +251912345678).";
-      }
+    if (!phone_number) {
+      phoneError = "Phone number is required";
+    } else if (!isValidPhoneNumber(phone_number)) {
+      phoneError = "Invalid phone number";
+    }
 
-      setErrors((prevErrors) => {
-        const updatedErrors = { ...prevErrors };
-        if (phoneError) {
-          updatedErrors.phone_number = phoneError;
-        } else if (updatedErrors.hasOwnProperty("phone_number")) {
-          delete updatedErrors.phone_number;
-        }
-        return updatedErrors;
-      });
-    };
-
-    validatePhoneNumber();
+    setErrors((prev) => {
+      const updated = { ...prev };
+      if (phoneError) updated.phone_number = phoneError;
+      else delete updated.phone_number;
+      return updated;
+    });
   }, [phone_number]);
 
-  // Handle change for phone number input
-  const handlePhoneNumberChange = (e) => {
-    const maxSuffixLength = 9;
-    let inputValue = e.target.value;
-    let newPhoneNumber;
-
-    if (inputValue.startsWith(prefix)) {
-      const suffix = inputValue.substring(prefix.length);
-      let numericSuffix = suffix.replace(/[^0-9]/g, "");
-      if (numericSuffix.length > maxSuffixLength) {
-        numericSuffix = numericSuffix.substring(0, maxSuffixLength);
-      }
-      newPhoneNumber = prefix + numericSuffix;
-    } else if (
-      inputValue === "+" ||
-      inputValue === "+2" ||
-      inputValue === "+25"
-    ) {
-      newPhoneNumber = prefix;
-    } else {
-      let numericInput = inputValue.replace(/[^0-9]/g, "");
-      if (numericInput.length > maxSuffixLength) {
-        numericInput = numericInput.substring(0, maxSuffixLength);
-      }
-      newPhoneNumber = prefix + numericInput;
-    }
-    setphone_number(newPhoneNumber);
-  };
 
   // Email validation (optional)
   useEffect(() => {
@@ -155,12 +141,15 @@ const Login = () => {
         last_name: lastName,
         phone_number,
         password,
-        user_type, // Add user_type to the request
-        referral_code: referralCode
+        user_type,
       };
 
       if (email) {
         requestBody.email = email;
+      }
+
+      if (refferal && refferal.trim() !== "") {
+        requestBody.referral_code = refferal.trim();
       }
 
       const response = await fetch(
@@ -213,12 +202,14 @@ const Login = () => {
     !!errors.confirmPassword || // Check for password mismatch error
     !password || // Password is empty
     !confirmPassword || // Confirm password is empty
-    phone_number === prefix || // Phone number is just the prefix
+    phone_number === prefix || 
     !user_type; // user_type must be selected
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE]">
+      <div className="w-full max-w-xl mx-auto p-10 rounded-lg shadow-lg bg-[#FAF9FE]
+                max-h-[90vh] overflow-y-auto overscroll-contain">
+
         <div className="flex w-full justify-between items-center ">
           <h1 className="text-4xl font-bold my-8">Account Verification</h1>
           <Link to="/" className="relative -mt-40">
@@ -291,24 +282,19 @@ const Login = () => {
               </RadioGroup>
             </FormControl>
 
-            <TextField
-              label="Phone Number"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              name="phone_number"
+            <PhoneInput
+              international
+              defaultCountry={country}
               value={phone_number}
-              onChange={handlePhoneNumberChange}
+              onChange={setphone_number}
+              onCountryChange={setCountry}
+              countrySelectProps={{ unicodeFlags: true }}
+              inputComponent={PhoneMuiInput}
+              label="Phone Number"
               error={!!errors.phone_number}
               helperText={errors.phone_number}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <img src={flag} className="w-8 h-6 rounded-md" alt="Flag" />
-                  </InputAdornment>
-                ),
-              }}
             />
+
             <TextField
               label="Email (Optional)"
               variant="outlined"
@@ -351,14 +337,12 @@ const Login = () => {
               <div className="p-4 border rounded-xl bg-gray-50 shadow-sm">
                 <TextField
                   label="Referral Code (Optional)"
-                  variant="outlined"
                   fullWidth
-                  type="text"
-                  name="refferalCode"
                   value={refferal}
                   onChange={(e) => setRefferal(e.target.value)}
                   helperText="Leave blank if you don’t have a referral code"
                 />
+
               </div>
             </div>
 
