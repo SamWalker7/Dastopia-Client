@@ -39,13 +39,31 @@ const faqData = [
         id: "referral-how-it-works",
         question: "How does the referral program work?",
         answer:
-          "Share your referral code with friends. When someone signs up using your code and completes their first booking within 90 days, you earn a commission automatically.",
+          "You earn money by sharing your referral code. When someone signs up using your code and completes their first booking within 90 days, you earn a commission automatically.",
       },
       {
         id: "find-referral-code",
-        question: "Where can I find and share my referral code?",
+        question: "How do I find and share my referral code?",
         answer:
-          "Go to Menu → Commission Wallet. You’ll find your referral code there with Copy and Share buttons to easily send it to friends.",
+          "You can find your referral code by going to Menu → Commission Wallet. In the Commission Wallet screen, you will see your referral code along with Copy and Share buttons, which you can use to easily share it with friends via WhatsApp, SMS, or social media.",
+      },
+      {
+        id: "commission-calculation",
+        question: "How is referral commission calculated?",
+        answer:
+          "Commission is 10% of the platform fee. The platform fee is calculated as the total booking amount minus the vehicle owner’s price.",
+      },
+      {
+        id: "90-day-rule",
+        question: "What does the 90-day rule mean?",
+        answer:
+          "The referred user must complete their first booking within 90 days of signing up. If they don’t, the referral expires and no commission is earned.",
+      },
+      {
+        id: "redeem-commission",
+        question: "How do I use or redeem my earned commission?",
+        answer:
+          "Once earned, commission is automatically added to your account. You can track your total referrals and earnings from your dashboard.",
       },
     ],
   },
