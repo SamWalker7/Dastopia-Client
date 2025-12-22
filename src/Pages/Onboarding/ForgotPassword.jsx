@@ -4,20 +4,61 @@ import flag from "../../images/hero/image.png";
 import { IconButton, InputAdornment, TextField } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import CloseIcon from "@mui/icons-material/Close"; // For the close button
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
+import PhoneMuiInput from "./PhoneMuiInput";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 const ForgotPassword = () => {
   // This state will now only hold the 9 digits of the phone number
-  const [mobileNumber, setMobileNumber] = useState("");
+  const [phone_number, setphone_number] = useState("");
+  const [prefix, setPrefix] = useState("");
+    const [country, setCountry] = useState();
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+
+    useEffect(() => {
+      const detectCountry = async () => {
+        try {
+          const res = await fetch("https://ipapi.co/json/");
+          const data = await res.json();
+  
+          if (data?.country_code) {
+            setCountry(data.country_code);
+            setPrefix(data.country_calling_code);
+          } else {
+            setCountry("ET");
+          }
+        } catch (err) {
+          console.error("Geo detect failed", err);
+          setCountry("ET");
+        }
+      };
+  
+      detectCountry();
+    }, []);
+  
+    useEffect(() => {
+      let phoneError;
+  
+      if (!phone_number) {
+        phoneError = "Phone number is required";
+      } else if (!isValidPhoneNumber(phone_number)) {
+        phoneError = "Invalid phone number";
+      }
+  
+      setErrors((prev) => {
+        const updated = { ...prev };
+        if (phoneError) updated.phone_number = phoneError;
+        else delete updated.phone_number;
+        return updated;
+      });
+    }, [phone_number]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!mobileNumber || errors.phone_number) return;
-
-    // Construct the full phone number with the prefix before sending
-    const fullPhoneNumber = `+251${mobileNumber}`;
+    if (!phone_number || errors.phone_number) return;
 
     try {
       const response = await fetch(
@@ -25,7 +66,7 @@ const ForgotPassword = () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone_number: fullPhoneNumber }),
+          body: JSON.stringify({ phone_number: phone_number }),
         }
       );
 
@@ -37,39 +78,12 @@ const ForgotPassword = () => {
       console.log(response);
 
       // Pass the full phone number to the reset password page
-      navigate("/resetpassword", { state: { phone_number: fullPhoneNumber } });
+      navigate("/resetpassword", { state: { phone_number: phone_number } });
     } catch (error) {
       console.error("Error sending OTP:", error);
     }
   };
 
-  // New handler to control the input for the 9-digit number
-  const handlePhoneInputChange = (e) => {
-    const value = e.target.value;
-    // Allow only numeric input and limit to 9 characters
-    if (/^\d*$/.test(value) && value.length <= 9) {
-      setMobileNumber(value);
-    }
-  };
-
-  useEffect(() => {
-    const validatePhoneNumber = () => {
-      let validationErrors = {};
-      // Updated regex to validate the 9-digit part of the number
-      const phoneRegex = /^(9|7)\d{8}$/;
-
-      if (!mobileNumber) {
-        validationErrors.phone_number = "Phone number is required";
-      } else if (!phoneRegex.test(mobileNumber)) {
-        validationErrors.phone_number =
-          "Number must be 9 digits and start with 9 or 7.";
-      }
-
-      setErrors(validationErrors);
-    };
-
-    validatePhoneNumber();
-  }, [mobileNumber]);
 
   return (
     <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 z-50">
@@ -92,43 +106,24 @@ const ForgotPassword = () => {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-2 mb-4">
-            <div className="relative inline-block my-3 text-lg w-full">
-              <label
-                className="absolute -top-2 left-3 text-base bg-white px-1 text-gray-500"
-                htmlFor="phone_number"
-              >
-                Phone Number
-              </label>
-              <div className="border border-gray-400 items-center rounded-md flex bg-white focus-within:outline focus-within:outline-1 focus-within:outline-blue-400">
-                <img
-                  src={flag}
-                  className="w-12 h-8 rounded-xl ml-4"
-                  alt="Flag"
-                />
-                <span className="px-2 text-gray-500">+251</span>
-                <input
-                  type="tel"
-                  id="phone_number"
-                  name="phone_number"
-                  value={mobileNumber}
-                  onChange={handlePhoneInputChange}
-                  className="flex-grow w-full p-3 py-4 bg-transparent text-gray-500 rounded-r-md focus:outline-none"
-                  placeholder="912 345 678"
-                  maxLength="9"
-                />
-              </div>
-              {errors.phone_number && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.phone_number}
-                </p>
-              )}
-            </div>
+             <PhoneInput
+                           international
+                           defaultCountry={country}
+                           value={phone_number}
+                           onChange={setphone_number}
+                           onCountryChange={setCountry}
+                           countrySelectProps={{ unicodeFlags: true }}
+                           inputComponent={PhoneMuiInput}
+                           label="Phone Number"
+                           error={!!errors.phone_number}
+                           helperText={errors.phone_number}
+                         />
           </div>
           <button
             type="submit"
             disabled={Object.keys(errors).length > 0}
             className={`w-full text-white text-lg rounded-full py-3 transition ${
-              !errors.phone_number && mobileNumber
+              !errors.phone_number && phone_number
                 ? "bg-[#00113D] hover:bg-blue-900"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
