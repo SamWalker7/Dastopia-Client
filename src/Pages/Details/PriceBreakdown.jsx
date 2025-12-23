@@ -51,7 +51,6 @@ const PaymentDetailsModal = ({
   const [viewMode, setViewMode] = useState("details");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const navigate = useNavigate();
   const customer = JSON.parse(localStorage.getItem("customer"));
   const USER_ID =
     customer?.userAttributes?.find((attr) => attr.Name === "sub")?.Value || "";
@@ -294,19 +293,63 @@ export default function PriceBreakdown({
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
 
   const [promoCode, setPromoCode] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState("");
+  const [promoDiscount, setPromoDiscount] = useState(0);
 
+  const validatePromoCode = async () => {
+    if (!promoCode) return;
 
+    try {
+      setPromoLoading(true);
+      setPromoError("");
+
+      const token = JSON.parse(localStorage.getItem("customer"))?.AccessToken;
+
+      const res = await fetch(
+        "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/promo-codes/validate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            code: promoCode,
+            subtotal,
+          }),
+        }
+      );
+
+      const response = await res.json();
+
+      if (!response.valid) {
+        setPromoDiscount(0);
+        setPromoError(response.data?.message || "Invalid promo code");
+        return;
+      }
+
+      // ✅ percentage from backend
+      setPromoDiscount(response.data.discountPercentage);
+    } catch (err) {
+      setPromoDiscount(0);
+      setPromoError("Failed to validate promo code");
+    } finally {
+      setPromoLoading(false);
+    }
+  };
 
   const {
     carRentalPrice,
     driverServicePrice,
     subtotal,
+    discountAmount,
+    discountedSubtotal,
     serviceFee,
     turnoverTax,
     finalTotalPrice,
     effectiveDays,
   } = useMemo(() => {
-    // Enforce a minimum of 1 day for all calculations.
     const effectiveDays = Math.max(days || 0, 1);
 
     const carPrice = effectiveDays * (selfDriveDailyPrice || 0);
@@ -316,22 +359,45 @@ export default function PriceBreakdown({
         : 0;
 
     const totalRental = carPrice + driverPrice;
-    const service = totalRental * 0.1;
-    const sub = totalRental + service;
-    const tax = sub * 0.1;
-    const finalTotal = sub + tax;
+
+    const serviceFee = totalRental * 0.1;
+
+    // Subtotal BEFORE discount & tax
+    const subtotal = totalRental + serviceFee;
+
+    // Promo discount (percentage)
+    const discountAmount =
+      promoDiscount > 0 ? subtotal * (promoDiscount / 100) : 0;
+
+    // Subtotal AFTER discount
+    const discountedSubtotal = subtotal - discountAmount;
+
+    // Tax applied AFTER discount
+    const turnoverTax = discountedSubtotal * 0.1;
+
+    // Final total
+    const finalTotalPrice = discountedSubtotal + turnoverTax;
 
     return {
       carRentalPrice: carPrice,
       driverServicePrice: driverPrice,
-      subtotal: sub,
-      serviceFee: service,
-      turnoverTax: tax,
-      finalTotalPrice: finalTotal,
-      effectiveDays: effectiveDays,
-      promoCode
+      subtotal,
+      discountAmount,
+      discountedSubtotal,
+      serviceFee,
+      turnoverTax,
+      finalTotalPrice,
+      effectiveDays,
     };
-  }, [days, selfDriveDailyPrice, driverDailyPrice, serviceOption, promoCode]);
+  }, [
+    days,
+    selfDriveDailyPrice,
+    driverDailyPrice,
+    serviceOption,
+    promoDiscount,
+  ]);
+
+
 
   const handleRequestBooking = () => {
     if (!pickUpLocation || !dropOffLocation) {
@@ -382,23 +448,47 @@ export default function PriceBreakdown({
             <span>Sub Total</span>
             <span>{subtotal.toFixed(2)} birr</span>
           </div>
+
+          {promoDiscount > 0 && (
+            <div className="flex justify-between text-xs md:text-sm text-green-400">
+              <span>Promo Discount ({promoDiscount}%)</span>
+              <span>-{discountAmount.toFixed(2)} birr</span>
+            </div>
+          )}
+
+
           <div className="flex justify-between text-xs md:text-sm">
             <span>Tax</span>
             <span>{turnoverTax.toFixed(2)} birr</span>
           </div>
-          <div className="flex justify-between items-center text-xs md:text-sm whitespace-nowrap">
+
+
+          <div className="flex justify-between items-center text-xs md:text-sm">
             <span>Promo Code</span>
 
-            {/* <span className="mx-2">:</span> */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                placeholder="DAS10"
+                className="border rounded px-2 py-1 text-black uppercase w-20"
+              />
 
-            <input
-              type="text"
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value)}
-              placeholder="Enter promo code"
-              className="border border-black rounded px-2 py-1 text-right text-black placeholder-gray-500 w-20 md:w-20 focus:outline-none focus:ring-1 focus:ring-black"
-            />
+              <button
+                onClick={validatePromoCode}
+                disabled={promoLoading}
+                className="bg-white text-[#0d1b3e] px-3 rounded"
+              >
+                {promoLoading ? "..." : "Apply"}
+              </button>
+            </div>
           </div>
+
+          {promoError && (
+            <p className="text-red-400 text-xs mt-1">{promoError}</p>
+          )}
+
 
 
           <div className="h-px bg-white/20 my-3" />
