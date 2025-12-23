@@ -267,13 +267,11 @@ const Login = ({ onClose }) => {
               !!errors.password || // Check if any error string exists
               loading ||
               !phone_number || // Ensure input part is filled
-              !password ||
-              !/^(9|7)\d{8}$/.test(phone_number) // Also validate format before enabling
+              !password
             }
             className={`w-full text-white text-base font-medium rounded-full py-3 transition duration-150 ease-in-out ${
               !errors.phone_number &&
               !errors.password &&
-              /^(9|7)\d{8}$/.test(phone_number) &&
               password &&
               !loading
                 ? "bg-[#00113D] hover:bg-blue-900"

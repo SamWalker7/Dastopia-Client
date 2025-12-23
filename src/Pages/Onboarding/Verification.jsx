@@ -55,8 +55,8 @@ const Login = () => {
   }, []);
 
   useEffect(() => {
-    if (referralCode) setRefferal(referralCode);
-  }, [referralCode])
+    if (referralCode) setRefferal(refferal);
+  }, [refferal])
 
   // Phone number validation useEffect
   useEffect(() => {
@@ -141,12 +141,15 @@ const Login = () => {
         last_name: lastName,
         phone_number,
         password,
-        user_type, // Add user_type to the request
-        referral_code: referralCode
+        user_type,
       };
 
       if (email) {
         requestBody.email = email;
+      }
+
+      if (refferal && refferal.trim() !== "") {
+        requestBody.referral_code = refferal.trim();
       }
 
       const response = await fetch(
@@ -334,14 +337,12 @@ const Login = () => {
               <div className="p-4 border rounded-xl bg-gray-50 shadow-sm">
                 <TextField
                   label="Referral Code (Optional)"
-                  variant="outlined"
                   fullWidth
-                  type="text"
-                  name="refferalCode"
                   value={refferal}
                   onChange={(e) => setRefferal(e.target.value)}
                   helperText="Leave blank if you don’t have a referral code"
                 />
+
               </div>
             </div>
 
