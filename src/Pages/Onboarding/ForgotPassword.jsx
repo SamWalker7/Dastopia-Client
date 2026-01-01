@@ -55,34 +55,47 @@ const ForgotPassword = () => {
       });
     }, [phone_number]);
 
+  const postRequest = async (url, body) => {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return response;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!phone_number || errors.phone_number) return;
 
     try {
-      const response = await fetch(
+      const payload = { phone_number };
+
+      let response = await postRequest(
         "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/forget_password",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone_number: phone_number }),
-        }
+        payload
       );
 
       if (!response.ok) {
-        console.error("Failed to send OTP", response);
-        // You might want to set an error state here to show the user
-        return;
-      }
-      console.log(response);
+        response = await postRequest(
+          "https://oy0bs62jx8.execute-api.us-east-1.amazonaws.com/Prod/v1/auth/resend_confirmation",
+          payload
+        );
 
-      // Pass the full phone number to the reset password page
-      navigate("/resetpassword", { state: { phone_number: phone_number } });
+        if (!response.ok) {
+          throw new Error("Failed to send OTP");
+        }
+      }
+
+      navigate("/resetpassword", {
+        state: { phone_number },
+      });
     } catch (error) {
-      console.error("Error sending OTP:", error);
+      console.error("OTP request error:", error.message);
     }
   };
+
 
 
   return (
