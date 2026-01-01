@@ -15,6 +15,8 @@ const ForgotPassword = () => {
   const [prefix, setPrefix] = useState("");
     const [country, setCountry] = useState();
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState("");
+
   const navigate = useNavigate();
 
     useEffect(() => {
@@ -92,7 +94,7 @@ const ForgotPassword = () => {
         state: { phone_number },
       });
     } catch (error) {
-      console.error("OTP request error:", error.message);
+      setSubmitError(error.message || "Something went wrong");
     }
   };
 
@@ -132,6 +134,12 @@ const ForgotPassword = () => {
                            helperText={errors.phone_number}
                          />
           </div>
+          {submitError && (
+            <div className="mb-4 rounded-md bg-red-100 border border-red-400 text-red-700 px-4 py-2 text-sm">
+              {submitError}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={Object.keys(errors).length > 0}
