@@ -94,7 +94,7 @@ const ForgotPassword = () => {
         state: { phone_number },
       });
     } catch (error) {
-      setSubmitError(error.message || "Something went wrong");
+      setSubmitError("Failed to send OTP code. Please try again!");
     }
   };
 
